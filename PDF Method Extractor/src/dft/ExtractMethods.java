@@ -1,5 +1,5 @@
 // PDF Extract Methods
-// v0.3
+// v0.31
 // Jason Hays
 // This program uses Apache PDFBox 1.8.10 to extract the Methods section using regular expressions.
 //
@@ -18,9 +18,11 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.DataFormatException;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.xml.bind.DataBindingException;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -161,83 +163,90 @@ public class ExtractMethods {
 			//  the next line: so you look for lower casing after the new line.
 			// Numbers are okay with punctuation (example: "3.1 Methods"), but not letters
 			//  (section numbers are used sometimes)
-		  //Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?)[\r\n]+(?![a-z])");
+			//Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?)[\r\n]+(?![a-z])");
 			// updated to have forms of "Experimental Procedure"
 			Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?|Experimental [Pp]rocedure(s)?|EXPERIMENTAL PROCEDURE(S)?|Experimental [Dd]esign)[\r\n]+(?![a-z])");
 
 			// the matcher can extract instances of a regular expression from the text (named "text"),
 			// which was extracted from the pdf
 			// in this case, it uses the methods pattern above.
-			Matcher m = methodsWord.matcher(text);
-
-			// finds headers at most like: 
-			//   new line #.#.?letter? (word w/caps) word? word?.? new line + no lower case
-			Pattern genericHeader = Pattern.compile("[\r\n]+[0-9\\.]*[a-z]?\\.?\\s?[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*)\\.?[\r\n]+(?![a-z])");
-			// likely too broad
-			//Pattern genericHeader = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*)\\.?[\r\n]+(?![a-z])");
-			Matcher h = genericHeader.matcher(text);
-
-
+			Matcher m = null;
 			// store the methods per pdf here
 			String method = "";
-
-			// see how generic header puller works
-			String[] search = {"results", "discussion","conclusion", "acknowledgment", "acknowledgement", "references"};
-
 			int methodStart = -1;
-			int headerEnd = 0;
-			boolean searching = false;
-			// keep finding headers until there are none.
-			// only find methods at first, then switch to finding any header
-			while ((searching && h.find(headerEnd)) || (!searching && m.find(headerEnd))) {
-				// by default, use the method finder
-				Matcher inUse = m;
-				// if you already found the method, use the header finder
-				if(searching)
-					inUse = h;
-				// leave a new line character for the next search
-				headerEnd = inUse.end()-1;
-				
-				// get the header name in lower case
-				String header = text.substring(inUse.start(), inUse.end()).toLowerCase();
-				//if (pdf.getName().equals("11689307.pdf"))
-					//System.out.println(header);
-				// if you are searching for headers other than methods..
-				if (searching) {
-					// go through the list of valid headers
-					for (String s : search) {
-						if (header.contains(s)) {
-							// you found a valid header after finding the method.
-							searching = false;
-							methodStart = -1;
-							// add the cleaned method contents to a new line
-							//  each line represents a method.
-							method += cleanup(text.substring(methodStart, h.start()));
-							break;
-						}
-					}
-				} 
-				// the method searcher "m" find had to find something to be here 
-				else {
-					// saw where the method started for future reference.
-					methodStart = m.start();
-					searching = true;
-					//System.out.println(header);
-				}
-			}
+			try {
+				m = methodsWord.matcher(text);
 
+				// finds headers at most like: 
+				//   new line #.#.?letter? (word w/caps) word? word?.? new line + no lower case
+				Pattern genericHeader = Pattern.compile("[\r\n]+[0-9\\.]*[a-z]?\\.?\\s?[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*)\\.?[\r\n]+(?![a-z])");
+				// likely too broad
+				//Pattern genericHeader = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*)\\.?[\r\n]+(?![a-z])");
+				Matcher h = genericHeader.matcher(text);
+
+				// see how generic header puller works
+				String[] search = {"results", "discussion","conclusion", "acknowledgment", "acknowledgement", "references"};
+
+				methodStart = -1;
+				int headerEnd = 0;
+				boolean searching = false;
+				// keep finding headers until there are none.
+				// only find methods at first, then switch to finding any header
+				while ((searching && h.find(headerEnd)) || (!searching && m.find(headerEnd))) {
+					// by default, use the method finder
+					Matcher inUse = m;
+					// if you already found the method, use the header finder
+					if(searching)
+						inUse = h;
+					// leave a new line character for the next search
+					headerEnd = inUse.end()-1;
+
+					// get the header name in lower case
+					String header = text.substring(inUse.start(), inUse.end()).toLowerCase();
+					//if (pdf.getName().equals("11689307.pdf"))
+					//System.out.println(header);
+					// if you are searching for headers other than methods..
+					if (searching) {
+						// go through the list of valid headers
+						for (String s : search) {
+							if (header.contains(s)) {
+								// you found a valid header after finding the method.
+								searching = false;
+								
+								// add the cleaned method contents to a new line
+								//  each line represents a method.
+								method += cleanup(text.substring(methodStart, h.start()));
+								methodStart = -1;
+								break;
+							}
+						}
+					} 
+					// the method searcher "m" find had to find something to be here 
+					else {
+						// saw where the method started for future reference.
+						methodStart = m.start();
+						searching = true;
+						//System.out.println(header);
+					}
+				}
+			} catch(NullPointerException e) {
+				methodStart = -2;
+			}
 			// if no methods were found (probably an oddball of labeling)
 			// print a message for the pdf in question.
 			if (method.isEmpty()) {
-				
+
 				String out = "";
 				// if method start is not -1, then it found a method header, but not
 				//  a valid header after that.
 				if (methodStart >= 0)
 					out = pdf.getName()+": Could not find the end of the method.";
-				else
+				else if (methodStart == -1)
 					// otherwise, it couldn't find where to begin.
 					out = pdf.getName()+": Could not find methods.";
+				else if (methodStart == -2)
+					// or, it couldn't even find text.
+					out = pdf.getName()+": Document had unreadable text.";
 				System.out.println(out);
 				try {
 					fw.write(out+"\n");
