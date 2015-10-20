@@ -1,5 +1,5 @@
 // PDF Extract Methods
-// v0.31
+// v0.32
 // Jason Hays
 // This program uses Apache PDFBox 1.8.10 to extract the Methods section using regular expressions.
 //
@@ -84,6 +84,8 @@ public class ExtractMethods {
 	}
 	// the main method is where the program starts
 	public static void main(String args[]) {
+		// increase the buffer size
+		System.setProperty("org.apache.pdfbox.baseParser.pushBackSize", "999000");
 		// make a window for the file chooser
 		Frame f = new Frame();
 		JFileChooser fc = new JFileChooser();
@@ -95,6 +97,8 @@ public class ExtractMethods {
 
 		// open the dialog (not using tmp)
 		int tmp = fc.showOpenDialog(f);
+		if (tmp == JFileChooser.CANCEL_OPTION)
+			return;
 		// get the folder they chose
 		File dirName = fc.getSelectedFile();
 		// dispose of the window.
@@ -115,11 +119,34 @@ public class ExtractMethods {
 			e1.printStackTrace();
 		}
 
+		File fileNames = new File(saveDir+"Names.txt");
+		FileWriter nw = null;
+
+		try {
+			if (!fileNames.exists())
+				fileNames.createNewFile();
+			nw = new FileWriter(fileNames);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
 		// initialize the list of pdf files in the directory
 		Vector<File> pdfList = new Vector<File>();
 		// get the files.
 		getFiles(dirName, pdfList);
-
+		// get the names
+		for (File pdf : pdfList) {
+			try {
+				nw.write(pdf.getName()+'\n');
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			nw.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		// go through each pdf found earlier
 		for (File pdf : pdfList) {
 			//System.out.println(pdf.getName());
@@ -130,12 +157,6 @@ public class ExtractMethods {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
-			// if the document has the PMID in the metadata, you could find it here:
-			// none of the documents I downloaded from PubMed have it, though.
-			//PDDocumentInformation info = pddDocument.getDocumentInformation();
-			//System.out.println(info.getMetadataKeys());
-			// "PubMed ID"
 
 			// set up the text extractor
 			PDFTextStripper stripper = null;
@@ -155,6 +176,8 @@ public class ExtractMethods {
 				text = stripper.getText(pddDocument);
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (NullPointerException e) {
+				e.printStackTrace();
 			}
 
 			// find "methods" at the end of the line in spite of casing, but only if the next line does not start with a lower case letter.
@@ -165,8 +188,8 @@ public class ExtractMethods {
 			//  (section numbers are used sometimes)
 			//Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?)[\r\n]+(?![a-z])");
 			// updated to have forms of "Experimental Procedure"
-			Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?|Experimental [Pp]rocedure(s)?|EXPERIMENTAL PROCEDURE(S)?|Experimental [Dd]esign)[\r\n]+(?![a-z])");
-
+			Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?|Experimental [Pp]rocedure(s)?|EXPERIMENTAL PROCEDURE(S)?|Experimental [Dd]esign)[\\s\r\n]+(?![a-z])");
+			
 			// the matcher can extract instances of a regular expression from the text (named "text"),
 			// which was extracted from the pdf
 			// in this case, it uses the methods pattern above.
@@ -174,7 +197,9 @@ public class ExtractMethods {
 			// store the methods per pdf here
 			String method = "";
 			int methodStart = -1;
-			try {
+			if (text == null || !text.contains(" ")) {
+				methodStart = -2;
+			}else{
 				m = methodsWord.matcher(text);
 
 				// finds headers at most like: 
@@ -229,9 +254,9 @@ public class ExtractMethods {
 						//System.out.println(header);
 					}
 				}
-			} catch(NullPointerException e) {
-				methodStart = -2;
 			}
+			
+			
 			// if no methods were found (probably an oddball of labeling)
 			// print a message for the pdf in question.
 			if (method.isEmpty()) {
