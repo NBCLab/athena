@@ -1,3 +1,4 @@
+
 import glob
 import string
 import os
@@ -26,15 +27,16 @@ class Athena:
 	#Called when the class is initialized
 	def __init__(self):
 		'''-----	Text Variables   -----'''
+		dataFolder = os.path.join(os.path.expanduser("~"), "data/")
 		#Location the abstracts' plain-text are located
 
-		#self.corpus_directory = './data/abstracts/*.txt'
-		self.corpus_directory = './data/methods/*.txt'
-		#self.corpus_directory = './data/combined/*.txt'
-		#self.corpus_directory = './data/2013_abstracts/*.txt'
+		#self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
+		self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
 
 		#Location of stopword list
-		self.stopword_file = './data/misc_data/onix_stopwords.txt'
+		self.stopword_file = os.path.join(dataFolder,'misc_data/onix_stopwords.txt')
 		#Total # of abstracts/methods loaded
 		self.text_files_loaded = 0
 		#Names of all loaded files
@@ -44,7 +46,7 @@ class Athena:
 
 		'''-----	Meta-data Variables   -----'''
 		#Location of meta_data
-		self.meta_data_directory = './data/meta_data/*.csv'
+		self.meta_data_directory = os.path.join(dataFolder, 'meta_data/*.csv')
 		self.meta_data = None
 		#Column names we want to keep
 		self.index_name = ['Year', 'First Author', 'Journal', 'PubMed ID']
@@ -146,6 +148,9 @@ class Athena:
 
 	#Merge experiments with multiple labels in one label dimension
 	def _merge_series(self, series):
+		'''
+		Merge experiments with multiple labels in one label dimension
+		'''
 		label_zip =  zip(series)
 		end_set = set()
 
@@ -156,6 +161,7 @@ class Athena:
 				end_set.update(v)
 		if 'None' in end_set:
 			end_set.remove('None')
+
 		return end_set
 
 	#A lot of the meta data has multiple rows for one PMID so let's merge them
@@ -282,6 +288,8 @@ class Athena:
 		for i in range(0,6):
 			self.test = self.pipeline[i].fit(self.train_data['Abstract Text'], self.train_label)
 			self.test2 = self.pipeline[i].predict(self.test_data['Abstract Text'])
+			if not os.path.exists('results/'):
+				os.mkdir('results')
 			np.save('results/conf_'+str(i)+'.npy',self.test2)
 		return self
 
@@ -425,16 +433,24 @@ class Athena:
 		subset_pred = label_pred[:, label_index_beg:label_index_end]
 		conf_array = np.empty(shape=subset_true.shape)
 		for (x,y), value in np.ndenumerate(subset_true):
+			# true negative
 			if subset_true[x,y] == 0 and subset_pred[x,y] == 0:
 				conf_array[x,y] = 1
+			# false positive
 			elif subset_true[x,y] == 0 and subset_pred[x,y] == 1:
 				conf_array[x,y] = 2
+			# false negative
 			elif subset_true[x,y] == 1 and subset_pred[x,y] == 0:
 				conf_array[x,y] = 3
+			# true positive
 			elif subset_true[x,y] == 1 and subset_pred[x,y] == 1:
 				conf_array[x,y] = 4
 		lbls = list(self.label_dimension_dict[label_dimension])
-		np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
+		if not os.path.exists('results/heatmaps/'):
+			os.mkdir('results/heatmaps/')
+		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
+		print("Writing "+'results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv')
+		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
 		f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
 		for item in lbls:
 			f.write(item + '\n')
@@ -450,16 +466,23 @@ class Athena:
 		subset_pred = label_pred[:, label_index_beg:label_index_end]
 		conf_array = np.empty(shape=subset_true.shape)
 		for (x,y), value in np.ndenumerate(subset_true):
+			# true negative
 			if subset_true[x,y] == 0 and subset_pred[x,y] == 0:
 				conf_array[x,y] = 1
+			# false positive
 			elif subset_true[x,y] == 0 and subset_pred[x,y] == 1:
 				conf_array[x,y] = 2
+			# false negative
 			elif subset_true[x,y] == 1 and subset_pred[x,y] == 0:
 				conf_array[x,y] = 3
+			# true positive
 			elif subset_true[x,y] == 1 and subset_pred[x,y] == 1:
 				conf_array[x,y] = 4
 		lbls = list(self.label_dimension_dict[label_dimension])
-		np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
+		if not os.exists('results/heatmaps/'):
+			os.mkdir('results/heatmaps/')
+		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
+		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
 		f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
 		for item in lbls:
 			f.write(item + ' ')
@@ -529,9 +552,3 @@ if __name__ == "__main__":
 		athena.get_params(run)
 
 	'''
-
-
-
-
-
-
