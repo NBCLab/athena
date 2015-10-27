@@ -104,7 +104,7 @@ class Athena:
 	def read_text(self):
 		print('Reading text data...')
 		temp_corpus = dict()
-		for filename in glob.glob(self.corpus_directory):
+		for filename in sorted(glob.glob(self.corpus_directory)):
 			#Read in text from file
 			f = open(filename)
 			text = f.read()
@@ -136,7 +136,7 @@ class Athena:
 		#Keep useful labels we want
 		df = df.loc[:,self.index_name + self.column_name]
 		#Sort the table
-		df = df.sort(['Year', 'First Author', 'Journal','PubMed ID'])
+		df = df.sort_values(by=['Year', 'First Author', 'Journal','PubMed ID'])
 		#Drop duplicates
 		df = df.drop_duplicates()
 		#Drop rows with null PMIDs
@@ -251,13 +251,19 @@ class Athena:
 		label_mlb_dict = {key:MultiLabelBinarizer().fit(label_list) for key, label_list in self.label_text_dict.items()}
 		label_mlb = MultiLabelBinarizer()
 		label_mlb.classes_ = np.concatenate([label_mlb_dict[key].classes_ for key in self.column_name])
-		self.label_mlb = label_mlb
+		#self.label_mlb = label_mlb
 		
 		label_dimension_dict = {key:set(label_mlb_dict[key].classes_) for key in self.column_name}
 		self.label_dimension_dict = label_dimension_dict
-
+		
 		#Conver to array!
 		self.label_bin_df= self.label_bin_df.values
+
+		#d = {'label_bin_dict': self.combined_df[0]}
+		#df2 = pd.DataFrame(data = d)
+		#df2.to_csv("results/test7.csv",',')
+		#self.label_bin_df.to_csv("results/test7.csv",',')
+		#np.savetxt('results/test.csv',self.label_bin_df,fmt='%d',delimiter=',')
 
 		return self
 	def create_pipeline_abs(self):
@@ -285,7 +291,7 @@ class Athena:
 	def run_grid_search_abs(self):
 		label_pred = dict()
 		f1_score = dict()
-		for i in range(0,6):
+		for i in range(len(self.pipeline)):
 			self.test = self.pipeline[i].fit(self.train_data['Abstract Text'], self.train_label)
 			self.test2 = self.pipeline[i].predict(self.test_data['Abstract Text'])
 			if not os.path.exists('results/'):
@@ -430,6 +436,9 @@ class Athena:
 		label_index_end = self.dimension_end[label_dimension]
 		label_index_beg = self.dimension_beg[label_dimension]
 		subset_true = self.test_label[:, label_index_beg:label_index_end]
+		# make sure shape is the same
+		if "Paradigm" in label_dimension:
+			print(subset_true.shape)
 		subset_pred = label_pred[:, label_index_beg:label_index_end]
 		conf_array = np.empty(shape=subset_true.shape)
 		for (x,y), value in np.ndenumerate(subset_true):
@@ -445,12 +454,15 @@ class Athena:
 			# true positive
 			elif subset_true[x,y] == 1 and subset_pred[x,y] == 1:
 				conf_array[x,y] = 4
-		lbls = list(self.label_dimension_dict[label_dimension])
+
+		lbls = sorted(list(self.label_dimension_dict[label_dimension]))
+
 		if not os.path.exists('results/heatmaps/'):
 			os.mkdir('results/heatmaps/')
 		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
-		print("Writing "+'results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv')
+		print('Writing results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv')
 		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
+		
 		f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
 		for item in lbls:
 			f.write(item + '\n')
@@ -478,7 +490,8 @@ class Athena:
 			# true positive
 			elif subset_true[x,y] == 1 and subset_pred[x,y] == 1:
 				conf_array[x,y] = 4
-		lbls = list(self.label_dimension_dict[label_dimension])
+		lbls = sorted(list(self.label_dimension_dict[label_dimension]))
+
 		if not os.exists('results/heatmaps/'):
 			os.mkdir('results/heatmaps/')
 		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
@@ -525,8 +538,9 @@ if __name__ == "__main__":
 	athena.read_text()
 	athena.read_stopwords()
 	athena.read_meta_data()
-	athena.combine_meta_data()
+	athena.combine_meta_data()	
 	athena.combine_data()
+
 	athena.binarize()
 	athena.split_data_abs()
 	athena.create_pipeline_abs()
