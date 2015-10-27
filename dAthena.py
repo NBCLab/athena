@@ -130,19 +130,24 @@ class Athena:
 	def read_meta_data(self):
 		print('Reading meta-data...')
 		#Read in all of the meta data files
-		df = [pd.read_csv(i, dtype = np.str) for i in glob.glob(self.meta_data_directory)]
+		df = [pd.read_csv(i, dtype = np.str) for i in sorted(glob.glob(self.meta_data_directory))]
 		#Now we have to join all the seperate tables stored in df
 		df = pd.concat(df, ignore_index = True)
 		#Keep useful labels we want
 		df = df.loc[:,self.index_name + self.column_name]
-		#Sort the table
-		df = df.sort_values(by=['Year', 'First Author', 'Journal','PubMed ID'])
 		#Drop duplicates
 		df = df.drop_duplicates()
 		#Drop rows with null PMIDs
 		df = df[(df['PubMed ID']!='null')]
+
 		#Drop rows who are missing columns
 		df = df.dropna()
+		df['PubMed ID'] = df['PubMed ID'].apply(int)
+		#Sort the table
+		df = df.sort_values(by=['PubMed ID', 'Year', 'First Author', 'Journal'])
+		df['PubMed ID'] = df['PubMed ID'].apply(str)
+		#print df['PubMed ID']
+
 		self.meta_data = df
 		return df
 
@@ -169,6 +174,7 @@ class Athena:
 		print('Combining meta-data...')
 		#New dataframe with the index being PMIDs
 		df = pd.DataFrame(index=self.meta_data['PubMed ID'].unique(), columns=self.column_name, dtype='string')
+
 		#Loop over rows
 		for row_index, current_row in self.meta_data.iterrows():
 			#Grab current PMID
@@ -456,7 +462,6 @@ class Athena:
 				conf_array[x,y] = 4
 
 		lbls = sorted(list(self.label_dimension_dict[label_dimension]))
-
 		if not os.path.exists('results/heatmaps/'):
 			os.mkdir('results/heatmaps/')
 		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
