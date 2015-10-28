@@ -28,11 +28,11 @@ class Athena:
 	#Called when the class is initialized
 	def __init__(self):
 		'''-----	Text Variables   -----'''
-		dataFolder = os.path.join(os.path.expanduser("~"), "data/")
+		dataFolder = os.path.join(os.path.expanduser("~"), "dAthena/data/")
 		#Location the abstracts' plain-text are located
 
-		#self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
-		self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
+		self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
 		#self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
 		#self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
 
@@ -546,7 +546,7 @@ class Athena:
 				conf_array[x,y] = 4
 		lbls = sorted(list(self.label_dimension_dict[label_dimension]))
 
-		if not os.exists('results/heatmaps/'):
+		if not os.path.exists('results/heatmaps/'):
 			os.mkdir('results/heatmaps/')
 		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
 		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
@@ -606,7 +606,7 @@ def run_2013_abstracts(alpha_param):
 # Program main functions
 if __name__ == "__main__":
 
-	run_2013_abstracts(0.1)
+	#run_2013_abstracts(0.1)
 
 	''' Single Run
 	run = 0
@@ -626,7 +626,6 @@ if __name__ == "__main__":
 	'''
 
 
-	'''
 	#Normal Run
 	for run in range(0,10):
 		print('Run '+str(run))
@@ -641,6 +640,5 @@ if __name__ == "__main__":
 		athena.create_pipeline()
 		athena.run_grid_search()
 		athena.get_f1s(run)
-		#athena.do_confs(run)
+		athena.do_confs(run)
 		athena.get_params(run)
-	'''
