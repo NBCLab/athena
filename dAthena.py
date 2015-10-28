@@ -11,6 +11,7 @@ from sklearn.naive_bayes import BernoulliNB
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cross_validation import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
@@ -90,6 +91,13 @@ class Athena:
 		self.test = None
 		self.test2 =None
 
+		''' Test '''
+		self.bnb_clf = None
+		self.tvect = None
+		self.x1 = None
+		self.test_pred = None
+		self.test_f1 = None
+
 	#Read in stopwords from file
 	def read_stopwords(self):
 		print ('Reading stopwords...')
@@ -112,7 +120,7 @@ class Athena:
 			#The [:-8] gets rid of the last 8 chars of file name
 			#11467915_a_p.txt -> 11467915
 			#Abstracts ext_len = -8, methods ext_len = -4
-			ext_len = -4
+			ext_len = -8
 			#temp_corpus[os.path.basename(filename)[:-8]] = text
 			temp_corpus[os.path.basename(filename)[:ext_len]] = text
 
@@ -305,6 +313,29 @@ class Athena:
 			np.save('results/conf_'+str(i)+'.npy',self.test2)
 		return self
 
+	'''++++++++++++++++++++++++++++++++++++++++++++++'''
+	def create_2013_pipeline(self, alpha_param):
+		self.clf_names = ['BNB']
+		clfs = [ BernoulliNB(alpha=alpha_param) ]
+		#LinearSVC(penalty = 'l2', class_weight='auto', dual=False, C=1.0)]
+
+		ovr_clfs = [OneVsRestClassifier(clf) for clf in clfs]
+
+		#'vect',TfidfVectorizer(min_df = 3, stop_words = self.stopwords, sublinear_tf = True))
+		self.pipeline = [Pipeline([
+						('vect',CountVectorizer(binary=True)),
+						('ovr',clf)]) for clf in ovr_clfs]
+
+		self.n_feature = [len(self.label_dimension_dict[col]) for col in self.column_name]
+		self.dimension_end = dict(zip(self.column_name, np.cumsum(self.n_feature)))
+		self.dimension_beg = {col:self.dimension_end[col]-len(self.label_dimension_dict[col]) for col in self.column_name}
+
+		self.pipeline[0].fit(self.train_data['Abstract Text'], self.train_label)
+		self.test_pred = self.pipeline[0].predict(self.test_data['Abstract Text'])
+		#self.test_f1 = metrics.f1_score(self.test_label,self.test_pred, average='micro')
+		return self.test_f1
+
+
 	#All processing will be done with pipelines to make things easier
 	def create_pipeline(self):
 		print('Creating pipeline...')
@@ -367,6 +398,24 @@ class Athena:
 		return self
 	'''
 
+	def compute_2013_f1(self,label_dimension='all'):
+		if label_dimension == 'all':
+			return metrics.f1_score(self.test_label,self.test_pred, average='micro')
+		else:
+			label_index_end = self.dimension_end[label_dimension]
+			label_index_beg = self.dimension_beg[label_dimension]
+			return metrics.f1_score(self.test_label[:, label_index_beg:label_index_end], 
+                self.test_pred[:, label_index_beg:label_index_end],average='micro')
+
+	def get_2013_f1s(self,run_num):
+		ary = np.empty([1,len(self.column_name2)])
+		y=0
+		for lbl in self.column_name2:
+			val = self.compute_2013_f1(lbl)
+			ary[0,y]= val
+			y = y+1
+		np.save('results/'+'f1_run'+str(run_num),ary)
+
 
 	#TODO: Refactor this into one function...
 	def compute_f1(self, clf_name, label_dimension = 'all'):
@@ -375,14 +424,14 @@ class Athena:
 
 	def _compute_f1(self, label_pred, label_dimension = 'all'):
 		if label_dimension == 'all':
-			return metrics.f1_score(self.test_label, label_pred)
+			return metrics.f1_score(self.test_label, label_pred, average='micro')
 		else:
 			#Here we grab only the specific label dimension
 			#This can be done because we generated those index-s
 			label_index_end = self.dimension_end[label_dimension]
 			label_index_beg = self.dimension_beg[label_dimension]
 			return metrics.f1_score(self.test_label[:, label_index_beg:label_index_end], 
-                label_pred[:, label_index_beg:label_index_end])
+                label_pred[:, label_index_beg:label_index_end],average='micro')
 
 	#Grid search over params to get best ones.
 	def run_grid_search(self):
@@ -535,9 +584,31 @@ class Athena:
 
 		return self
 
+#Replicating matt's results from 2013 (now with 100% more countvectorization)
+def run_2013_abstracts(alpha_param):
+	#2013 Test run
+	for run in range(0,10):
+		#All same preprocessing/data stuff as normal run
+		athena = Athena()
+		athena.read_text()
+		athena.read_stopwords()
+		athena.read_meta_data()
+		athena.combine_meta_data()
+		athena.combine_data()
+		athena.binarize()
+		athena.split_data()
+		#Now we use a seperate pipeline with BNB, word count vect instead of tfidf
+		athena.create_2013_pipeline(alpha_param)
+		#Also seperate way to get f1s obviously
+		athena.get_2013_f1s(run)
+
+
 # Program main functions
 if __name__ == "__main__":
-	
+
+	run_2013_abstracts(0.1)
+
+	''' Single Run
 	run = 0
 	athena = Athena()
 	athena.read_text()
@@ -552,8 +623,11 @@ if __name__ == "__main__":
 	athena.run_grid_search_abs()
 	athena.do_confs_abs(run)
 	#athena.get_f1s(run)
-	
 	'''
+
+
+	'''
+	#Normal Run
 	for run in range(0,10):
 		print('Run '+str(run))
 		athena = Athena()
@@ -569,5 +643,4 @@ if __name__ == "__main__":
 		athena.get_f1s(run)
 		#athena.do_confs(run)
 		athena.get_params(run)
-
 	'''
