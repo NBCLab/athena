@@ -552,7 +552,7 @@ class Athena:
 		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
 		f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
 		for item in lbls:
-			f.write(item + ' ')
+			f.write(item + '\n')
 		f.close() 
 
 	def get_params(self,run_num):
@@ -608,7 +608,7 @@ if __name__ == "__main__":
 
 	#run_2013_abstracts(0.1)
 
-	''' Single Run
+
 	run = 0
 	athena = Athena()
 	athena.read_text()
@@ -623,9 +623,8 @@ if __name__ == "__main__":
 	athena.run_grid_search_abs()
 	athena.do_confs_abs(run)
 	#athena.get_f1s(run)
+
 	'''
-
-
 	#Normal Run
 	for run in range(0,10):
 		print('Run '+str(run))
@@ -642,3 +641,4 @@ if __name__ == "__main__":
 		athena.get_f1s(run)
 		athena.do_confs(run)
 		athena.get_params(run)
+	'''
