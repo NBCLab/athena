@@ -1,5 +1,5 @@
 // PDF Extract Methods
-// v0.33
+// v0.34
 // Jason Hays
 // This program uses Apache PDFBox 1.8.10 to extract the Methods section using regular expressions.
 //
@@ -8,6 +8,8 @@
 // The Method section's name can vary somewhat in casing and what accompanies it.
 // The output uses the name of the pdf to create a .txt file in the "ExtractMethods Output" folder.
 //  Each line in the output has a methods section (if there are multiple experiments).
+
+// bug: 10320379 is a coincidental find
 
 package dft;
 
@@ -195,12 +197,14 @@ public class ExtractMethods {
 			} catch (NullPointerException e) {
 				e.printStackTrace();
 			}
+
 			// close the pdf
 			try {
 				pddDocument.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
 			processFileText(text, fw, pdf, saveDir);
 		}
 		for (File txt : txtList) {
@@ -217,7 +221,7 @@ public class ExtractMethods {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
+			
 			processFileText(text, fw, txt, saveDir);
 		}
 		try {
@@ -238,7 +242,7 @@ public class ExtractMethods {
 		//  (section numbers are used sometimes)
 		//Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?)[\r\n]+(?![a-z])");
 		// updated to have forms of "Experimental Procedure"
-		Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?|Experimental [Pp]rocedure(s)?|EXPERIMENTAL PROCEDURE(S)?|Experimental [Dd]esign)[\\s\r\n]+(?![a-z])");
+		Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;])[^\r\n]*([mM]ethod(s)?|METHOD(S)?|[Mm]\\se\\st\\sh\\so\\sd(\\ss)?|M\\sE\\sT\\sH\\sO\\sD(\\sS)?|DATA|Experimental\\s[Pp]rocedure(s)?|METHOD(S)?\\sAND\\sMATERIALS|[Mm]ethod(s)?\\s[Aa]nd\\s[Mm]aterials|EXPERIMENTAL\\sPROCEDURE(S)?|Experimental\\s[Dd]esign)[\\s\r\n]+(?![a-z])");
 
 		// the matcher can extract instances of a regular expression from the text (named "text"),
 		// which was extracted from the pdf
@@ -254,14 +258,14 @@ public class ExtractMethods {
 
 			// finds headers at most like: 
 			//   new line #.#.?letter? (word w/caps) word? word?.? new line + no lower case
-			Pattern genericHeader = Pattern.compile("[\r\n]+[0-9\\.]*[a-z]?\\.?\\s?[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*)\\.?[\r\n]+(?![a-z])");
+			// ([A-Z]\\s)+[A-Z]) is for weird spaced headers R E S U L T S
+			Pattern genericHeader = Pattern.compile("[\r\n]+[0-9\\.]*[a-z]?\\.?\\s?[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*|([A-Z]\\s)+[A-Z])\\.?[\r\n]+(?![a-z])");
 			// likely too broad
 			//Pattern genericHeader = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*[a-zA-Z\\-\\']*[A-Z]+[a-zA-Z\\-\\']*\\s?([a-zA-Z]*\\s?[a-zA-Z]*)\\.?[\r\n]+(?![a-z])");
 			Matcher h = genericHeader.matcher(text);
 
 			// see how generic header puller works
-			String[] search = {"results", "discussion","conclusion", "acknowledgment", "acknowledgement", "references"};
-
+			String[] search = {"r e s u l t s", "results", "discussion","conclusion", "acknowledgment", "acknowledgement", "references"};
 			methodStart = -1;
 			int headerEnd = 0;
 			boolean searching = false;
@@ -278,7 +282,6 @@ public class ExtractMethods {
 
 				// get the header name in lower case
 				String header = text.substring(inUse.start(), inUse.end()).toLowerCase();
-				//if (pdf.getName().equals("11689307.pdf"))
 				//System.out.println(header);
 				// if you are searching for headers other than methods..
 				if (searching) {
@@ -315,13 +318,13 @@ public class ExtractMethods {
 			// if method start is not -1, then it found a method header, but not
 			//  a valid header after that.
 			if (methodStart >= 0)
-				out = pdf.getName()+": Could not find the end of the method.";
+				out += pdf.getName()+": Could not find the end of the method.";
 			else if (methodStart == -1)
 				// otherwise, it couldn't find where to begin.
-				out = pdf.getName()+": Could not find methods.";
+				out += pdf.getName()+": Could not find methods.";
 			else if (methodStart == -2)
 				// or, it couldn't even find text.
-				out = pdf.getName()+": Document had unreadable text.";
+				out += pdf.getName()+": Document had unreadable text.";
 			System.out.println(out);
 			try {
 				fw.write(out+"\n");
