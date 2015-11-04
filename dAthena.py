@@ -457,21 +457,49 @@ class Athena:
 		np.save('results/'+'f1_run'+str(run_num),ary)
 		return self
 
+	# counts the number of words (that aren't stop words) in a body of text
+	def nonstop_word_count(self, text, dic):
+		words = text.split()
+		for w in words:
+			if w not in self.stopwords:
+				if w in dic:
+					dic[w] = dic.get(w, 0) + 1
+				else:
+					dic[w] = 1
+		return dic
+
+	# counts the number of words (that aren't stop words) across all articles
+	def write_nonstop_word_count_per_article(self):
+		for f in self.filenames:
+			dic = defaultdict(int)
+			dic = self.nonstop_word_count(self.text_corpus[f], dic)
+			df = pd.DataFrame(data = dic.items())
+			if not os.path.exists("./wordCount/"):
+				os.mkdir("./wordCount/")
+			df.to_csv("./wordCount/"+f+".csv", ',')
+		
+	# counts the number of words (that aren't stop words) across all articles
+	def total_nonstop_word_count(self):
+		dic = defaultdict(int)
+		for f in self.filenames:
+			dic = self.nonstop_word_count(self.text_corpus[f], dic)
+		return dic
+	
 	#Returns a list with the number of words in each abstract
-	def word_count(self):
+	def word_list(self):
 		word_list = []
 		for abs in self.label_df['Abstract Text']:
 			words = abs.split()
-			wordlist.append(len(words))
+			word_list.append(len(words))
 		return word_list
 
 	#Returns a list with the number unique words in each abstract
-	def unique_word_count(self):
+	def unique_word_list(self):
 		word_list = []
 		for abs in self.label_df['Abstract Text']:
 			words = abs.split()
 			words_set = set(words)
-			wordlist.append(len(words_set))
+			word_list.append(len(words_set))
 		return word_list
 
 	def do_confs(self,c_run):
@@ -612,7 +640,7 @@ if __name__ == "__main__":
 	run = 0
 	athena = Athena()
 	athena.read_text()
-	athena.read_stopwords()
+	athena.read_stopwords()	
 	athena.read_meta_data()
 	athena.combine_meta_data()	
 	athena.combine_data()
