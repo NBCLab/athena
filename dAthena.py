@@ -32,7 +32,7 @@ class Athena:
 		#Location the abstracts' plain-text are located
 
 		self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
-		#self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
+        #self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
 		#self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
 		#self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
 
@@ -606,10 +606,27 @@ class Athena:
 		f = open('results/best_params_'+str(run_num)+'.txt', 'w')
 		for item in range(0,6):
 			f.write(str(winning_vals[item]))
-			f.write(' ')
-
+			f.write(" ")
 		f.close()
 
+		return self
+
+	#Coeff vectors
+	def get_coeff_vectors(self):
+		for clf_i in range(0,5):
+			#n_labels = 
+			n_coef = self.pipeline[clf_i].steps[1][1].coef_.shape
+			coef_vect = self.pipeline[clf_i].steps[1][1].coef_
+			#intercept = self.pipeline[clf_i].steps[1][1].intercept_
+			feature_list = self.pipeline[clf_i].steps[0][1].get_feature_names()
+			np.savetxt("results/coef_vect_"+str(clf_i)+'.csv',coef_vect, delimiter = ',')
+			f = open('results/coef_names_'+str(clf_i)+'.txt', 'w')
+			for item in feature_list:
+				f.write(item)
+				f.write('\n')
+			f.close()
+
+			#np.savetxt("results/coef_list_"+str(clf_i)+'.csv',feature_list,delimiter=',')
 		return self
 
 #Replicating matt's results from 2013 (now with 100% more countvectorization)
@@ -650,6 +667,7 @@ if __name__ == "__main__":
 	athena.create_pipeline_abs()
 	athena.run_grid_search_abs()
 	athena.do_confs_abs(run)
+	athena.get_coeff_vectors()
 	#athena.get_f1s(run)
 
 	'''
