@@ -1,5 +1,5 @@
 // PDF Extract Methods
-// v0.34
+// v0.35
 // Jason Hays
 // This program uses Apache PDFBox 1.8.10 to extract the Methods section using regular expressions.
 //
@@ -242,7 +242,7 @@ public class ExtractMethods {
 		//  (section numbers are used sometimes)
 		//Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;]).*([mM]ethod(s)?|METHOD(S)?)[\r\n]+(?![a-z])");
 		// updated to have forms of "Experimental Procedure"
-		Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;])[^\r\n]*([mM]ethod(s)?|METHOD(S)?|[Mm]\\se\\st\\sh\\so\\sd(\\ss)?|M\\sE\\sT\\sH\\sO\\sD(\\sS)?|DATA|Experimental\\s[Pp]rocedure(s)?|METHOD(S)?\\sAND\\sMATERIALS|[Mm]ethod(s)?\\s[Aa]nd\\s[Mm]aterials|EXPERIMENTAL\\sPROCEDURE(S)?|Experimental\\s[Dd]esign)[\\s\r\n]+(?![a-z])");
+		Pattern methodsWord = Pattern.compile("[\r\n]+(?![a-zA-Z][\\.,\\?\\!\\;])[^\r\n]*([mM]ethod(s)?|METHOD(S)?|[Mm]\\se\\st\\sh\\so\\sd(\\ss)?|M\\sE\\sT\\sH\\sO\\sD(\\sS)?|DATA|Experimental\\s[Pp]rocedure(s)?|METHOD(S)?\\sAND\\sMATERIALS|[Mm]ethod(s)?\\s[Aa]nd\\s[Mm]aterials|EXPERIMENTAL\\sPROCEDURE(S)?|Experimental\\s[Dd]esign|TASK DESIGN)[\\s\r\n]+(?![a-z])");
 
 		// the matcher can extract instances of a regular expression from the text (named "text"),
 		// which was extracted from the pdf
