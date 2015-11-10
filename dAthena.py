@@ -613,7 +613,7 @@ class Athena:
 
 	#Coeff vectors
 	def get_coeff_vectors(self):
-		for clf_i in range(0,5):
+		for clf_i in range(0,6):
 			#n_labels = 
 			n_coef = self.pipeline[clf_i].steps[1][1].coef_.shape
 			coef_vect = self.pipeline[clf_i].steps[1][1].coef_
@@ -628,6 +628,10 @@ class Athena:
 
 			#np.savetxt("results/coef_list_"+str(clf_i)+'.csv',feature_list,delimiter=',')
 		return self
+
+	def get_246(self,lbl):
+		beg_index = athena.label_dimesion_beg[lbl]
+		end_index = athena.label_dimesion_end[lbl]
 
 #Replicating matt's results from 2013 (now with 100% more countvectorization)
 def run_2013_abstracts(alpha_param):
