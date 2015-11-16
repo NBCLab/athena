@@ -31,9 +31,9 @@ class Athena:
 		dataFolder = os.path.join(os.path.expanduser("~"), "dAthena/data/")
 		#Location the abstracts' plain-text are located
 
-		self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
         #self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
-		#self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
+		self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
 		#self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
 
 		#Location of stopword list
@@ -120,7 +120,7 @@ class Athena:
 			#The [:-8] gets rid of the last 8 chars of file name
 			#11467915_a_p.txt -> 11467915
 			#Abstracts ext_len = -8, methods ext_len = -4
-			ext_len = -8
+			ext_len = -4
 			#temp_corpus[os.path.basename(filename)[:-8]] = text
 			temp_corpus[os.path.basename(filename)[:ext_len]] = text
 
