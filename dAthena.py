@@ -30,9 +30,13 @@ class Athena:
 		'''-----	Text Variables   -----'''
 		dataFolder = os.path.join(os.path.expanduser("~"), "dAthena/data/")
 		#Location the abstracts' plain-text are located
-
+		
+		#self.corpus_directory = os.path.join(dataFolder, 'stemmed/abstracts/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, 'stemmed/methods/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, 'stemmed/combined/*.txt')
+		
 		#self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
-        #self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
+		#self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
 		self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
 		#self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
 
@@ -160,7 +164,7 @@ class Athena:
 		return df
 
 	#Merge experiments with multiple labels in one label dimension
-	def _merge_series(self, series):
+	def _merge_series(self, series,curr_column):
 		'''
 		Merge experiments with multiple labels in one label dimension
 		'''
@@ -172,8 +176,10 @@ class Athena:
 			for v in temp_val:
 				v = [s.strip() for s in v]
 				end_set.update(v)
+		
 		if 'None' in end_set:
 			end_set.remove('None')
+			end_set.add(curr_column+'_None')
 
 		return end_set
 
@@ -192,7 +198,7 @@ class Athena:
 			#Loop over all columns we want to keep
 			for curr_column in self.column_name:
 				#Save unique values for each column in each PMID into df
-				df.loc[current_pmid,curr_column] = self._merge_series(current_record[curr_column].unique())
+				df.loc[current_pmid,curr_column] = self._merge_series(current_record[curr_column].unique(),curr_column)
 		self.combined_meta_data = df
 		return self
 
@@ -235,10 +241,10 @@ class Athena:
 
 	def split_data_abs(self):
 		print('Partitioning Data...')
-		self.train_data = self.combined_df
-		self.test_data = self.combined_df
-		self.train_label = self.label_bin_df
-		self.test_label = self.label_bin_df
+		self.train_data = self.combined_df.copy()
+		self.test_data = self.combined_df.copy()
+		self.train_label = self.label_bin_df.copy()
+		self.test_label = self.label_bin_df.copy()
 		return self
 
 	#Here we set up the MLB as well as dictionarys corresponding to the binary matrix
@@ -544,7 +550,8 @@ class Athena:
 		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
 		print('Writing results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv')
 		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
-		
+		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_true.csv',subset_true, fmt='%d', delimiter=',')
+		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_pred.csv',subset_pred, fmt='%d', delimiter=',')
 		f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
 		for item in lbls:
 			f.write(item + '\n')
@@ -578,6 +585,8 @@ class Athena:
 			os.mkdir('results/heatmaps/')
 		#np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
 		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
+		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_true.csv',subset_true, fmt='%d', delimiter=',')
+		np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_pred.csv',subset_pred, fmt='%d', delimiter=',')
 		f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
 		for item in lbls:
 			f.write(item + '\n')
@@ -657,7 +666,7 @@ if __name__ == "__main__":
 
 	#run_2013_abstracts(0.1)
 
-
+	'''
 	run = 0
 	athena = Athena()
 	athena.read_text()
@@ -672,9 +681,10 @@ if __name__ == "__main__":
 	athena.run_grid_search_abs()
 	athena.do_confs_abs(run)
 	athena.get_coeff_vectors()
-	#athena.get_f1s(run)
-
+	##athena.get_f1s(run)
 	'''
+	
+
 	#Normal Run
 	for run in range(0,10):
 		print('Run '+str(run))
@@ -691,4 +701,6 @@ if __name__ == "__main__":
 		athena.get_f1s(run)
 		athena.do_confs(run)
 		athena.get_params(run)
-	'''
+
+	
+	

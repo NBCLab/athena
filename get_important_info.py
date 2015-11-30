@@ -1,3 +1,5 @@
+import pickle
+
 for i in range(0,6):
 	vocab = athena.pipeline[i].steps[0][1].vocabulary_
 	pickle.dump(vocab,open('results/vocab_'+str(i)+'.p','wb'))
