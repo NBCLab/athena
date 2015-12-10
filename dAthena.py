@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import scipy as sc
 import pandas as pd
+import pickle
 from collections import defaultdict
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -22,6 +23,7 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn import metrics
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import KFold
+from sklearn.externals import joblib
 
 #This class contains all the abstracts or test
 class Athena:
@@ -314,6 +316,8 @@ class Athena:
 		for i in range(len(self.pipeline)):
 			self.test = self.pipeline[i].fit(self.train_data['Abstract Text'], self.train_label)
 			self.test2 = self.pipeline[i].predict(self.test_data['Abstract Text'])
+			np.save('results/true_'+str(i)+'.npy',self.test)
+
 			if not os.path.exists('results/'):
 				os.mkdir('results')
 			np.save('results/conf_'+str(i)+'.npy',self.test2)
@@ -557,6 +561,7 @@ class Athena:
 			f.write(item + '\n')
 		f.close() 
 
+
 		return self
 
 	def conf(self,clf_name,label_dimension,c_run):
@@ -642,6 +647,9 @@ class Athena:
 		beg_index = athena.label_dimesion_beg[lbl]
 		end_index = athena.label_dimesion_end[lbl]
 
+	def pickle_pipeline(self,run):
+		pickle.dump(self.pipeline,open( 'results/'+run+'_pipeline'+".p", "wb" ) )
+
 #Replicating matt's results from 2013 (now with 100% more countvectorization)
 def run_2013_abstracts(alpha_param):
 	#2013 Test run
@@ -661,12 +669,15 @@ def run_2013_abstracts(alpha_param):
 		athena.get_2013_f1s(run)
 
 
+
+
 # Program main functions
 if __name__ == "__main__":
 
 	#run_2013_abstracts(0.1)
 
-	'''
+	#This if for the 100% test 100% training run
+	
 	run = 0
 	athena = Athena()
 	athena.read_text()
@@ -679,12 +690,25 @@ if __name__ == "__main__":
 	athena.split_data_abs()
 	athena.create_pipeline_abs()
 	athena.run_grid_search_abs()
-	athena.do_confs_abs(run)
-	athena.get_coeff_vectors()
-	##athena.get_f1s(run)
+	#athena.do_confs_abs(run)
+	#athena.get_coeff_vectors()
+	athena.pickle_pipeline('methods')
+
+	'''
+
+	for i in range(0,6):
+		vocab = athena.pipeline[i].steps[0][1].vocabulary_
+		pickle.dump(vocab,open('results/vocab_'+str(i)+'.p','wb'))
+	dim = athena.label_dimension_dict
+	dim_b = athena.dimension_beg
+	dim_e = athena.dimension_end
+	pickle.dump(dim  ,open('results/label_dimension_dict.p','wb'))
+	pickle.dump(dim_b,open('results/dim_beg.p','wb'))
+	pickle.dump(dim_e,open('results/dim_end.p','wb'))
 	'''
 	
-
+	
+	'''
 	#Normal Run
 	for run in range(0,10):
 		print('Run '+str(run))
@@ -701,6 +725,8 @@ if __name__ == "__main__":
 		athena.get_f1s(run)
 		athena.do_confs(run)
 		athena.get_params(run)
+	'''
+
 
 	
 	
