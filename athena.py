@@ -1,17 +1,12 @@
 import glob
-import string
 import os
-import sys
 import numpy as np
-import scipy as sc
 import pandas as pd
 import pickle
 from collections import defaultdict
 from sklearn import metrics
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import train_test_split
-from sklearn.datasets import make_multilabel_classification
-from sklearn.externals import joblib
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.grid_search import GridSearchCV
@@ -30,36 +25,48 @@ class Athena:
     """
     def __init__(self):
         '''-----    Text Variables   -----'''
-        dataFolder = os.path.join(os.path.expanduser("~"), "dAthena/data/")
-        #Location the abstracts' plain-text are located
         
-        #self.corpus_directory = os.path.join(dataFolder, 'stemmed/abstracts/*.txt')
-        #self.corpus_directory = os.path.join(dataFolder, 'stemmed/methods/*.txt')
-        #self.corpus_directory = os.path.join(dataFolder, 'stemmed/combined/*.txt')
+        data_folder = os.path.join(os.path.expanduser("~"), "dAthena/data/")
         
-        #self.corpus_directory = os.path.join(dataFolder, 'abstracts/*.txt')
-        #self.corpus_directory = os.path.join(dataFolder, 'methods/*.txt')
-        self.corpus_directory = os.path.join(dataFolder, 'combined/*.txt')
-        #self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
+        # Location of abstracts' plain-text
+        #self.corpus_directory = os.path.join(data_folder, 'stemmed/abstracts/*.txt')
+        #self.corpus_directory = os.path.join(data_folder, 'stemmed/methods/*.txt')
+        #self.corpus_directory = os.path.join(data_folder, 'stemmed/combined/*.txt')
+        
+        #self.corpus_directory = os.path.join(data_folder, 'abstracts/*.txt')
+        #self.corpus_directory = os.path.join(data_folder, 'methods/*.txt')
+        self.corpus_directory = os.path.join(data_folder, 'combined/*.txt')
+        #self.corpus_directory = os.path.join(data_folder, '2013_abstracts/*.txt')
 
-        #Location of stopword list
-        self.stopword_file = os.path.join(dataFolder,'misc_data/onix_stopwords.txt')
-        #Total # of abstracts/methods loaded
+        # Location of stopword list
+        self.stopword_file = os.path.join(data_folder,'misc_data/onix_stopwords.txt')
+        
+        # Total # of abstracts/methods loaded
         self.text_files_loaded = 0
-        #Names of all loaded files
+        
+        # Names of all loaded files
         self.filenames = None
-        #Holds all of the plain text
+        
+        # Holds all of the plain text
         self.text_corpus = None
 
-        '''-----    Meta-data Variables   -----'''
-        #Location of meta_data
-        self.meta_data_directory = os.path.join(dataFolder, 'meta_data/*.csv')
+        '''-----    Metadata Variables   -----'''
+        # Location of metadata
+        self.meta_data_directory = os.path.join(data_folder, 'meta_data/*.csv')
         self.meta_data = None
-        #Column names we want to keep
+        
+        # Column names we want to keep
+        # These variables need more informative names
         self.index_name = ['Year', 'First Author', 'Journal', 'PubMed ID']
-        self.column_name = ['Diagnosis','Stimulus Modality','Response Modality','Response Type','Stimulus Type', 'Instructions', 'Behavioral Domain', 'Paradigm Class']
-        self.column_name2 = ['all','Diagnosis','Stimulus Modality','Response Modality','Response Type','Stimulus Type', 'Instructions', 'Behavioral Domain', 'Paradigm Class']
-        self.kept_columns = ['PubMed ID','Diagnosis','Stimulus Modality','Response Modality','Response Type','Stimulus Type', 'Instructions', 'Behavioral Domain', 'Paradigm Class']
+        self.column_name = ['Diagnosis', 'Stimulus Modality', 'Response Modality',
+                            'Response Type', 'Stimulus Type', 'Instructions',
+                            'Behavioral Domain', 'Paradigm Class']
+        self.column_name2 = ['all', 'Diagnosis', 'Stimulus Modality',
+                             'Response Modality', 'Response Type', 'Stimulus Type',
+                             'Instructions', 'Behavioral Domain', 'Paradigm Class']
+        self.kept_columns = ['PubMed ID', 'Diagnosis', 'Stimulus Modality',
+                             'Response Modality', 'Response Type', 'Stimulus Type',
+                             'Instructions', 'Behavioral Domain', 'Paradigm Class']
 
         '''------ Combined Data ------ '''
         self.combined_meta_data = None
@@ -90,7 +97,7 @@ class Athena:
 
         self.grid_searches = None
 
-        #Label dim stuff
+        # Label dim stuff
         self.n_feature = None
         self.dimension_end = None
         self.dimension_beg = None
@@ -104,60 +111,76 @@ class Athena:
         self.test_pred = None
         self.test_f1 = None
 
-    #Read in stopwords from file
+
     def read_stopwords(self):
+        """
+        Reads in stopwords from file.
+        """
         print ('Reading stopwords...')
         with open(self.stopword_file) as f:
             self.stopwords = f.read().split()
         return self
 
-    #read_text(self) : Load in text
-    # Corpus can be accessed with corpus.text_corpus['dictkey']
-    # dictkeys are the filenames minus the extension
-    # e.g. corpus.text_corpus['11467915'] will give you text from 11468915_a_p.txt
+
     def read_text(self):
+        """
+        Loads in text.
+        Corpus can be accessed with corpus.text_corpus['dictkey']
+        dictkeys are the filenames minus the extension
+        e.g. corpus.text_corpus['11467915'] will give you text from 11468915_a_p.txt
+        """
         print('Reading text data...')
         temp_corpus = dict()
         for filename in sorted(glob.glob(self.corpus_directory)):
-            #Read in text from file
-            f = open(filename)
-            text = f.read()
-            f.close()
-            #The [:-8] gets rid of the last 8 chars of file name
-            #11467915_a_p.txt -> 11467915
-            #Abstracts ext_len = -8, methods ext_len = -4
+            # Read in text from file
+            with open(filename) as f:
+                text = f.read()
+
+            # The [:-8] gets rid of the last 8 chars of file name
+            # 11467915_a_p.txt -> 11467915
+            # Abstracts ext_len = -8, methods ext_len = -4
             ext_len = -4
-            #temp_corpus[os.path.basename(filename)[:-8]] = text
             temp_corpus[os.path.basename(filename)[:ext_len]] = text
 
-
-        #filenames now contains all the dictionary kegs (filenames)
-        self.filenames = sorted(temp_corpus);
-        #text_corpus contains all the plaintext keyed with filenames
+        # filenames now contains all the dictionary kegs (filenames)
+        self.filenames = sorted(temp_corpus)
+        
+        # text_corpus contains all the plaintext keyed with filenames
         self.text_corpus = temp_corpus
-        #update number of files
+        
+        # update number of files
         self.text_files_loaded = len(self.filenames)
-        print('Files loaded: '+str(self.text_files_loaded))
+        
+        print('Files loaded: {0}'.format(self.text_files_loaded))
         return self
 
-    #Loads in all meta-data from .csv files (pain.csv, face.csv, etc)
+
     def read_meta_data(self):
-        print('Reading meta-data...')
-        #Read in all of the meta data files
+        """
+        Loads in all metadata from .csv files (pain.csv, face.csv, etc)
+        """
+        print('Reading metadata...')
+        
+        # Read in all of the meta data files
         df = [pd.read_csv(i, dtype = np.str) for i in sorted(glob.glob(self.meta_data_directory))]
-        #Now we have to join all the seperate tables stored in df
+        
+        # Now we have to join all the seperate tables stored in df
         df = pd.concat(df, ignore_index = True)
-        #Keep useful labels we want
+        
+        # Keep useful labels we want
         df = df.loc[:,self.index_name + self.column_name]
-        #Drop duplicates
+        
+        # Drop duplicates
         df = df.drop_duplicates()
-        #Drop rows with null PMIDs
+        
+        # Drop rows with null PMIDs
         df = df[(df['PubMed ID']!='null')]
 
-        #Drop rows who are missing columns
+        # Drop rows who are missing columns
         df = df.dropna()
         df['PubMed ID'] = df['PubMed ID'].apply(int)
-        #Sort the table
+        
+        # Sort the table
         df = df.sort_values(by=['PubMed ID', 'Year', 'First Author', 'Journal'])
         df['PubMed ID'] = df['PubMed ID'].apply(str)
         #print df['PubMed ID']
@@ -165,11 +188,11 @@ class Athena:
         self.meta_data = df
         return df
 
-    #Merge experiments with multiple labels in one label dimension
-    def _merge_series(self, series,curr_column):
-        '''
-        Merge experiments with multiple labels in one label dimension
-        '''
+
+    def _merge_series(self, series, curr_column):
+        """
+        Merges experiments with multiple labels in one label dimension.
+        """
         label_zip =  zip(series)
         end_set = set()
 
@@ -185,40 +208,54 @@ class Athena:
 
         return end_set
 
-    #A lot of the meta data has multiple rows for one PMID so let's merge them
-    def combine_meta_data(self):
-        print('Combining meta-data...')
-        #New dataframe with the index being PMIDs
-        df = pd.DataFrame(index=self.meta_data['PubMed ID'].unique(), columns=self.column_name, dtype='string')
 
-        #Loop over rows
+    def combine_meta_data(self):
+        """
+        A lot of the metadata has multiple rows for one PMID so let's merge
+        them.
+        """
+        print('Combining metadata...')
+        
+        # New dataframe with the index being PMIDs
+        df = pd.DataFrame(index=self.meta_data['PubMed ID'].unique(),
+                          columns=self.column_name, dtype='string')
+
+        # Loop over rows
         for row_index, current_row in self.meta_data.iterrows():
-            #Grab current PMID
+            # Grab current PMID
             current_pmid = current_row['PubMed ID']
-            #Grab all rows which match this PMID (multiple rows are from same paper)
+            
+            # Grab all rows which match this PMID (multiple rows are from same paper)
             current_record = self.meta_data[self.meta_data['PubMed ID']==current_pmid]
-            #Loop over all columns we want to keep
+            
+            # Loop over all columns we want to keep
             for curr_column in self.column_name:
-                #Save unique values for each column in each PMID into df
-                df.loc[current_pmid,curr_column] = self._merge_series(current_record[curr_column].unique(),curr_column)
+                # Save unique values for each column in each PMID into df
+                df.loc[current_pmid, curr_column] = self._merge_series(current_record[curr_column].unique(),
+                                                                       curr_column)
         self.combined_meta_data = df
         return self
 
-    #Combines the meta-data + abstracts into one table
-    def combine_data(self):
-        print('Combining abstracts + meta_data...')
-        #Meta data table basis for our new combined data array
-        self.combined_df = self.combined_meta_data
-        #Add an abstract text column
-        self.combined_df['Abstract Text']=''
 
-        for row_index,current_row in self.combined_meta_data.iterrows():
+    def combine_data(self):
+        """
+        Combines the metadata + abstracts into one table.
+        """
+        print('Combining abstracts + metadata...')
+        
+        # Metadata table basis for our new combined data array
+        self.combined_df = self.combined_meta_data
+        
+        # Add an abstract text column
+        self.combined_df['Abstract Text'] = ''
+
+        for row_index, current_row in self.combined_meta_data.iterrows():
             try:
                 current_pmid = row_index
                 current_abs = self.text_corpus[current_pmid]
-                self.combined_df.loc[current_pmid,'Abstract Text'] = current_abs
+                self.combined_df.loc[current_pmid, 'Abstract Text'] = current_abs
             except Exception as e:
-                #Throws key error if we didn't find the abstract text, so drop the column from the table
+                # Throws key error if we didn't find the abstract text, so drop the column from the table
                 #print e
                 self.combined_df = self.combined_df.drop(row_index)
                 pass
@@ -226,8 +263,10 @@ class Athena:
         return self
 
 
-    #Grab all unique labels for a paradigm class!
-    def get_unique_labels(self,paradigm_label):
+    def get_unique_labels(self, paradigm_label):
+        """
+        Grab all unique labels for a paradigm class!
+        """
         paradigm_list = []
         for i in self.combined_df[paradigm_label]:
             for c_set in i:
@@ -235,13 +274,22 @@ class Athena:
         paradigm_set = set(paradigm_list)
         return paradigm_set
 
-    #Splits the data into two partitions!
-    def split_data(self, partition_size = 0.30):
+
+    def split_data(self, partition_size=0.30):
+        """
+        Splits the data into two partitions (training and testing data).
+        """
         print('Partitioning Data...')
-        self.train_data, self.test_data, self.train_label, self.test_label = train_test_split(self.combined_df,self.label_bin_df,test_size=partition_size)
+        self.train_data, self.test_data, self.train_label, self.test_label = train_test_split(self.combined_df,
+                                                                                              self.label_bin_df,
+                                                                                              test_size=partition_size)
         return self
 
+
     def split_data_abs(self):
+        """
+        Splits the data into two partitions (training and testing data).
+        """
         print('Partitioning Data...')
         self.train_data = self.combined_df.copy()
         self.test_data = self.combined_df.copy()
@@ -249,21 +297,17 @@ class Athena:
         self.test_label = self.label_bin_df.copy()
         return self
 
-    #Here we set up the MLB as well as dictionarys corresponding to the binary matrix
+
     def binarize(self):
+        """
+        Sets up the MLB as well as dictionarys corresponding to the binary
+        matrix.
+        """
         self.label_text_dict = defaultdict(list)
 
         for index, current_row in self.combined_df.iterrows():
             for current_column_name in self.column_name:
                 self.label_text_dict[current_column_name].append(current_row[current_column_name])
-
-        ''' This is stupid, i am stupid
-        #Generates a dictionary list for all possible labels in each column
-        self.label_text_dict = defaultdict(list)
-        for lbl in self.column_name:
-            for set_val in self.get_unique_labels(lbl):
-                self.label_text_dict[lbl].append(set_val)
-        '''
 
         self.label_bin_dict = {key:MultiLabelBinarizer().fit_transform(label_list) for key, label_list in self.label_text_dict.items()}
         self.label_bin_df =  pd.DataFrame(np.concatenate([self.label_bin_dict[k] for k in self.column_name],1))
@@ -273,12 +317,12 @@ class Athena:
         label_mlb_dict = {key:MultiLabelBinarizer().fit(label_list) for key, label_list in self.label_text_dict.items()}
         label_mlb = MultiLabelBinarizer()
         label_mlb.classes_ = np.concatenate([label_mlb_dict[key].classes_ for key in self.column_name])
-        #self.label_mlb = label_mlb
+        # self.label_mlb = label_mlb
         
         label_dimension_dict = {key:set(label_mlb_dict[key].classes_) for key in self.column_name}
         self.label_dimension_dict = label_dimension_dict
         
-        #Conver to array!
+        # Convert to array!
         self.label_bin_df= self.label_bin_df.values
 
         #d = {'label_bin_dict': self.combined_df[0]}
@@ -286,52 +330,57 @@ class Athena:
         #df2.to_csv("results/test7.csv",',')
         #self.label_bin_df.to_csv("results/test7.csv",',')
         #np.savetxt('results/test.csv',self.label_bin_df,fmt='%d',delimiter=',')
-
         return self
+
+
     def create_pipeline_abs(self):
-        self.clf_names = ['MNB','BNB','LRL1','LRL2','SVCL1','SVCL2']
+        """
+        """
+        self.clf_names = ['MNB', 'BNB', 'LRL1', 'LRL2', 'SVCL1', 'SVCL2']
         clfs = [
             MultinomialNB(alpha=0.01),
             BernoulliNB(alpha=0.01),
-            LogisticRegression(C=100,penalty = 'l1', class_weight='auto'),
-            LogisticRegression(C=10,penalty = 'l2', class_weight='auto'), 
-            LinearSVC(C=10,penalty = 'l1', class_weight='auto', dual=False),
-            LinearSVC(C=1,penalty = 'l2', class_weight='auto', dual=False)]
+            LogisticRegression(C=100, penalty = 'l1', class_weight='auto'),
+            LogisticRegression(C=10, penalty = 'l2', class_weight='auto'), 
+            LinearSVC(C=10, penalty = 'l1', class_weight='auto', dual=False),
+            LinearSVC(C=1, penalty = 'l2', class_weight='auto', dual=False)]
 
         ovr_clfs = [OneVsRestClassifier(clf) for clf in clfs]
         self.pipeline = [Pipeline([
-                        ('vect',TfidfVectorizer(min_df = 3, stop_words = self.stopwords, sublinear_tf = True)),
-                        ('ovr',clf)]) for clf in ovr_clfs]
+                        ('vect', TfidfVectorizer(min_df=3, stop_words=self.stopwords, sublinear_tf=True)),
+                        ('ovr', clf)]) for clf in ovr_clfs]
 
-
-        #So we can pick label dims!
+        # So we can pick label dims!
         self.n_feature = [len(self.label_dimension_dict[col]) for col in self.column_name]
         self.dimension_end = dict(zip(self.column_name, np.cumsum(self.n_feature)))
         self.dimension_beg = {col:self.dimension_end[col]-len(self.label_dimension_dict[col]) for col in self.column_name}
         return self
 
     def run_grid_search_abs(self):
-        label_pred = dict()
-        f1_score = dict()
+        """
+        """
         for i in range(len(self.pipeline)):
             self.test = self.pipeline[i].fit(self.train_data['Abstract Text'], self.train_label)
             self.test2 = self.pipeline[i].predict(self.test_data['Abstract Text'])
-            np.save('results/true_'+str(i)+'.npy',self.test)
+            np.save('results/true_{0}.npy'.format(i), self.test)
 
             if not os.path.exists('results/'):
                 os.mkdir('results')
-            np.save('results/conf_'+str(i)+'.npy',self.test2)
+            np.save('results/conf_{0}.npy'.format(i), self.test2)
         return self
 
-    '''++++++++++++++++++++++++++++++++++++++++++++++'''
+
+    '''++++++++++++++++++++++++++++++++++++++++++++++'''  # Well this is informative...
     def create_2013_pipeline(self, alpha_param):
+        """
+        """
         self.clf_names = ['BNB']
         clfs = [ BernoulliNB(alpha=alpha_param) ]
-        #LinearSVC(penalty = 'l2', class_weight='auto', dual=False, C=1.0)]
+        # LinearSVC(penalty = 'l2', class_weight='auto', dual=False, C=1.0)]
 
         ovr_clfs = [OneVsRestClassifier(clf) for clf in clfs]
 
-        #'vect',TfidfVectorizer(min_df = 3, stop_words = self.stopwords, sublinear_tf = True))
+        # 'vect', TfidfVectorizer(min_df=3, stop_words=self.stopwords, sublinear_tf=True))
         self.pipeline = [Pipeline([
                         ('vect',CountVectorizer(binary=True)),
                         ('ovr',clf)]) for clf in ovr_clfs]
@@ -342,73 +391,68 @@ class Athena:
 
         self.pipeline[0].fit(self.train_data['Abstract Text'], self.train_label)
         self.test_pred = self.pipeline[0].predict(self.test_data['Abstract Text'])
-        #self.test_f1 = metrics.f1_score(self.test_label,self.test_pred, average='micro')
+        # self.test_f1 = metrics.f1_score(self.test_label, self.test_pred, average='micro')
         return self.test_f1
 
 
-    #All processing will be done with pipelines to make things easier
     def create_pipeline(self):
+        """
+        All processing will be done with pipelines to make things easier.
+        """
         print('Creating pipeline...')
 
-        #Classifier names, arbitrary
-        self.clf_names = ['MNB','BNB','LRL1','LRL2','SVCL1','SVCL2']
-        #Classifiers used in the experiment
+        # Classifier names, arbitrary
+        self.clf_names = ['MNB', 'BNB', 'LRL1', 'LRL2', 'SVCL1', 'SVCL2']
+        
+        # Classifiers used in the experiment
         clfs = [
             MultinomialNB(),
             BernoulliNB(),
-            LogisticRegression(penalty = 'l1', class_weight='auto'),
-            LogisticRegression(penalty = 'l2', class_weight='auto'), 
-            LinearSVC(penalty = 'l1', class_weight='auto', dual=False),
-            LinearSVC(penalty = 'l2', class_weight='auto', dual=False)]
+            LogisticRegression(penalty='l1', class_weight='auto'),
+            LogisticRegression(penalty='l2', class_weight='auto'), 
+            LinearSVC(penalty='l1', class_weight='auto', dual=False),
+            LinearSVC(penalty='l2', class_weight='auto', dual=False)]
 
-        #Generates one vs rest classifiers for each classifier
+        # Generates one vs rest classifiers for each classifier
         ovr_clfs = [OneVsRestClassifier(clf) for clf in clfs]
 
-        #Create pipeline consisting of the vectorizer and one vs rest classifiers
+        # Create pipeline consisting of the vectorizer and one vs rest classifiers
         self.pipeline = [Pipeline([
-                        ('vect',TfidfVectorizer(min_df = 3, stop_words = self.stopwords, sublinear_tf = True)),
-                        ('ovr',clf)]) for clf in ovr_clfs]
+                            ('vect', TfidfVectorizer(min_df=3, stop_words=self.stopwords, sublinear_tf=True)),
+                            ('ovr', clf)]) for clf in ovr_clfs]
         
-        #Parameters to grid search over. Look at the individual classifiers for details
+        # Parameters to grid search over. Look at the individual classifiers for details
         pipelines_parameters = [
-            {'ovr__estimator__alpha':[0.01, 0.1, 1, 10]},
-            {'ovr__estimator__alpha':[0.01, 0.1, 1, 10]}, 
-            {'ovr__estimator__C':[0.1, 1, 10, 100]},
-            {'ovr__estimator__C':[0.01, 0.1, 1, 10]},
-            {'ovr__estimator__C':[0.01, 0.1, 1, 10]},
-            {'ovr__estimator__C':[0.01, 0.1, 1, 10]}]
+            {'ovr__estimator__alpha': [0.01, 0.1, 1, 10]},
+            {'ovr__estimator__alpha': [0.01, 0.1, 1, 10]}, 
+            {'ovr__estimator__C': [0.1, 1, 10, 100]},
+            {'ovr__estimator__C': [0.01, 0.1, 1, 10]},
+            {'ovr__estimator__C': [0.01, 0.1, 1, 10]},
+            {'ovr__estimator__C': [0.01, 0.1, 1, 10]}]
 
-        #Pass above list of params to the pipeline
+        # Pass above list of params to the pipeline
         self.pipelines_parameters = dict(zip(self.clf_names, pipelines_parameters))
 
-        #define grid searches and 10-Fold validation for the pipeline
+        # Define grid searches and 10-Fold validation for the pipeline
         self.grid_searches = [
-            {'grid_search': GridSearchCV(pl, param_grid = pp, 
-            cv = KFold(len(self.train_data['Abstract Text']), n_folds = 10, shuffle=True), scoring = 'f1_micro', n_jobs = -1, verbose = 1)} 
+            {'grid_search': GridSearchCV(pl, param_grid=pp, 
+                                         cv=KFold(len(self.train_data['Abstract Text']), n_folds=10,
+                                                  shuffle=True), scoring='f1_micro', n_jobs=-1, verbose=1)} 
             for pl, pp in zip(self.pipeline, pipelines_parameters)
             ]
 
-        #Variable to hold our clf names and grid search stuff
+        # Variable to hold our clf names and grid search stuff
         self.estimators = dict(zip(self.clf_names, self.grid_searches))
 
-        #So we can pick label dims!
+        # So we can pick label dims!
         self.n_feature = [len(self.label_dimension_dict[col]) for col in self.column_name]
         self.dimension_end = dict(zip(self.column_name, np.cumsum(self.n_feature)))
         self.dimension_beg = {col:self.dimension_end[col]-len(self.label_dimension_dict[col]) for col in self.column_name}
 
-        
-    ''' TODO: Remove this
-    def train_clfs(self):
-        for clf in self.pipeline:
-            clf.fit(self.train_data['Abstract Text'],self.train_label)
-        return self
-
-    def predict_clfs(self):
-        self.results = self.pipeline[1].predict(self.test_data['Abstract Text'])
-        return self
-    '''
 
     def compute_2013_f1(self,label_dimension='all'):
+        """
+        """
         if label_dimension == 'all':
             return metrics.f1_score(self.test_label,self.test_pred, average='micro')
         else:
@@ -418,6 +462,8 @@ class Athena:
                 self.test_pred[:, label_index_beg:label_index_end],average='micro')
 
     def get_2013_f1s(self,run_num):
+        """
+        """
         ary = np.empty([1,len(self.column_name2)])
         y=0
         for lbl in self.column_name2:
@@ -427,34 +473,35 @@ class Athena:
         np.save('results/'+'f1_run'+str(run_num),ary)
 
 
-    #TODO: Refactor this into one function...
-    def compute_f1(self, clf_name, label_dimension = 'all'):
+    def compute_f1(self, clf_name, label_dimension='all'):
         label_pred = self.estimators[clf_name]['label_pred']
-        return self._compute_f1(label_pred, label_dimension)
-
-    def _compute_f1(self, label_pred, label_dimension = 'all'):
-        if label_dimension == 'all':
+        
+        if label_dimension=='all':
             return metrics.f1_score(self.test_label, label_pred, average='micro')
         else:
-            #Here we grab only the specific label dimension
-            #This can be done because we generated those index-s
+            # Here we grab only the specific label dimension
+            # This can be done because we generated those indices
             label_index_end = self.dimension_end[label_dimension]
             label_index_beg = self.dimension_beg[label_dimension]
             return metrics.f1_score(self.test_label[:, label_index_beg:label_index_end], 
                 label_pred[:, label_index_beg:label_index_end],average='micro')
+        
 
-    #Grid search over params to get best ones.
     def run_grid_search(self):
-        label_pred = dict()
-        f1_score = dict()
+        """
+        Grid search over params to get best ones.
+        """
         for clf_name, clf in self.estimators.items():
             #print ("*** Grid Search " + clf_name + " ****")
             clf['grid_search'].fit(self.train_data['Abstract Text'], self.train_label)
             clf['label_pred'] = clf['grid_search'].predict(self.test_data['Abstract Text'])
         return self
 
-    #Generates F1 scores and saves them
+
     def get_f1s(self,run_num):
+        """
+        Generates F1 scores and saves them.
+        """
         ary = np.empty([6,len(self.column_name2)])
         x = 0
         for clf in self.clf_names:
@@ -467,44 +514,59 @@ class Athena:
         np.save('results/'+'f1_run'+str(run_num),ary)
         return self
 
-    # counts the number of words (that aren't stop words) in a body of text
+
     def nonstop_word_count(self, text, dic):
+        """
+        Counts the number of words (that aren't stop words) in a body of text.
+        """
         words = text.split()
-        for w in words:
-            if w not in self.stopwords:
-                if w in dic:
-                    dic[w] = dic.get(w, 0) + 1
+        for word in words:
+            if word not in self.stopwords:
+                if word in dic:
+                    dic[word] = dic.get(word, 0) + 1
                 else:
-                    dic[w] = 1
+                    dic[word] = 1
         return dic
 
-    # counts the number of words (that aren't stop words) across all articles
+
     def write_nonstop_word_count_per_article(self):
+        """
+        Counts the number of words (that aren't stop words) across all articles.
+        """
         for f in self.filenames:
             dic = defaultdict(int)
             dic = self.nonstop_word_count(self.text_corpus[f], dic)
             df = pd.DataFrame(data = dic.items())
             if not os.path.exists("./wordCount/"):
                 os.mkdir("./wordCount/")
-            df.to_csv("./wordCount/"+f+".csv", ',')
+            df.to_csv("./wordCount/{0}.csv".format(f), ',')
         
-    # counts the number of words (that aren't stop words) across all articles
+
     def total_nonstop_word_count(self):
+        """
+        Counts the number of words (that aren't stop words) across all articles.
+        """
         dic = defaultdict(int)
         for f in self.filenames:
             dic = self.nonstop_word_count(self.text_corpus[f], dic)
         return dic
-    
-    #Returns a list with the number of words in each abstract
+
+
     def word_list(self):
+        """
+        Returns a list with the number of words in each abstract.
+        """
         word_list = []
         for abs in self.label_df['Abstract Text']:
             words = abs.split()
             word_list.append(len(words))
         return word_list
 
-    #Returns a list with the number unique words in each abstract
+
     def unique_word_list(self):
+        """
+        Returns a list with the number unique words in each abstract.
+        """
         word_list = []
         for abs in self.label_df['Abstract Text']:
             words = abs.split()
@@ -512,59 +574,73 @@ class Athena:
             word_list.append(len(words_set))
         return word_list
 
-    def do_confs(self,c_run):
+
+    def do_confs(self, c_run):
+        """
+        """
         for clf in self.clf_names:
             for lbl_dim in self.column_name:
                 self.conf(clf,lbl_dim,c_run)
         return self
 
-    def do_confs_abs(self,c_run):
+
+    def do_confs_abs(self, c_run):
+        """
+        """
         for clf in self.clf_names:
             for lbl_dim in self.column_name:
                 self.abs_conf(clf,lbl_dim,c_run)
         return self
 
-    def abs_conf(self,clf_name,label_dimension,c_run):
+
+    def abs_conf(self, clf_name, label_dimension, c_run):
+        """
+        """
         label_pred = self.test2
         label_index_end = self.dimension_end[label_dimension]
         label_index_beg = self.dimension_beg[label_dimension]
         subset_true = self.test_label[:, label_index_beg:label_index_end]
-        # make sure shape is the same
+        
+        # Make sure shape is the same
         if "Paradigm" in label_dimension:
             print(subset_true.shape)
         subset_pred = label_pred[:, label_index_beg:label_index_end]
         conf_array = np.empty(shape=subset_true.shape)
-        for (x,y), value in np.ndenumerate(subset_true):
+        for (x, y), value in np.ndenumerate(subset_true):
             # true negative
-            if subset_true[x,y] == 0 and subset_pred[x,y] == 0:
-                conf_array[x,y] = 1
+            if subset_true[x, y]==0 and subset_pred[x, y]==0:
+                conf_array[x, y] = 1
             # false positive
-            elif subset_true[x,y] == 0 and subset_pred[x,y] == 1:
-                conf_array[x,y] = 2
+            elif subset_true[x, y]==0 and subset_pred[x, y]==1:
+                conf_array[x, y] = 2
             # false negative
-            elif subset_true[x,y] == 1 and subset_pred[x,y] == 0:
-                conf_array[x,y] = 3
+            elif subset_true[x, y]==1 and subset_pred[x, y]==0:
+                conf_array[x, y] = 3
             # true positive
-            elif subset_true[x,y] == 1 and subset_pred[x,y] == 1:
-                conf_array[x,y] = 4
+            elif subset_true[x, y]==1 and subset_pred[x, y]==1:
+                conf_array[x, y] = 4
 
         lbls = sorted(list(self.label_dimension_dict[label_dimension]))
         if not os.path.exists('results/heatmaps/'):
             os.mkdir('results/heatmaps/')
+
         #np.save('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array)
-        print('Writing results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv')
-        np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'.csv',conf_array, fmt='%d', delimiter=',')
-        np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_true.csv',subset_true, fmt='%d', delimiter=',')
-        np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_pred.csv',subset_pred, fmt='%d', delimiter=',')
-        f = open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w')
-        for item in lbls:
-            f.write(item + '\n')
-        f.close() 
-
-
+        print('Writing results/heatmaps/{0}_{1}_{2}.csv'.format(clf_name, label_dimension, str(c_run)))
+        np.savetxt('results/heatmaps/{0}_{1}_{2}.csv'.format(clf_name, label_dimension, str(c_run)),
+                   conf_array, fmt='%d', delimiter=',')
+        np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_true.csv',
+                   subset_true, fmt='%d', delimiter=',')
+        np.savetxt('results/heatmaps/'+clf_name+'_'+label_dimension+'_'+str(c_run)+'_pred.csv',
+                   subset_pred, fmt='%d', delimiter=',')
+        with open('results/heatmaps/'+clf_name+'_'+label_dimension+'_label_'+str(c_run)+'.txt', 'w') as fo:
+            for item in lbls:
+                fo.write(item + '\n')
         return self
 
-    def conf(self,clf_name,label_dimension,c_run):
+
+    def conf(self, clf_name, label_dimension, c_run):
+        """
+        """
         label_pred = self.estimators[clf_name]['label_pred']
         label_index_end = self.dimension_end[label_dimension]
         label_index_beg = self.dimension_beg[label_dimension]
@@ -597,7 +673,10 @@ class Athena:
             f.write(item + '\n')
         f.close() 
 
+
     def get_params(self,run_num):
+        """
+        """
         p_alpha = 'ovr__estimator__alpha'
         p_c = 'ovr__estimator__C'
         winning_params = []
@@ -611,25 +690,26 @@ class Athena:
             winning_vals.append(param_val)
 
         #These clfs has c param
-        for clf in ['LRL1','LRL2','SVCL1','SVCL2']:
+        for clf in ['LRL1', 'LRL2', 'SVCL1', 'SVCL2']:
             best_param = self.estimators[clf]['grid_search'].best_params_
             param_val = best_param.get(p_c)
             winning_params.append(p_c)
             winning_vals.append(param_val)
 
         f = open('results/best_params_'+str(run_num)+'.txt', 'w')
-        for item in range(0,6):
+        for item in range(0, 6):
             f.write(str(winning_vals[item]))
             f.write(" ")
         f.close()
 
         return self
 
-    #Coeff vectors
+
     def get_coeff_vectors(self):
-        for clf_i in range(0,6):
-            #n_labels = 
-            n_coef = self.pipeline[clf_i].steps[1][1].coef_.shape
+        """
+        Coeff vectors
+        """
+        for clf_i in range(0, 6):
             coef_vect = self.pipeline[clf_i].steps[1][1].coef_
             #intercept = self.pipeline[clf_i].steps[1][1].intercept_
             feature_list = self.pipeline[clf_i].steps[0][1].get_feature_names()
@@ -643,19 +723,30 @@ class Athena:
             #np.savetxt("results/coef_list_"+str(clf_i)+'.csv',feature_list,delimiter=',')
         return self
 
-    def get_246(self,lbl):
+
+    def get_246(self, lbl):
+        """
+        """
         beg_index = athena.label_dimesion_beg[lbl]
         end_index = athena.label_dimesion_end[lbl]
+        print beg_index
+        print end_index
 
-    def pickle_pipeline(self,run):
-        pickle.dump(self.pipeline,open( 'results/'+run+'_pipeline'+".p", "wb" ) )
+
+    def pickle_pipeline(self, run):
+        """
+        """
+        with open('results/{0}_pipeline.p'.format(run), "wb" ) as fo:
+            pickle.dump(self.pipeline, fo)
 
 
-#Replicating matt's results from 2013 (now with 100% more countvectorization)
 def run_2013_abstracts(alpha_param):
-    #2013 Test run
-    for run in range(0,10):
-        #All same preprocessing/data stuff as normal run
+    """
+    Replicating Matt's results from 2013 (now with 100% more countvectorization)
+    """
+    # 2013 Test run
+    for run in range(0, 10):
+        # All same preprocessing/data stuff as normal run
         athena = Athena()
         athena.read_text()
         athena.read_stopwords()
@@ -664,21 +755,18 @@ def run_2013_abstracts(alpha_param):
         athena.combine_data()
         athena.binarize()
         athena.split_data()
-        #Now we use a seperate pipeline with BNB, word count vect instead of tfidf
+        
+        # Now we use a seperate pipeline with BNB, word count vect instead of tfidf
         athena.create_2013_pipeline(alpha_param)
-        #Also seperate way to get f1s obviously
+        
+        # Also separate way to get f1s obviously
         athena.get_2013_f1s(run)
-
-
 
 
 # Program main functions
 if __name__ == "__main__":
-
     #run_2013_abstracts(0.1)
-
     #This if for the 100% test 100% training run
-    
     run = 0
     athena = Athena()
     athena.read_text()
@@ -686,7 +774,6 @@ if __name__ == "__main__":
     athena.read_meta_data()
     athena.combine_meta_data()    
     athena.combine_data()
-
     athena.binarize()
     athena.split_data_abs()
     athena.create_pipeline_abs()
@@ -696,7 +783,6 @@ if __name__ == "__main__":
     athena.pickle_pipeline('methods')
 
     '''
-
     for i in range(0,6):
         vocab = athena.pipeline[i].steps[0][1].vocabulary_
         pickle.dump(vocab,open('results/vocab_'+str(i)+'.p','wb'))
@@ -707,8 +793,7 @@ if __name__ == "__main__":
     pickle.dump(dim_b,open('results/dim_beg.p','wb'))
     pickle.dump(dim_e,open('results/dim_end.p','wb'))
     '''
-    
-    
+
     '''
     #Normal Run
     for run in range(0,10):
