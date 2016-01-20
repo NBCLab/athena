@@ -3,7 +3,10 @@ import os
 import numpy as np
 import pandas as pd
 import pickle
+import string
 from collections import defaultdict
+from nltk import word_tokenize
+from nltk.stem import PorterStemmer
 from sklearn import metrics
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import train_test_split
