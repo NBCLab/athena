@@ -263,6 +263,17 @@ class Athena:
         return self
 
 
+    def process_text(text):
+        """
+        Tokenize text and stem words, removing punctuation.
+        """
+        text = text.translate(None, string.punctuation)
+        tokens = word_tokenize(text)
+        stemmer = PorterStemmer()
+        tokens = [stemmer.stem(t) for t in tokens]
+        return tokens
+
+
     def get_unique_labels(self, paradigm_label):
         """
         Grab all unique labels for a paradigm class!
@@ -347,7 +358,8 @@ class Athena:
 
         ovr_clfs = [OneVsRestClassifier(clf) for clf in clfs]
         self.pipeline = [Pipeline([
-                        ("vect", TfidfVectorizer(min_df=3,
+                        ("vect", TfidfVectorizer(tokenizer=process_text,
+                                                 min_df=3,
                                                  stop_words=self.stopwords,
                                                  sublinear_tf=True)),
                         ("ovr", clf)]) for clf in ovr_clfs]
