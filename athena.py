@@ -269,6 +269,7 @@ class Athena:
     def process_text(text):
         """
         Tokenize text and stem words, removing punctuation.
+        Adapted from http://tech.swamps.io/recipe-text-clustering-using-nltk-and-scikit-learn/
         """
         text = text.translate(None, string.punctuation)
         tokens = word_tokenize(text)
