@@ -6,7 +6,7 @@ import pickle
 import string
 from collections import defaultdict
 from nltk import word_tokenize
-from nltk.stem import PorterStemmer
+from nltk.stem.lancaster import LancasterStemmer
 from sklearn import metrics
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import train_test_split
@@ -272,7 +272,7 @@ class Athena:
         """
         text = text.translate(None, string.punctuation)
         tokens = word_tokenize(text)
-        stemmer = PorterStemmer()
+        stemmer = LancasterStemmer()
         tokens = [stemmer.stem(t) for t in tokens]
         return tokens
 
