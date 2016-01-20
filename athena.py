@@ -5,21 +5,27 @@ import pandas as pd
 import pickle
 import string
 from collections import defaultdict
+from sklearn.pipeline import Pipeline
+
+# Feature extraction
 from nltk import word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Classifiers
+from sklearn.grid_search import GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.svm import LinearSVC
+from sklearn.multiclass import OneVsRestClassifier
+
+# Classifier evaluation
 from sklearn import metrics
 from sklearn.cross_validation import KFold
 from sklearn.cross_validation import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.grid_search import GridSearchCV
-from sklearn.linear_model import LogisticRegression
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.svm import LinearSVC
 
 
 class Athena:
@@ -324,7 +330,8 @@ class Athena:
             for current_column_name in self.column_name:
                 self.label_text_dict[current_column_name].append(current_row[current_column_name])
 
-        self.label_bin_dict = {key:MultiLabelBinarizer().fit_transform(label_list) for key, label_list in self.label_text_dict.items()}
+        self.label_bin_dict = {key:MultiLabelBinarizer().fit_transform(label_list) for key,
+                               label_list in self.label_text_dict.items()}
         self.label_bin_df = pd.DataFrame(np.concatenate([self.label_bin_dict[k] for k in self.column_name], 1))
         self.combined_df.index = range(len(self.combined_df.index))
         self.label_df = pd.concat([self.combined_df, self.label_bin_df], axis=1)
