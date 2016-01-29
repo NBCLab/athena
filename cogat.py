@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 25 10:49:45 2016
+Created on Thu Jan 28 12:35:54 2016
 
 @author: salo
 """
@@ -19,32 +19,36 @@ class RelException(Exception):
                                                                                                                    term_type))
 
 
-
 def clean_id_sheet(df):
-    id_df = df[["name", "id"]]
-    for i in range(len(id_df)):
-        # Protect case of acronyms. Lower everything else.
-        print id_df["name"].loc[i]
-        try:
-            name = str(id_df["name"].loc[i])
-        except:
-            return id_df["name"].loc[i]
-        if name != name.upper():
-            id_df["name"][i] = name.lower()
-
-    alias_df = df[["alias", "id"]].astype(str)
-    alias_df = alias_df[alias_df["alias"] != ""].reset_index()
-    alias2_df = pd.DataFrame(columns=["name", "id"])
+    """
+    """
+    input_df = df[["name", "id", "alias"]]
+    id_df = pd.DataFrame(columns=["term", "id", "preferred term"])
+    
     row_counter = 0
-    for i in range(len(alias_df)):
-        aliases = alias_df["alias"][i].replace("; ", ", ").replace("(", "").replace(")", "").split(", ")
+    for i in range(len(input_df)):
+        # Protect case of acronyms. Lower everything else.
+        # Also convert apostrophe symbols to apostrophes.
+        name = input_df["name"].loc[i].encode("utf-8").strip()
+        name = str(name.replace("&#39;", "'"))
+
+        if name:
+            if name != name.upper():
+                name = name.lower()
+            id_df.loc[row_counter] = [name, input_df["id"].loc[i], name]
+            row_counter += 1
+        
+        aliases = input_df["alias"].loc[i].encode("utf-8").strip().replace("; ", ", ").replace("(", "").replace(")", "").split(", ")
+        aliases = [alias for alias in aliases if alias]
         for alias in aliases:
             # Protect case of acronyms. Lower everything else.
+            # Also convert apostrophe symbols to apostrophes.
+            alias = str(alias.replace("&#39;", "'"))
+        
             if alias != alias.upper():
                 alias = alias.lower()
-            alias2_df.loc[row_counter] = [alias, alias_df["id"][i]]
+            id_df.loc[row_counter] = [alias, input_df["id"].loc[i], name]
             row_counter += 1
-    id_df = pd.concat([id_df, alias2_df], ignore_index=True)
     return id_df
 
 
@@ -52,23 +56,24 @@ def create_id_sheet():
     """
     Create spreadsheet with all terms (including synonyms) and their IDs.
     """
-    concepts = get_concept().pandas
-    tasks = get_task().pandas
-    #c_id_df = clean_id_sheet(concepts)
-    id_df = clean_id_sheet(tasks)
-    return id_df
-    #id_df = pd.concat([c_id_df, t_id_df], ignore_index=True)
+    concepts = get_concept(silent=True).pandas
+    tasks = get_task(silent=True).pandas
+    c_id_df = clean_id_sheet(concepts)
+    t_id_df = clean_id_sheet(tasks)
+    id_df = pd.concat([c_id_df, t_id_df], ignore_index=True)
     
     # Sort by name length (current substitute for searching by term level)
-    lens = id_df["name"].str.len()
+    lens = id_df["term"].str.len()
     lens.sort_values(ascending=False, inplace=True)
     lens = lens.reset_index()
     df = id_df.loc[lens["index"]]
-    df = df.reset_index()
+    df = df.reset_index(drop=True)
     return df
 
 
 def clean_rel_sheet(df):
+    """
+    """
     rel_df = pd.DataFrame(columns=["id", "rel_output", "rel_type"])
     row_counter = 0
     for i in range(len(df)):
@@ -80,11 +85,12 @@ def clean_rel_sheet(df):
             rel_df.loc[row_counter] = [id_, category, "inCategory"]
             row_counter += 1
         
-        # Next, regular relationships
-        relationship_list = df["relationships"].loc[i]
-        if type(relationship_list) == list:
-            for rel in relationship_list:
-                if df["type"].loc[i] == "concept":
+        if df["type"].loc[i] == "concept":
+            concept = get_concept(id=id_, silent=True).json
+            
+            if "relationships" in concept[0].keys():
+                relationships = concept[0]["relationships"]
+                for rel in relationships:
                     if rel["relationship"] == "kind of":
                         if rel["direction"] == "parent":
                             rel_type = "isKindOf"
@@ -101,34 +107,35 @@ def clean_rel_sheet(df):
                             raise RelException(rel["direction"], rel["relationship"], df["type"].loc[i])
                     else:
                         raise Exception("Unknown relationship {0} for type {1}.".format(rel["relationship"], df["type"].loc[i]))
-                elif df["type"].loc[i] == "task":
-                    """
-                    Progenitor of/descendant of and related concepts are not
-                    available ATM.
-                    """
-                    pass
-                elif df["type"].loc[i] == "Text":
-                    """
-                    Disorder structure is strange and disorders are of limited
-                    value ATM.
-                    """
-                    pass
-                rel_df.loc[row_counter] = [id_, str(rel["id"]), rel_type]
-                row_counter += 1
+                    rel_df.loc[row_counter] = [id_, str(rel["id"]), rel_type]
+                    row_counter += 1
+
+        elif df["type"].loc[i] == "task":
+            task = get_task(id=id_, silent=True).json
+            if "concepts" in task[0].keys():
+                for concept in task[0]["concepts"]:
+                    rel_df.loc[row_counter] = [id_, concept["concept_id"], "relatedConcept"]
+                    row_counter += 1
+            
+            if "disorders" in task[0].keys():
+                for disorder in task[0]["disorders"]:
+                    rel_df.loc[row_counter] = [id_, disorder["id_disorder"], "relatedDisorder"]
+                    row_counter += 1
     return rel_df
 
 
 def create_rel_sheet():
+    """
+    """
     concepts = get_concept().pandas
-    #tasks = get_task().pandas
-    rel_df = clean_rel_sheet(concepts)
+    tasks = get_task().pandas
+    c_rel_df = clean_rel_sheet(concepts)
+    t_rel_df = clean_rel_sheet(tasks)
+    rel_df = pd.concat([c_rel_df, t_rel_df], ignore_index=True)
     return rel_df
-
 
 id_df = create_id_sheet()
 rel_df = create_rel_sheet()
 
-id_df.to_csv("cogat_ids.csv")
-rel_df.to_csv("cog_relationships.csv")
-# Disorders have very different structure for synonyms, for some reason.
-# disorders = get_disorder().pandas
+id_df.to_csv("cogat_ids.csv", index=False)
+rel_df.to_csv("cog_relationships.csv", index=False)
