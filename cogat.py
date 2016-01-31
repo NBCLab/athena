@@ -6,6 +6,7 @@ Created on Thu Jan 28 12:35:54 2016
 """
 
 import pandas as pd
+import re
 from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
 #from cognitiveatlas.api import get_disorder  # we won't use disorders until MS[?]
@@ -13,10 +14,8 @@ from cognitiveatlas.api import get_task
 
 class RelException(Exception):
     def __init__(self, direct, rel_type, term_type):
-        Exception.__init__(self,
-                           "Unknown relationship direction {0} for relationship type {1} for term type {2}".format(direct,
-                                                                                                                   rel_type,
-                                                                                                                   term_type))
+        Exception.__init__(self, """Unknown relationship direction {0} for 
+                                    relationship type {1} for term type {2}""".format(direct, rel_type, term_type))
 
 
 def clean_id_sheet(df):
@@ -38,7 +37,9 @@ def clean_id_sheet(df):
             id_df.loc[row_counter] = [name, input_df["id"].loc[i], name]
             row_counter += 1
         
-        aliases = input_df["alias"].loc[i].encode("utf-8").strip().replace("; ", ", ").replace("(", "").replace(")", "").split(", ")
+        aliases = input_df["alias"].loc[i].encode("utf-8").strip()
+        aliases = re.sub(r"\s+\(([^)]+)\)", "", aliases)
+        aliases.replace("; ", ", ").split(", ")
         aliases = [alias for alias in aliases if alias]
         for alias in aliases:
             # Protect case of acronyms. Lower everything else.
