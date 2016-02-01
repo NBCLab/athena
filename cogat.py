@@ -129,6 +129,7 @@ def clean_rel_sheet(df):
             #    for disorder in task[0]["disorders"]:
             #        rel_df.loc[row_counter] = [id_, disorder["id_disorder"], "relatedDisorder"]
             #        row_counter += 1
+    rel_df.drop_duplicates(subset=["id", "rel_output"], inplace=True)  # Keep the first (not the strongest)
     return rel_df
 
 
@@ -164,6 +165,7 @@ def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
     weight_df["weight"] = np.zeros(len(weight_df))
     row_counter = len(weight_df)
     print len(existing_rels)
+    
     for rel in existing_rels:
         rel_idx = np.intersect1d(np.where(rel_df["id"]==rel[0])[0], np.where(rel_df["rel_output"]==rel[1])[0])[0]
         rel_type = rel_df["rel_type"].iloc[rel_idx]
@@ -190,10 +192,10 @@ def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
     weight_df.to_csv("cogat_weights_{0}_{1}.csv".format(weighting_scheme, date), index=True)
     return weight_df
 
-#id_df = create_id_sheet()
-#rel_df = create_rel_sheet()
+id_df = create_id_sheet()
+rel_df = create_rel_sheet()
 
-#weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme="ws2")
+weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme="ws2")
 
-#id_df.to_csv("cogat_ids.csv", index=False)
-#rel_df.to_csv("cog_relationships.csv", index=False)
+id_df.to_csv("cogat_ids.csv", index=False)
+rel_df.to_csv("cogat_relationships.csv", index=False)

@@ -14,14 +14,12 @@ trm_4a3fd79d096fc,trm_4a3fd79d09ab2,isPartOf
 trm_4a3fd79d09707,trm_4a3fd79d09707,isSelf
 trm_4a3fd79d09707,ctp_C1,inCategory
 trm_4a3fd79d09707,trm_4a3fd79d0b8e5,isKindOf
-trm_4a3fd79d09707,trm_4a3fd79d0b8e5,isKindOf
 trm_4a3fd79d09707,trm_4a3fd79d09ab2,isPartOf
 trm_4a3fd79d09707,trm_4a3fd79d09aa7,isPartOf
 trm_4a3fd79d09707,trm_4a3fd79d09a3d,isPartOf
 trm_4a3fd79d09713,trm_4a3fd79d09713,isSelf
 trm_4a3fd79d09713,ctp_C6,inCategory
 trm_4a3fd79d09713,trm_4a3fd79d09ab2,isKindOf
-trm_4a3fd79d09713,trm_4a3fd79d09ab2,isPartOf
 trm_4a3fd79d09713,trm_4a3fd79d0b1f7,isPartOf
 trm_4a3fd79d0971e,trm_4a3fd79d0971e,isSelf
 trm_4a3fd79d0971e,ctp_C1,inCategory
@@ -70,7 +68,6 @@ trm_4a3fd79d097bf,ctp_C10,inCategory
 trm_4a3fd79d097cb,trm_4a3fd79d097cb,isSelf
 trm_4a3fd79d097cb,ctp_C6,inCategory
 trm_4a3fd79d097d6,trm_4a3fd79d097d6,isSelf
-trm_4a3fd79d097d6,trm_4a3fd79d0a908,isKindOf
 trm_4a3fd79d097d6,trm_4a3fd79d0a908,isKindOf
 trm_4a3fd79d097e2,trm_4a3fd79d097e2,isSelf
 trm_4a3fd79d097ed,trm_4a3fd79d097ed,isSelf
@@ -169,7 +166,6 @@ trm_4a3fd79d09902,trm_4a3fd79d0b043,hasKind
 trm_4a3fd79d09902,trm_4a3fd79d0990e,hasPart
 trm_4a3fd79d09902,trm_4a3fd79d0b5e3,hasPart
 trm_4a3fd79d09902,trm_4a3fd79d0b5ef,hasPart
-trm_4a3fd79d09902,trm_4a3fd79d0b5ef,hasPart
 trm_4a3fd79d09902,trm_552185f5cda66,hasPart
 trm_4a3fd79d09902,trm_5524572b66764,hasPart
 trm_4a3fd79d09902,trm_4a3fd79d0b4cd,isPartOf
@@ -195,7 +191,6 @@ trm_4a3fd79d09919,trm_4a3fd79d0a151,isKindOf
 trm_4a3fd79d09919,trm_4a3fd79d09d4d,isPartOf
 trm_4a3fd79d0b5ef,trm_4a3fd79d0b5ef,isSelf
 trm_4a3fd79d0b5ef,ctp_C2,inCategory
-trm_4a3fd79d0b5ef,trm_4a3fd79d09902,isPartOf
 trm_4a3fd79d0b5ef,trm_4a3fd79d09902,isPartOf
 trm_4a3fd79d09925,trm_4a3fd79d09925,isSelf
 trm_4a3fd79d09925,ctp_C2,inCategory
@@ -259,7 +254,6 @@ trm_4a3fd79d09ab2,trm_55b6b8b8e7870,hasKind
 trm_4a3fd79d09ab2,trm_557b474e2b578,hasKind
 trm_4a3fd79d09ab2,trm_4a3fd79d096fc,hasPart
 trm_4a3fd79d09ab2,trm_4a3fd79d09707,hasPart
-trm_4a3fd79d09ab2,trm_4a3fd79d09713,hasPart
 trm_4a3fd79d09ab2,trm_4a3fd79d09a3d,hasPart
 trm_4a3fd79d09ab2,trm_4a3fd79d09a61,hasPart
 trm_4a3fd79d09ab2,trm_4a3fd79d09ae1,hasPart
@@ -787,9 +781,7 @@ trm_4a3fd79d0b8e5,trm_4a3fd79d09a49,hasKind
 trm_4a3fd79d0b8e5,trm_4a3fd79d0a7d4,hasKind
 trm_4a3fd79d0b8e5,trm_4a3fd79d0ac87,hasKind
 trm_4a3fd79d0b8e5,trm_4a3fd79d0b756,hasKind
-trm_4a3fd79d0b8e5,trm_4a3fd79d09707,hasKind
 trm_4a3fd79d0b8e5,trm_4a3fd79d0af7d,hasKind
-trm_4a3fd79d0b8e5,trm_4a3fd79d0ac87,hasKind
 trm_4a3fd79d0b8e5,trm_4a3fd79d09a3d,hasKind
 trm_4a3fd79d0b8e5,trm_4a3fd79d0a891,isPartOf
 trm_4a3fd79d0b8f0,trm_4a3fd79d0b8f0,isSelf
@@ -1380,7 +1372,6 @@ trm_4a3fd79d0a908,trm_4a3fd79d0a908,isSelf
 trm_4a3fd79d0a908,trm_4f4511e519b53,hasKind
 trm_4a3fd79d0a908,trm_4a3fd79d0aa6a,hasKind
 trm_4a3fd79d0a908,trm_4a3fd79d097d6,hasKind
-trm_4a3fd79d0a908,trm_4a3fd79d097d6,hasKind
 trm_4a3fd79d0a908,trm_4a3fd79d0ae87,hasKind
 trm_4a3fd79d0a908,trm_4a3fd79d0b4c1,hasKind
 trm_4a3fd79d0a908,trm_56798c5f25b0c,hasKind
@@ -1650,7 +1641,6 @@ trm_558c73b3663a6,trm_52b5f1ef4f9cc,isKindOf
 trm_558c73b3663a6,trm_555cfb890d721,isKindOf
 trm_4a3fd79d0ac87,trm_4a3fd79d0ac87,isSelf
 trm_4a3fd79d0ac87,ctp_C6,inCategory
-trm_4a3fd79d0ac87,trm_4a3fd79d0b8e5,isKindOf
 trm_4a3fd79d0ac87,trm_4a3fd79d0b8e5,isKindOf
 trm_4a3fd79d0ac87,trm_4a3fd79d09a3d,isPartOf
 trm_4a3fd79d0ba48,trm_4a3fd79d0ba48,isSelf
@@ -2603,9 +2593,7 @@ trm_5586ff878155d,trm_523c7c13bc55f,relatedConcept
 trm_5586ff878155d,trm_4a3fd79d0a803,relatedConcept
 trm_5586ff878155d,trm_4a3fd79d0b908,relatedConcept
 trm_5586ff878155d,trm_4a3fd79d0a54b,relatedConcept
-trm_5586ff878155d,dso_1094,relatedDisorder
 trm_55a6a79b55c8b,trm_55a6a79b55c8b,isSelf
-trm_55a6a79b55c8b,dso_1094,relatedDisorder
 tsk_4a57abb949858,tsk_4a57abb949858,isSelf
 trm_523ca67b786d5,trm_523ca67b786d5,isSelf
 trm_523ca67b786d5,trm_523ca7e778c50,relatedConcept
@@ -2644,7 +2632,6 @@ trm_4da6304c9aa23,trm_4da6304c9aa23,isSelf
 trm_4da6304c9aa23,trm_4aae62e4ad209,relatedConcept
 trm_4da6304c9aa23,trm_4a3fd79d09883,relatedConcept
 trm_4da6304c9aa23,trm_4a3fd79d0b5fb,relatedConcept
-trm_4da6304c9aa23,dso_1094,relatedDisorder
 trm_4f241614d4a25,trm_4f241614d4a25,isSelf
 trm_4f241614d4a25,trm_4a3fd79d0b5fb,relatedConcept
 trm_551f06a08dcc4,trm_551f06a08dcc4,isSelf
@@ -3182,7 +3169,6 @@ trm_550b5b066d37b,trm_557b4891e9265,relatedConcept
 trm_550b5b066d37b,trm_4a3fd79d0af71,relatedConcept
 trm_550b5b066d37b,trm_557b4a7315f1b,relatedConcept
 trm_550b5b066d37b,trm_557b482a7c62b,relatedConcept
-trm_550b5b066d37b,dso_14320,relatedDisorder
 trm_50f734f86b11a,trm_50f734f86b11a,isSelf
 trm_50f734f86b11a,trm_4a3fd79d0b4b5,relatedConcept
 trm_50f734f86b11a,trm_4a3fd79d0b665,relatedConcept
@@ -3301,7 +3287,6 @@ tsk_4a57abb949a93,tsk_4a57abb949a93,isSelf
 tsk_4a57abb949a93,trm_4a3fd79d0a613,relatedConcept
 tsk_4a57abb949a93,trm_4b7c270940f9d,relatedConcept
 tsk_4a57abb949a93,trm_4a3fd79d0af66,relatedConcept
-tsk_4a57abb949a93,dso_1094,relatedDisorder
 trm_50f741a965470,trm_50f741a965470,isSelf
 trm_50f741a965470,trm_4a3fd79d0b802,relatedConcept
 trm_4c898ff0bea97,trm_4c898ff0bea97,isSelf
@@ -3314,7 +3299,6 @@ tsk_4a57abb949aa1,trm_4a3fd79d0aeb6,relatedConcept
 trm_529911569b592,trm_529911569b592,isSelf
 trm_529911569b592,trm_4a3fd79d0a972,relatedConcept
 trm_559e2af1cc0ce,trm_559e2af1cc0ce,isSelf
-trm_559e2af1cc0ce,dso_1470,relatedDisorder
 trm_4da88c205b16b,trm_4da88c205b16b,isSelf
 trm_4da88c205b16b,trm_4a3fd79d0b160,relatedConcept
 trm_4da88c904862b,trm_4da88c904862b,isSelf
@@ -3334,8 +3318,6 @@ tsk_4a57abb949aae,trm_4a3fd79d0b4a9,relatedConcept
 tsk_4a57abb949aae,trm_4a3fd79d0aaa4,relatedConcept
 tsk_4a57abb949aae,trm_4b82c75498408,relatedConcept
 trm_55a6a860a7088,trm_55a6a860a7088,isSelf
-trm_55a6a860a7088,dso_1470,relatedDisorder
-trm_55a6a860a7088,dso_2030,relatedDisorder
 trm_50b40bca8cf83,trm_50b40bca8cf83,isSelf
 trm_50b40bca8cf83,trm_4a3fd79d0b642,relatedConcept
 trm_50b40bca8cf83,trm_4a3fd79d0a038,relatedConcept
@@ -3976,10 +3958,7 @@ trm_4b75ea4ddd896,trm_4a3fd79d0b4cd,relatedConcept
 trm_4b75ea4ddd896,trm_4a3fd79d0a723,relatedConcept
 trm_4b75ea4ddd896,trm_4a3fd79d0b607,relatedConcept
 trm_55a6a36d9c3f9,trm_55a6a36d9c3f9,isSelf
-trm_55a6a36d9c3f9,dso_5419,relatedDisorder
-trm_55a6a36d9c3f9,dso_5419,relatedDisorder
 trm_55a6cffbcb5f7,trm_55a6cffbcb5f7,isSelf
-trm_55a6cffbcb5f7,dso_5419,relatedDisorder
 trm_4da6327154fd4,trm_4da6327154fd4,isSelf
 trm_4da6327154fd4,trm_4a3fd79d0b1d5,relatedConcept
 trm_56ac06bac9334,trm_56ac06bac9334,isSelf
@@ -4471,7 +4450,6 @@ trm_4c8a85c5c75eb,trm_4a3fd79d0a7d4,relatedConcept
 trm_4c8a85c5c75eb,trm_4a3fd79d0a972,relatedConcept
 trm_4c8a85c5c75eb,trm_4a3fd79d0b2b4,relatedConcept
 trm_558702243da12,trm_558702243da12,isSelf
-trm_558702243da12,dso_3312,relatedDisorder
 trm_56a91e92eab46,trm_56a91e92eab46,isSelf
 trm_4da89089ce0af,trm_4da89089ce0af,isSelf
 trm_56abebfe9aaa3,trm_56abebfe9aaa3,isSelf
