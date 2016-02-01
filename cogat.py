@@ -5,10 +5,13 @@ Created on Thu Jan 28 12:35:54 2016
 @author: salo
 """
 
+from __future__ import division
 import pandas as pd
 import re
 from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
+import numpy as np
+import itertools
 #from cognitiveatlas.api import get_disorder  # we won't use disorders until MS[?]
 
 
@@ -80,7 +83,11 @@ def clean_rel_sheet(df):
     for i in range(len(df)):
         id_ = str(df["id"].loc[i])
         
-        # First relationship: Category
+        # First relationship: Self
+        rel_df.loc[row_counter] = [id_, id_, "isSelf"]
+        row_counter += 1
+        
+        # Second relationship: Category
         category = str(df["id_concept_class"].loc[i])
         if category:
             rel_df.loc[row_counter] = [id_, category, "inCategory"]
@@ -118,10 +125,10 @@ def clean_rel_sheet(df):
                     rel_df.loc[row_counter] = [id_, concept["concept_id"], "relatedConcept"]
                     row_counter += 1
             
-            if "disorders" in task[0].keys():
-                for disorder in task[0]["disorders"]:
-                    rel_df.loc[row_counter] = [id_, disorder["id_disorder"], "relatedDisorder"]
-                    row_counter += 1
+            #if "disorders" in task[0].keys():
+            #    for disorder in task[0]["disorders"]:
+            #        rel_df.loc[row_counter] = [id_, disorder["id_disorder"], "relatedDisorder"]
+            #        row_counter += 1
     return rel_df
 
 
@@ -135,8 +142,58 @@ def create_rel_sheet():
     rel_df = pd.concat([c_rel_df, t_rel_df], ignore_index=True)
     return rel_df
 
-id_df = create_id_sheet()
-rel_df = create_rel_sheet()
 
-id_df.to_csv("cogat_ids.csv", index=False)
-rel_df.to_csv("cog_relationships.csv", index=False)
+def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
+    from cogat_weighting_schemes import get_weights
+    import time
+
+    weights = get_weights(weighting_scheme)
+    
+    existing_rels = rel_df[["id", "rel_output"]].values.tolist()
+    
+    term_ids = np.unique(rel_df[["id", "rel_output"]])
+    all_rels = list(itertools.product(term_ids, term_ids))
+    print len(all_rels)
+    all_rels = [list(pair) for pair in all_rels]
+    existing_set = set(map(tuple, existing_rels))
+    all_rels = set(map(tuple, all_rels))
+    print len(all_rels)
+    new_rels = list(all_rels - existing_set)
+    print len(new_rels)
+    weight_df = pd.DataFrame(columns=["input", "output"], data=new_rels)
+    weight_df["weight"] = np.zeros(len(weight_df))
+    row_counter = len(weight_df)
+    print len(existing_rels)
+    for rel in existing_rels:
+        rel_idx = np.intersect1d(np.where(rel_df["id"]==rel[0])[0], np.where(rel_df["rel_output"]==rel[1])[0])[0]
+        rel_type = rel_df["rel_type"].iloc[rel_idx]
+        if rel_type in weights.keys():
+            if type(weights[rel_type]) == dict:
+                num = weights[rel_type]["num"]
+                den = weights[rel_type]["den"]
+                if den == "n":
+                    den = len(np.intersect1d(np.where(rel_df["id"]==rel[0])[0], np.where(rel_df["rel_type"]==rel_type)[0]))
+                weight = num / den
+            else:
+                weight = weights[rel_type]
+        else:
+            weight = 0
+        weight_df.loc[row_counter] = [rel[0], rel[1], weight]
+        row_counter += 1
+    return weight_df
+    weight_df = weight_df.pivot(index="input", columns="output", values="weight")
+    del weight_df.index.name
+    del weight_df.columns.name
+    
+    date = time.strftime('%Y%m%d')  # We have date here because CogAt is always changing.
+    
+    weight_df.to_csv("cogat_weights_{0}_{1}.csv".format(weighting_scheme, date), index=True)
+    return weight_df
+
+#id_df = create_id_sheet()
+#rel_df = create_rel_sheet()
+
+#weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme="ws2")
+
+#id_df.to_csv("cogat_ids.csv", index=False)
+#rel_df.to_csv("cog_relationships.csv", index=False)
