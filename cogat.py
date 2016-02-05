@@ -10,7 +10,7 @@ import pandas as pd
 import re
 from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
-#from cognitiveatlas.api import get_disorder  # we won't use disorders until MS[?]
+from cognitiveatlas.api import get_disorder  # we won't use disorders until MS[?]
 import numpy as np
 import itertools
 from cogat_weighting_schemes import get_weights
@@ -211,15 +211,68 @@ def apply_weights(input_df, weight_df):
     weighted_df = input_df.dot(weight_df)
     return weighted_df
 
-# Create and save ID, relationship, and weight files.
-id_df = create_id_sheet()
-id_df.to_csv("cogat_ids.csv", index=False)
 
-rel_df = create_rel_sheet()
-rel_df.to_csv("cogat_relationships.csv", index=False)
+def apply_weights_recursively(input_df, weight_dfs=None, rel_df=None,
+                              weighting_scheme="ws2"):
+    """
+    First pass at trying to apply parent- and child-directed weights all the
+    way to their ends. Sideways weights are only applied once.
 
-weighting_scheme = "ws2"
-weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme)
-date = time.strftime('%Y%m%d')  # We have date here because CogAt is always changing.
-weight_df.to_csv("cogat_weights_{0}_{1}.csv".format(weighting_scheme, date),
-                 index=True)
+    input_df:           A DataFrame with observed feature counts.
+
+    weight_dfs:         A list of DataFrames corresponding to upward-,
+                        downward-, and side-directed relationships. Either
+                        weight_dfs or rel_df must be defined.
+
+    rel_df:             A DataFrame of existing relationships from the
+                        Cognitive Atlas. Will be used with weighting_scheme to
+                        create weight_dfs. Either weight_dfs or rel_df must be
+                        defined.
+    weighting_scheme:   The weighting scheme. Must match a set of keys from
+                        get_weights.
+    """
+    if type(weight_dfs) == list:
+        weights_up = weight_dfs[0]
+        weights_down = weight_dfs[1]
+        weights_side = weight_dfs[2]
+    elif rel_df:
+        weights_up = create_weighted_rel_sheet(rel_df, weighting_scheme+"_up")
+        weights_down = create_weighted_rel_sheet(rel_df, weighting_scheme+"_down")
+        weights_side = create_weighted_rel_sheet(rel_df, weighting_scheme+"_side")
+    else:
+        raise Exception("Neither weight_dfs nor rel_df defined.")
+
+    weights_up = weights_up.reindex_axis(sorted(weights_up.columns), axis=1).sort()
+    weights_down = weights_down.reindex_axis(sorted(weights_down.columns), axis=1).sort()
+    weights_side = weights_side.reindex_axis(sorted(weights_side.columns), axis=1).sort()
+    input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
+
+    weighted_up = input_df.dot(weights_up)
+    while weighted_up != weighted_up.dot(weights_up):
+        weighted_up = weighted_up.dot(weights_up)
+
+    weighted_down = input_df.dot(weights_down)
+    while weighted_down != weighted_down.dot(weights_down):
+        weighted_down = weighted_down.dot(weights_down)
+
+    weighted_side = input_df.dot(weights_side)
+
+    input_df += weighted_up
+    input_df += weighted_down
+    input_df += weighted_side
+    return input_df
+
+
+def test():
+    # Create and save ID, relationship, and weight files.
+    id_df = create_id_sheet()
+    id_df.to_csv("cogat_ids.csv", index=False)
+    
+    rel_df = create_rel_sheet()
+    rel_df.to_csv("cogat_relationships.csv", index=False)
+    
+    weighting_scheme = "ws2"
+    weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme)
+    date = time.strftime('%Y%m%d')  # We have date here because CogAt is always changing.
+    weight_df.to_csv("cogat_weights_{0}_{1}.csv".format(weighting_scheme, date),
+                     index=True)
