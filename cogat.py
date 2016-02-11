@@ -246,15 +246,22 @@ def apply_weights_recursively(input_df, weight_dfs=None, rel_df=None,
     weights_down = weights_down.reindex_axis(sorted(weights_down.columns), axis=1).sort()
     weights_side = weights_side.reindex_axis(sorted(weights_side.columns), axis=1).sort()
     input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
+    
+    zero_df = copy.deepcopy(input_df)
+    zero_df[zero_df>-1]=0
 
+    # Apply vertical relationship weights until relationships are exhausted
+    # TODO: Add escape condition (e.g. number of loops exceeds n) in case of cyclical
+    #       relationships
     weighted_up = input_df.dot(weights_up)
-    while weighted_up != weighted_up.dot(weights_up):
+    while not weighted_up.equals(zero_df):
         weighted_up = weighted_up.dot(weights_up)
 
     weighted_down = input_df.dot(weights_down)
-    while weighted_down != weighted_down.dot(weights_down):
+    while not weighted_down.equals(zero_df):
         weighted_down = weighted_down.dot(weights_down)
 
+    # Apply horizontal relationship weights once
     weighted_side = input_df.dot(weights_side)
 
     input_df += weighted_up
