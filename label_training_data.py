@@ -54,7 +54,7 @@ for column in column_to_cogpo.keys():
 full_cogpo = sorted(list(set(full_cogpo)))
 
 # Preallocate label DataFrame
-df = df[pd.notnull(df["PubMed ID"])]
+df = df[df["PubMed ID"].str.contains("^\d+$")].reset_index()
 list_of_pmids = df["PubMed ID"].unique().tolist()
 
 column_names = ["pmid"] + full_cogpo
@@ -71,7 +71,8 @@ for row in df.index:
             for value in values:
                 for out_column in df2.columns:
                     if out_column in value:
-                        df2[out_column].iloc[df2["pmid"]==pmid] = 1
+                        ind = df2.loc[df2["pmid"]==pmid].index[0]
+                        df2[out_column].iloc[ind] = 1
 
 df2.to_csv("labeled_data.csv", index=False)
 
