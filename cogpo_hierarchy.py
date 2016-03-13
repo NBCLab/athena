@@ -14,7 +14,7 @@ graph = pydot.Dot(graph_type="graph", overlap=False)
 df = pd.read_csv("/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv")
 
 observed_cogpo = df.columns[1:].astype(str).tolist()
-observed_cogpo = ["CogPO.{0}".format(i) for i in observed_cogpo]
+observed_cogpo = [i[12:] for i in observed_cogpo if "Experiments.BehavioralDomain" in i]
 
 proc_cogpo = observed_cogpo[:]
 for label in observed_cogpo:
