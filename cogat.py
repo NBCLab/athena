@@ -15,6 +15,7 @@ import numpy as np
 import itertools
 from cogat_weighting_schemes import get_weights
 import time
+import copy
 
 
 class RelException(Exception):
@@ -31,6 +32,32 @@ class RelException(Exception):
                                                            term_type))
         else:
             Exception.__init__(self, """Unknown term type {0}""".format(term_type))
+
+
+def clean_disorders_id_sheet(df):
+    """
+    """
+    id_df = pd.DataFrame(columns=["term", "id", "preferred term"])
+    
+    row_counter = 0
+    for i in range(len(df)):
+        # Protect case of acronyms. Lower everything else.
+        # Also convert apostrophe symbols to apostrophes.
+        name = df["name"].loc[i].encode("utf-8").strip()
+        name = str(name.replace("&#39;", "'"))
+        if name:
+            if name != name.upper():
+                name = name.lower()
+            id_df.loc[row_counter] = [name, df["id"].loc[i], name]
+            row_counter += 1
+        
+        aliases = [alias_dict["synonym"] for alias_dict in df["synonyms"].loc[i]]
+        aliases = [alias.lower() if alias != alias.upper() else alias for alias in aliases]
+        aliases = list(set(aliases))
+        for alias in aliases:
+            id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
+            row_counter += 1        
+    return id_df
 
 
 def clean_id_sheet(df):
@@ -73,9 +100,11 @@ def create_id_sheet():
     """
     concepts = get_concept(silent=True).pandas
     tasks = get_task(silent=True).pandas
+    disorders = get_disorder(silent=True).pandas
     c_id_df = clean_id_sheet(concepts)
     t_id_df = clean_id_sheet(tasks)
-    id_df = pd.concat([c_id_df, t_id_df], ignore_index=True)
+    d_id_df = clean_disorders_id_sheet(disorders)
+    id_df = pd.concat([c_id_df, t_id_df, d_id_df], ignore_index=True)
     
     # Sort by name length (current substitute for searching by term level)
     lens = id_df["term"].str.len()
@@ -99,10 +128,11 @@ def clean_rel_sheet(df):
         row_counter += 1
         
         # Second relationship: Category
-        category = str(df["id_concept_class"].loc[i])
-        if category:
-            rel_df.loc[row_counter] = [id_, category, "inCategory"]
-            row_counter += 1
+        if "id_concept_class" in df.columns:
+            category = str(df["id_concept_class"].loc[i])
+            if category:
+                rel_df.loc[row_counter] = [id_, category, "inCategory"]
+                row_counter += 1
         
         if df["type"].loc[i] == "concept":
             concept = get_concept(id=id_, silent=True).json
@@ -141,6 +171,13 @@ def clean_rel_sheet(df):
                     rel_df.loc[row_counter] = [id_, concept["concept_id"],
                                                "relatedConcept"]
                     row_counter += 1
+        # Disorder
+        elif df["type"].loc[i] == "Text":
+            disorder = get_disorder(id=id_, silent=True).json
+            if "is_a" in disorder[0].keys():
+                if str(disorder[0]["is_a"]):
+                    rel_df.loc[row_counter] = [id_, str(disorder[0]["is_a"]), "childOf"]
+                    row_counter += 1
     # Keep the first of duplicates (not the strongest)
     rel_df.drop_duplicates(subset=["input", "output"], inplace=True)
     return rel_df
@@ -151,9 +188,11 @@ def create_rel_sheet():
     """
     concepts = get_concept().pandas
     tasks = get_task().pandas
+    disorders = get_disorder().pandas
     c_rel_df = clean_rel_sheet(concepts)
     t_rel_df = clean_rel_sheet(tasks)
-    rel_df = pd.concat([c_rel_df, t_rel_df], ignore_index=True)
+    d_rel_df = clean_rel_sheet(disorders)
+    rel_df = pd.concat([c_rel_df, t_rel_df, d_rel_df], ignore_index=True)
     return rel_df
 
 

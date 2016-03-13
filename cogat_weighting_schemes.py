@@ -33,7 +33,7 @@ def get_weights(scheme):
                        "childOf": 1,
                        "parentOf": {"num": 1,
                                     "den": "n"},
-                       "relatesTasks2": 0,
+                       "relatedTasks2": 0,
                        },
                "ws2_up": {"isKindOf": 1,
                           "isPartOf": {"num": 0.5,
@@ -55,7 +55,7 @@ def get_weights(scheme):
                             "relatedConcepts": {"num": 1,
                                                 "den": "n"},
                             "relatedDisorders": 0,
-                            "relatesTasks2": 0,
+                            "relatedTasks2": 0,
                             },
                }
     return schemes[scheme]

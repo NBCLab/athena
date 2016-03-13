@@ -130,7 +130,7 @@ def create_gazs(folder="/Users/salo/NBCLab/athena-data/meta_data/"):
     all_pmids = sorted(list(set(all_pmids)))
     k_gaz = generate_keyword_gazetteer(all_pmids)
     ay_gaz, j_gaz, tw_gaz = generate_metadata_gazeteers(all_pmids)
-    with open("gazetteers.pkl", "wb") as fo:
+    with open("/Users/salo/NBCLab/athena-data/gazetteers/gazetteers.pkl", "wb") as fo:
         pickle.dump([k_gaz, ay_gaz, j_gaz, tw_gaz], fo)
 
 
@@ -146,9 +146,9 @@ def count_gazs(folder="/Users/salo/NBCLab/athena-data/meta_data/"):
     all_pmids = [pmid for pmid in all_pmids if pmid.isdigit()]
     all_pmids = sorted(list(set(all_pmids)))
     
-    with open("gazetteers.pkl", "rb") as fo:
+    with open("/Users/salo/NBCLab/athena-data/gazetteers/gazetteers.pkl", "rb") as fo:
         k_gaz, ay_gaz, j_gaz, tw_gaz = pickle.load(fo)
     
-    count_ay_metadata(all_pmids, ay_gaz, "ay_count.csv")
-    count_j_metadata(all_pmids, j_gaz, "j_count.csv")
-    count_tw_metadata(all_pmids, tw_gaz, "tw_count.csv")
+    count_ay_metadata(all_pmids, ay_gaz, "/Users/salo/NBCLab/athena-data/processed_data/train_features_ay.csv")
+    count_j_metadata(all_pmids, j_gaz, "/Users/salo/NBCLab/athena-data/processed_data/train_features_j.csv")
+    count_tw_metadata(all_pmids, tw_gaz, "/Users/salo/NBCLab/athena-data/processed_data/train_features_tw.csv")
