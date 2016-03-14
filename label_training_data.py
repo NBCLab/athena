@@ -58,7 +58,8 @@ df = df[df["PubMed ID"].str.contains("^\d+$")].reset_index()
 list_of_pmids = df["PubMed ID"].unique().tolist()
 
 column_names = ["pmid"] + full_cogpo
-df2 = pd.DataFrame(columns=column_names, data=np.zeros((len(list_of_pmids), len(column_names))))
+df2 = pd.DataFrame(columns=column_names,
+                   data=np.zeros((len(list_of_pmids), len(column_names))))
 df2["pmid"] = list_of_pmids
 
 for row in df.index:
@@ -74,5 +75,4 @@ for row in df.index:
                         ind = df2.loc[df2["pmid"]==pmid].index[0]
                         df2[out_column].iloc[ind] = 1
 
-df2.to_csv("labeled_data.csv", index=False)
-
+df2.to_csv("/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv", index=False)

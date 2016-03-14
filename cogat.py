@@ -8,14 +8,15 @@ Created on Thu Jan 28 12:35:54 2016
 from __future__ import division
 import pandas as pd
 import re
-from cognitiveatlas.api import get_concept
-from cognitiveatlas.api import get_task
-from cognitiveatlas.api import get_disorder  # we won't use disorders until MS[?]
 import numpy as np
 import itertools
-from cogat_weighting_schemes import get_weights
 import time
 import copy
+
+from cognitiveatlas.api import get_concept
+from cognitiveatlas.api import get_task
+from cognitiveatlas.api import get_disorder
+from cogat_weighting_schemes import get_weights
 
 
 class RelException(Exception):
@@ -290,8 +291,6 @@ def apply_weights_recursively(input_df, weight_dfs=None, rel_df=None,
     zero_df[zero_df>-1]=0
 
     # Apply vertical relationship weights until relationships are exhausted
-    # TODO: Add escape condition (e.g. number of loops exceeds n) in case of cyclical
-    #       relationships
     weighted_up = input_df.dot(weights_up)
     while not weighted_up.equals(zero_df):
         weighted_up = weighted_up.dot(weights_up)
