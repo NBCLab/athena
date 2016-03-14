@@ -2,7 +2,8 @@
 """
 Generate digraph of CogPO.
 
-Based off this: https://pythonhaven.wordpress.com/2009/12/09/generating_graphs_with_pydot/
+Based off this:
+https://pythonhaven.wordpress.com/2009/12/09/generating_graphs_with_pydot/
 """
 
 import pydotplus as pydot
@@ -14,6 +15,9 @@ graph = pydot.Dot(graph_type="graph", overlap=False)
 df = pd.read_csv("/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv")
 
 observed_cogpo = df.columns[1:].astype(str).tolist()
+
+# Reduce labels to only look at Behavioral Domain, which is the only section
+# of CogPO with additional depth.
 observed_cogpo = [i[12:] for i in observed_cogpo if "Experiments.BehavioralDomain" in i]
 
 proc_cogpo = observed_cogpo[:]
@@ -36,6 +40,4 @@ for label in proc_cogpo:
         edge = pydot.Edge(parent, label)
         graph.add_edge(edge)
 
-# ok, we are set, let's save our graph into a file
-graph.write_png("/Users/salo/cogpo_graph.png")
-
+graph.write_png("/Users/salo/NBCLab/athena-data/cogpo_graph.png")

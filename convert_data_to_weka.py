@@ -20,6 +20,8 @@ def convert_to_arff(feature_files,
     feature_dfs = [[] for i in feature_files]
     for i, feature_file in enumerate(feature_files):
         file_ = os.path.basename(feature_file)
+        if i == 0:
+            out_name = file_.split("features_")[0][:-1]
         feature_name = "_" + file_.split("features_")[-1].split(".csv")[0]
         out_name += feature_name
         
@@ -107,4 +109,9 @@ def test():
     feature_files = ["/Users/salo/NBCLab/athena-data/processed_data/train_features_ay.csv",
                      "/Users/salo/NBCLab/athena-data/processed_data/train_features_j.csv"]
     convert_to_arff(feature_files)
+    
+    feature_files = ["/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv",
+                     "/Users/salo/NBCLab/athena-data/processed_data/test_features_j.csv"]
+    convert_to_arff(feature_files,
+                    "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv")
     gen_hier_label_file()

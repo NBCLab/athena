@@ -23,9 +23,9 @@ def df_to_list(df, column_name, prefix):
     table = ["{0}.{1}".format(prefix, item) for item in table]
     return table
 
-folder="/home/tsalo006/cogpo/"
-filenames = ["Face.csv", "Pain.csv", "Passive.csv", "Reward.csv",
-             "Semantic.csv", "Word.csv", "nBack.csv"]
+train_labels = "/home/tsalo006/cogpo/train_labels.csv"
+folder = "/home/tsalo006/cogpo/"
+filenames = ["KarinaAnnotationsDataComplete.csv"]
              
 column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
                    "Behavioral Domain": "Experiments.BehavioralDomain",
@@ -36,7 +36,6 @@ column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
                    "Response Type": "Conditions.OvertResponseType",
                    "Instructions": "Conditions.Instruction"}
 
-full_cogpo = []
 file_ = filenames[0]
 for i, file_ in enumerate(filenames):
     full_file = os.path.join(folder, file_)
@@ -46,11 +45,8 @@ for i, file_ in enumerate(filenames):
     else:
         df = pd.concat([df, df_temp], ignore_index=True)
 
-for column in column_to_cogpo.keys():
-    table = df_to_list(df, column, column_to_cogpo[column])
-    full_cogpo += table
-
-full_cogpo = sorted(list(set(full_cogpo)))
+train_df = pd.read_csv(train_labels)
+full_cogpo = train_df.columns.values[1:]
 
 # Preallocate label DataFrame
 df = df[df["PubMed ID"].str.contains("^\d+$")].reset_index()
@@ -74,4 +70,4 @@ for row in df.index:
                         ind = df2.loc[df2["pmid"]==pmid].index[0]
                         df2[out_column].iloc[ind] = 1
 
-df2.to_csv("/home/tsalo006/cogpo/train_labels.csv", index=False)
+df2.to_csv("/home/tsalo006/cogpo/test_labels.csv", index=False)

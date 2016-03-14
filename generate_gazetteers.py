@@ -14,6 +14,7 @@ from nltk.tokenize import RegexpTokenizer
 import pickle
 import numpy as np
 import os
+import sys
 
 tokenizer = RegexpTokenizer("[\s:\.]+", gaps=True)
 stop = stopwords.words("english")
@@ -33,7 +34,7 @@ def generate_metadata_gazeteers(label_file="/Users/salo/NBCLab/athena-data/proce
             - This includes multiword expressions.
     """
     df = pd.read_csv(label_file)
-    pmids = df["pmid"].tolist()
+    pmids = df["pmid"].astype(str).tolist()
     
     author_year_gaz = []
     journal_gaz = []
@@ -121,21 +122,26 @@ def count_tw_metadata(list_of_pmids, tw_gaz, out_file):
     df.to_csv(out_file, index=False)
 
 
-def count_gazs(label_file="/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv",
+def count_gazs(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
                gaz_file="/Users/salo/NBCLab/athena-data/gazetteers/gazetteers.pkl"):
     """
     Calls each of the feature-specific count functions to generate three
     feature count files. Keywords will be extracted from the articles' texts,
     not from their metadata.
-    """
-    out_dir = os.path.dirname(label_file)
-    
-    df = pd.read_csv(label_file)
-    pmids = df["pmid"].tolist()
-    
+    """  
     with open(gaz_file, "rb") as fo:
         ay_gaz, j_gaz, tw_gaz, k_gaz = pickle.load(fo)
     
-    count_ay_metadata(pmids, ay_gaz, os.path.join(out_dir, "train_features_ay.csv"))
-    count_j_metadata(pmids, j_gaz, os.path.join(out_dir, "train_features_j.csv"))
-    count_tw_metadata(pmids, tw_gaz,os.path.join(out_dir, "train_features_tw.csv"))
+    for dataset in ["train", "test"]:
+        filename = "{0}_labels.csv".format(dataset)
+        label_file = os.path.join(label_dir, filename)
+        df = pd.read_csv(label_file)
+        pmids = df["pmid"].astype(str).tolist()
+
+        count_ay_metadata(pmids, ay_gaz, os.path.join(label_dir, "{0}_features_ay.csv".format(dataset)))
+        count_j_metadata(pmids, j_gaz, os.path.join(label_dir, "{0}_features_j.csv".format(dataset)))
+        count_tw_metadata(pmids, tw_gaz,os.path.join(label_dir, "{0}_features_tw.csv".format(dataset)))
+
+
+if __name__ == "__main__":
+    count_gazs(sys.argv[1], sys.argv[2])
