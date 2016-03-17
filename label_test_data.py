@@ -26,7 +26,7 @@ def df_to_list(df, column_name, prefix):
 train_labels = "/home/tsalo006/cogpo/train_labels.csv"
 folder = "/home/tsalo006/cogpo/"
 filenames = ["KarinaAnnotationsDataComplete.csv"]
-             
+
 column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
                    "Behavioral Domain": "Experiments.BehavioralDomain",
                    "Diagnosis": "Subjects.Diagnosis",

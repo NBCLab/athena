@@ -74,4 +74,10 @@ for row in df.index:
                         ind = df2.loc[df2["pmid"]==pmid].index[0]
                         df2[out_column].iloc[ind] = 1
 
-df2.to_csv("/home/tsalo006/cogpo/train_labels.csv", index=False)
+# Reduce DataFrame
+label_counts = df2.sum()
+rep_labels = label_counts[label_counts>4].index
+df3 = df2[rep_labels]
+df4 = df3[(df3.T != 0).any()]
+
+df4.to_csv("/home/tsalo006/cogpo/train_labels.csv", index=False)

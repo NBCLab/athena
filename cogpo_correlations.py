@@ -30,4 +30,4 @@ for i in range(data.shape[1]):
 cmap = sns.diverging_palette(220, 10, as_cmap=True)
 plot = sns.heatmap(out, cmap=cmap, xticklabels=False, yticklabels=False)
 fig = plot.get_figure()
-fig.savefig("heatmap.png")
+fig.savefig("/Users/salo/NBCLab/athena-data/heatmap.png")
