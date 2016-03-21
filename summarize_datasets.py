@@ -62,8 +62,9 @@ train_features = "/Users/salo/NBCLab/athena-data/processed_data/train_features_a
 # To be switched with real test files.
 test_labels = train_labels
 test_features = train_features
-#test_labels = "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv"
+test_labels = "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv"
 #test_features = "/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv"
+
 
 # Load and combine data
 train_label_df = pd.read_csv(train_labels, dtype=int)

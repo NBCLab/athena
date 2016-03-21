@@ -23,18 +23,19 @@ def df_to_list(df, column_name, prefix):
     table = ["{0}.{1}".format(prefix, item) for item in table]
     return table
 
-folder="/home/tsalo006/cogpo/"
+folder = "/home/tsalo006/cogpo/"
 filenames = ["Face.csv", "Pain.csv", "Passive.csv", "Reward.csv",
              "Semantic.csv", "Word.csv", "nBack.csv"]
+data_dir = "/home/tsalo006/cogpo/athena-data/combined/"
              
 column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
-                   "Behavioral Domain": "Experiments.BehavioralDomain",
-                   "Diagnosis": "Subjects.Diagnosis",
-                   "Stimulus Modality": "Conditions.StimulusModality",
-                   "Stimulus Type": "Conditions.StimulusType",
-                   "Response Modality": "Conditions.OvertResponseModality",
-                   "Response Type": "Conditions.OvertResponseType",
-                   "Instructions": "Conditions.Instruction"}
+                   "Behavioral Domain": "Experiments.BehavioralDomain",}
+#                   "Diagnosis": "Subjects.Diagnosis",
+#                   "Stimulus Modality": "Conditions.StimulusModality",
+#                   "Stimulus Type": "Conditions.StimulusType",
+#                   "Response Modality": "Conditions.OvertResponseModality",
+#                   "Response Type": "Conditions.OvertResponseType",
+#                   "Instructions": "Conditions.Instruction"}
 
 full_cogpo = []
 file_ = filenames[0]
@@ -55,6 +56,12 @@ full_cogpo = sorted(list(set(full_cogpo)))
 # Preallocate label DataFrame
 df = df[df["PubMed ID"].str.contains("^\d+$")].reset_index()
 list_of_pmids = df["PubMed ID"].unique().tolist()
+list_of_files = os.listdir(data_dir)
+list_of_files = [os.path.splitext(file_)[0] for file_ in list_of_files]
+print len(list_of_pmids)
+print len(list_of_files)
+list_of_pmids = sorted(list(set(list_of_pmids).intersection(list_of_files)))
+print len(list_of_pmids)
 
 column_names = ["pmid"] + full_cogpo
 df2 = pd.DataFrame(columns=column_names,
@@ -63,16 +70,17 @@ df2["pmid"] = list_of_pmids
 
 for row in df.index:
     pmid = df["PubMed ID"].iloc[row]
-    for column in column_to_cogpo.keys():
-        values = df[column].iloc[row]
-        if pd.notnull(values):
-            values = values.split("| ")
-            values = ["{0}.{1}".format(column_to_cogpo[column], item.replace(" ", "").replace("'", "")) for item in values]
-            for value in values:
-                for out_column in df2.columns:
-                    if out_column in value:
-                        ind = df2.loc[df2["pmid"]==pmid].index[0]
-                        df2[out_column].iloc[ind] = 1
+    if pmid in list_of_pmids:
+        for column in column_to_cogpo.keys():
+            values = df[column].iloc[row]
+            if pd.notnull(values):
+                values = values.split("| ")
+                values = ["{0}.{1}".format(column_to_cogpo[column], item.replace(" ", "").replace("'", "")) for item in values]
+                for value in values:
+                    for out_column in df2.columns:
+                        if out_column in value:
+                            ind = df2.loc[df2["pmid"]==pmid].index[0]
+                            df2[out_column].iloc[ind] = 1
 
 # Reduce DataFrame
 label_counts = df2.sum()
