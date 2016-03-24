@@ -5,9 +5,11 @@
 module add miniconda/2.7
 
 # Set up project-specific python environment
-source activate ~/Athena/env
+scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source activate ${scriptdir}/env
 
 # Set Python path to project-specific folder
-PYTHONPATH="${PYTHONPATH}:~/Athena/"
+parentdir="$(dirname "$scriptdir")"
+PYTHONPATH="${PYTHONPATH}:${parentdir}"
 
 export project_name="[athena]"
