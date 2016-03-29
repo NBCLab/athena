@@ -11,10 +11,10 @@ from Bio import Medline
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
-import pickle
 import numpy as np
 import os
 import sys
+import csv
 
 tokenizer = RegexpTokenizer("[\s:\.]+", gaps=True)
 stop = stopwords.words("english")
@@ -22,8 +22,8 @@ stop = stopwords.words("english")
 Entrez.email = "tsalo90@gmail.com"
 
 
-def generate_metadata_gazeteers(label_file="/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv",
-                                gaz_file = "/Users/salo/NBCLab/athena-data/gazetteers/gazetteers.pkl"):
+def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv",
+                                 gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
     """
     Creates list of unique terms for four gazetteers derived from metadata
     available through PubMed:
@@ -61,8 +61,26 @@ def generate_metadata_gazeteers(label_file="/Users/salo/NBCLab/athena-data/proce
     tw_gaz = sorted(list(set(title_word_gaz)))
     k_gaz = sorted(list(set(keyword_gaz)))
     
-    with open(gaz_file, "wb") as fo:
-        pickle.dump([ay_gaz, j_gaz, tw_gaz, k_gaz], fo)
+    save_gaz(ay_gaz, gaz_dir, "ay")
+    save_gaz(j_gaz, gaz_dir, "j")
+    save_gaz(tw_gaz, gaz_dir, "tw")
+    save_gaz(k_gaz, gaz_dir, "k")
+
+
+def save_gaz(gaz_list, gaz_dir, gaz_name):
+    gaz_file = os.path.join(gaz_dir, gaz_name + "_gaz.txt")
+    with open(gaz_file, "w") as fo:
+        writer = csv.writer(fo, lineterminator='\n')
+        for att in gaz_list:
+            writer.writerow([att])    
+
+
+def read_gaz(gaz_dir, gaz_name):
+    gaz_file = os.path.join(gaz_dir, gaz_name + "_gaz.txt")
+    with open(gaz_file, "rb") as fo:
+        reader = csv.reader(fo)
+        gaz_list = list(reader)
+    return gaz_list
 
 
 def count_ay_metadata(list_of_pmids, ay_gaz, out_file):
@@ -123,25 +141,29 @@ def count_tw_metadata(list_of_pmids, tw_gaz, out_file):
 
 
 def count_gazs(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
-               gaz_file="/Users/salo/NBCLab/athena-data/gazetteers/gazetteers.pkl"):
+               gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
     """
     Calls each of the feature-specific count functions to generate three
     feature count files. Keywords will be extracted from the articles' texts,
     not from their metadata.
-    """  
-    with open(gaz_file, "rb") as fo:
-        ay_gaz, j_gaz, tw_gaz, k_gaz = pickle.load(fo)
-    
-    for dataset in ["train", "test"]:
-        filename = "{0}_labels.csv".format(dataset)
-        label_file = os.path.join(label_dir, filename)
-        df = pd.read_csv(label_file)
-        pmids = df["pmid"].astype(str).tolist()
+    """    
+    gaz_dict = {"ay": count_ay_metadata,
+                "j": count_j_metadata,
+                "tw": count_tw_metadata}
+    datasets = ["train", "test"]
+                
+    for gaz in gaz_dict.keys():        
+        gaz_list = read_gaz(gaz_dir, gaz)
+        
+        for dataset in datasets:
+            filename = "{0}_labels.csv".format(dataset)
+            label_file = os.path.join(label_dir, filename)
+            df = pd.read_csv(label_file)
+            pmids = df["pmid"].astype(str).tolist()
 
-        count_ay_metadata(pmids, ay_gaz, os.path.join(label_dir, "{0}_features_ay.csv".format(dataset)))
-        count_j_metadata(pmids, j_gaz, os.path.join(label_dir, "{0}_features_j.csv".format(dataset)))
-        count_tw_metadata(pmids, tw_gaz,os.path.join(label_dir, "{0}_features_tw.csv".format(dataset)))
+            gaz_dict[gaz](pmids, gaz_list, os.path.join(label_dir, "{0}_features_{1}.csv".format(dataset, gaz)))
 
 
 if __name__ == "__main__":
+    generate_metadata_gazetteers(os.path.join(sys.argv[1], "train_labels.csv"), sys.argv[2])
     count_gazs(sys.argv[1], sys.argv[2])
