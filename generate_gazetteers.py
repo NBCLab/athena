@@ -70,7 +70,7 @@ def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/proc
 def save_gaz(gaz_list, gaz_dir, gaz_name):
     gaz_file = os.path.join(gaz_dir, gaz_name + "_gaz.txt")
     with open(gaz_file, "w") as fo:
-        writer = csv.writer(fo, lineterminator='\n')
+        writer = csv.writer(fo, lineterminator="\n")
         for att in gaz_list:
             writer.writerow([att])    
 
@@ -78,8 +78,9 @@ def save_gaz(gaz_list, gaz_dir, gaz_name):
 def read_gaz(gaz_dir, gaz_name):
     gaz_file = os.path.join(gaz_dir, gaz_name + "_gaz.txt")
     with open(gaz_file, "rb") as fo:
-        reader = csv.reader(fo)
+        reader = csv.reader(fo, delimiter="\n")
         gaz_list = list(reader)
+    gaz_list = [item for row in gaz_list for item in row]
     return gaz_list
 
 
