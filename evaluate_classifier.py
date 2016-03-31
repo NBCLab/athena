@@ -64,4 +64,4 @@ def test():
     metrics = return_metrics(train_label_file, predictions_file)
     f1, mac_prec, mic_prec, mac_rec, mic_rec, hl = metrics
     out_df = return_all(train_label_file, predictions_dir)
-    return out_df
+    out_df.to_csv("/Users/salo/NBCLab/athena-data/predictions/compiled.csv", index=False)
