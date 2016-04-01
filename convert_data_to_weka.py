@@ -110,8 +110,8 @@ def test():
                      "/Users/salo/NBCLab/athena-data/processed_data/train_features_j.csv"]
     convert_to_arff(feature_files)
     
-#    feature_files = ["/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv",
-#                     "/Users/salo/NBCLab/athena-data/processed_data/test_features_j.csv"]
-#    convert_to_arff(feature_files,
-#                    "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv")
+    feature_files = ["/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv",
+                     "/Users/salo/NBCLab/athena-data/processed_data/test_features_j.csv"]
+    convert_to_arff(feature_files,
+                    "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv")
     gen_hier_label_file()
