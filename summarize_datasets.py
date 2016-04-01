@@ -40,10 +40,11 @@ def statistics(label_df, feature_df, dataset_name):
     n_labels = len(labels)
     print("\tNumber of labels: {0}".format(n_labels))
     
-    label_cardinality = label_df.sum().sum() / len(labels)
+    label_cardinality = label_df.sum(axis=1).sum() / n_instances
     print("\tLabel cardinality: {0}".format(label_cardinality))
     
-    label_density = (label_df.sum() / n_labels).sum() / len(labels)
+    n_positive = label_df.sum(axis=0).sum()
+    label_density = (label_df.sum(axis=1) / n_positive).sum() / len(labels)
     print("\tLabel density: {0}".format(label_density))
     
     label_array = label_df.values
@@ -60,10 +61,10 @@ train_labels = "/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv"
 train_features = "/Users/salo/NBCLab/athena-data/processed_data/train_features_ay.csv"
 
 # To be switched with real test files.
-test_labels = train_labels
-test_features = train_features
+#test_labels = train_labels
+#test_features = train_features
 test_labels = "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv"
-#test_features = "/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv"
+test_features = "/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv"
 
 
 # Load and combine data

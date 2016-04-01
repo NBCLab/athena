@@ -22,7 +22,7 @@ stop = stopwords.words("english")
 Entrez.email = "tsalo90@gmail.com"
 
 
-def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv",
+def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/processed_data/all_labels.csv",
                                  gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
     """
     Creates list of unique terms for four gazetteers derived from metadata
@@ -42,7 +42,7 @@ def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/proc
     keyword_gaz = []
     
     for pmid in pmids:
-        h = Entrez.efetch(db='pubmed', id=pmid, rettype='medline', retmode='text')
+        h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
         record = list(Medline.parse(h))[0]
         author_year_gaz += [author.replace(".", "").lower() for author in record["AU"]]
         author_year_gaz += [record["DP"][:4]]
@@ -92,7 +92,7 @@ def count_ay_metadata(list_of_pmids, ay_gaz, out_file):
     df = pd.DataFrame(columns=column_names, data=np.zeros((len(list_of_pmids), len(column_names))))
     df["pmid"] = list_of_pmids
     for pmid in df["pmid"]:
-        h = Entrez.efetch(db='pubmed', id=pmid, rettype='medline', retmode='text')
+        h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
         record = list(Medline.parse(h))[0]
         ays = [author.lower() for author in record["AU"]]
         ays += [record["DP"][:4]]
@@ -110,7 +110,7 @@ def count_j_metadata(list_of_pmids, j_gaz, out_file):
     df = pd.DataFrame(columns=column_names, data=np.zeros((len(list_of_pmids), len(column_names))))
     df["pmid"] = list_of_pmids
     for pmid in df["pmid"]:
-        h = Entrez.efetch(db='pubmed', id=pmid, rettype='medline', retmode='text')
+        h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
         record = list(Medline.parse(h))[0]
         js = [journal.lower() for journal in record["TA"]]
         for j in js:
@@ -129,7 +129,7 @@ def count_tw_metadata(list_of_pmids, tw_gaz, out_file):
     df = pd.DataFrame(columns=column_names, data=np.zeros((len(list_of_pmids), len(column_names))))
     df["pmid"] = list_of_pmids
     for pmid in df["pmid"]:
-        h = Entrez.efetch(db='pubmed', id=pmid, rettype='medline', retmode='text')
+        h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
         record = list(Medline.parse(h))[0]
         
         title = record["TI"]
@@ -166,5 +166,5 @@ def count_gazs(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
 
 
 if __name__ == "__main__":
-    generate_metadata_gazetteers(os.path.join(sys.argv[1], "train_labels.csv"), sys.argv[2])
+    generate_metadata_gazetteers(os.path.join(sys.argv[1], "all_labels.csv"), sys.argv[2])
     count_gazs(sys.argv[1], sys.argv[2])
