@@ -21,6 +21,9 @@ from sklearn.metrics import f1_score, precision_score, recall_score, hamming_los
 
 
 def return_metrics(train_label_file, predictions_file):
+    """
+    Calculate metrics for model based on predicted labels.
+    """
     df = pd.read_csv(train_label_file, dtype=int)
     true_labels = df.as_matrix()[:, 1:]
     
@@ -40,9 +43,14 @@ def return_metrics(train_label_file, predictions_file):
 
 
 def return_all(train_label_file, predictions_dir):
+    """
+    Calculate the metrics for all csv files in the folder, except for
+    compiled.csv.
+    """
     out_metrics = []
     
     predictions_files = glob(os.path.join(predictions_dir, "*.csv"))
+    predictions_files = [file_ for file_ in predictions_files if not "compiled" in file_]
     for predictions_file in predictions_files:
         model_name, _ = os.path.splitext(predictions_file)
         model_name = os.path.basename(model_name)
