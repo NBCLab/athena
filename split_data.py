@@ -17,6 +17,7 @@ train_labels = pd.read_csv(labels_file)
 
 labels = train_labels.as_matrix()
 de_ided = labels[:, 1:]
+ids = labels[:, 0]
 
 n_instances = labels.shape[0]
 index = range(n_instances)
@@ -34,3 +35,9 @@ while contd:
     if np.all(np.sum(train_rows, axis=0)>2) and np.all(np.sum(test_rows, axis=0)>0):
         contd = False
 
+train_ids = ids[shuf_index[n_test:]]
+test_ids = ids[shuf_index[:n_test]]
+df = pd.DataFrame(columns=["PubMed ID"], data=sorted(train_ids))
+df.to_csv("/Users/salo/NBCLab/athena-data/processed_data/train_ids.csv", index=False)
+df2 = pd.DataFrame(columns=["PubMed ID"], data=sorted(test_ids))
+df2.to_csv("/Users/salo/NBCLab/athena-data/processed_data/test_ids.csv", index=False)
