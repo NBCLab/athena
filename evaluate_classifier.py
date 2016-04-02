@@ -20,14 +20,12 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
 
 
-def return_metrics(train_label_file, predictions_file):
+def return_metrics(train_label_file, predictions):
     """
     Calculate metrics for model based on predicted labels.
     """
     df = pd.read_csv(train_label_file, dtype=int)
     true_labels = df.as_matrix()[:, 1:]
-    
-    predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
     
     macro_precision = precision_score(true_labels, predictions, average="macro")
     micro_precision = precision_score(true_labels, predictions, average="micro")
@@ -54,7 +52,10 @@ def return_all(train_label_file, predictions_dir):
     for predictions_file in predictions_files:
         model_name, _ = os.path.splitext(predictions_file)
         model_name = os.path.basename(model_name)
-        metrics = return_metrics(train_label_file, predictions_file)
+        
+        predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
+        
+        metrics = return_metrics(train_label_file, predictions)
         metrics.insert(0, model_name)
         out_metrics += [metrics]
     out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
@@ -68,8 +69,9 @@ def test():
     train_label_file = "/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv"
     predictions_file = "/Users/salo/NBCLab/athena-data/predictions/predictions.csv"
     predictions_dir = "/Users/salo/NBCLab/athena-data/predictions/"
-
-    metrics = return_metrics(train_label_file, predictions_file)
+    predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
+    
+    metrics = return_metrics(train_label_file, predictions)
     f1, mac_prec, mic_prec, mac_rec, mic_rec, hl = metrics
     out_df = return_all(train_label_file, predictions_dir)
     out_df.to_csv("/Users/salo/NBCLab/athena-data/predictions/compiled.csv", index=False)
