@@ -14,8 +14,9 @@ def df_to_list(df, column_name, prefix):
     table = df[pd.notnull(df[column_name])][column_name]
     table.apply(lambda x: "{%s}" % "| ".join(x))
     table = table.tolist()
-    table = [item.replace(" ", "").replace("'", "") for sublist in
+    table = [item.replace(" ", "").replace("'", "").replace("(", ".").replace(")", "").replace("Stroop-", "Stroop.") for sublist in
              table for item in sublist.split("| ")]
+    
     parents = table
     while parents:
         parents = [".".join(item.split(".")[:-1]) for item in parents if len(item.split("."))>1]
@@ -39,14 +40,8 @@ column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
 #                   "Instructions": "Conditions.Instruction"}
 
 full_cogpo = []
-file_ = filenames[0]
-for i, file_ in enumerate(filenames):
-    full_file = os.path.join(folder, file_)
-    df_temp = pd.read_csv(full_file, dtype=str)
-    if i == 0:
-        df = df_temp
-    else:
-        df = pd.concat([df, df_temp], ignore_index=True)
+dfs = [pd.read_csv(os.path.join(folder, file_), dtype=str)[["PubMed ID"] + column_to_cogpo.keys()] for file_ in filenames]
+df = pd.concat(dfs, ignore_index=True)
 
 for column in column_to_cogpo.keys():
     table = df_to_list(df, column, column_to_cogpo[column])

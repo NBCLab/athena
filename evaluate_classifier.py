@@ -57,6 +57,8 @@ def return_labelwise(train_label_file, predictions):
             metrics_array[i, j] = metrics[j](label_true, label_pred)
     metric_df = pd.DataFrame(columns=["F1", "Precision", "Recall", "Hamming Loss"],
                             index=label_names, data=metrics_array)
+    metric_df["Label"] = metric_df.index
+    metric_df = metric_df[["Label", "F1", "Precision", "Recall", "Hamming Loss"]]
     return metric_df
 
 

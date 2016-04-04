@@ -71,7 +71,8 @@ def run_clf(feature_name, in_folder, out_folder):
     
     # Evaluate
     metrics = ec.return_metrics(test_labels_file, test_pred)
-    return metrics
+    lb_df = ec.return_labelwise(test_labels_file, test_pred)
+    return metrics, lb_df
 
 
 def run_feature_selection():
@@ -94,7 +95,7 @@ def run_feature_selection():
     for combo in combos:
         feature_name = "_".join(combo)
         combine_features(combo, in_dir)
-        metrics = run_clf(feature_name, in_dir, out_dir)
+        metrics, lb_df = run_clf(feature_name, in_dir, out_dir)
         metrics.insert(0, feature_name)
         out_metrics += [metrics]
     out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
@@ -103,3 +104,5 @@ def run_feature_selection():
                                    "Hamming Loss"], data=out_metrics)
     
     out_df.to_csv(os.path.join(out_dir, "fs_results.csv"), index=False)
+    lb_df.to_csv(os.path.join(out_dir, "labelwise.csv"), index=False)
+
