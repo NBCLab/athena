@@ -10,15 +10,11 @@ Glossary:
   - nbow: Naive bag of words
   - kw: PubMed keywords
   - tw: Title words
-- Sources:
-  - c: Combined abstract and methods section
-  - m: Methods section
-  - a: Abstract
-  - f: Full text
 
 @author: salo
 """
 
+import numpy as np
 import itertools
 import pandas as pd
 import os
@@ -28,6 +24,9 @@ import evaluate_classifier as ec
 
 
 def combine_features(feature_names, folder):
+    """
+    Produce combined count files for all possible combinations of features.
+    """
     out_files = []
     for dataset in ["train", "test"]:
         path = os.path.join(folder, dataset+"_features_")
@@ -43,12 +42,16 @@ def combine_features(feature_names, folder):
         out_files += [out_name]
 
 
-def run_clf(feature_name, folder):
+def run_clf(feature_name, in_folder, out_folder):
+    """
+    Run sklearn OneVsRest multilabel classifier wrapped around a LinearSVC
+    binary classifier with l2 penalty and 1.0 C on a given feature count file.
+    """
     # Train
-    train_features_file = os.path.join(folder, "train_features_"+feature_name+".csv")
-    train_labels_file = os.path.join(folder, "train_labels.csv")
-    test_features_file = os.path.join(folder, "train_features_"+feature_name+".csv")
-    test_labels_file = os.path.join(folder, "train_labels.csv")
+    train_features_file = os.path.join(in_folder, "train_features_"+feature_name+".csv")
+    train_labels_file = os.path.join(in_folder, "train_labels.csv")
+    test_features_file = os.path.join(in_folder, "train_features_"+feature_name+".csv")
+    test_labels_file = os.path.join(in_folder, "train_labels.csv")
     
     train_features_df = pd.read_csv(train_features_file)
     train_features = train_features_df.as_matrix()[:, 1:]
@@ -63,6 +66,8 @@ def run_clf(feature_name, folder):
     
     # Test
     test_pred = classif.predict(test_features)
+    out_file = os.path.join(out_folder, feature_name+".csv")
+    np.savetxt(out_file, test_pred, delimiter=",")
     
     # Evaluate
     metrics = ec.return_metrics(test_labels_file, test_pred)
@@ -70,8 +75,14 @@ def run_clf(feature_name, folder):
 
 
 def run_feature_selection():
-    dir_ = "/Users/salo/NBCLab/athena-data/processed_data/"
-    features = ["ay", "cogat", "j", "kw", "nbow", "ref", "tw"]
+    """
+    Create all possible combination feature count files, run simple classifier
+    on each, and output summary statistics.
+    """
+    in_dir = "/Users/salo/NBCLab/athena-data/processed_data/"
+    out_dir = "/Users/salo/NBCLab/athena-data/feature_selection/"
+#    features = ["ay", "cogat", "j", "kw", "nbow", "ref", "tw"]  # Full feature list
+    features = ["ay", "j", "tw"]  # Easily generated features to test functions
     combos = []
     for i in range(1, len(features)):
         combos += sorted(list(itertools.combinations(features, i)))
@@ -82,8 +93,8 @@ def run_feature_selection():
     out_metrics = []
     for combo in combos:
         feature_name = "_".join(combo)
-        combine_features(combo, dir_)
-        metrics = run_clf(feature_name, dir_)
+        combine_features(combo, in_dir)
+        metrics = run_clf(feature_name, in_dir, out_dir)
         metrics.insert(0, feature_name)
         out_metrics += [metrics]
     out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
@@ -91,4 +102,4 @@ def run_feature_selection():
                                    "Macro Recall", "Micro Recall",
                                    "Hamming Loss"], data=out_metrics)
     
-    out_df.to_csv(os.path.join(dir_, "fs_results.csv"), index=False)
+    out_df.to_csv(os.path.join(out_dir, "fs_results.csv"), index=False)
