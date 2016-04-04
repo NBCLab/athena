@@ -75,6 +75,18 @@ def convert_meka(meka_file):
     return predictions
 
 
+def convert_mulan(mulan_file):
+    """
+    Convert classifier output from MULAN to sparse matrix and output to csv.
+    
+    Assumes that MULAN output is named according to [model_name].csv convention.
+    """
+    file_dir = os.path.dirname(mulan_file)
+    filename = os.path.splitext(os.path.basename(mulan_file))[0]
+    data_string = get_data(mulan_file)
+    pass
+
+
 def majority_vote(predictions_files, out_file):
     """
     Implement simple majority vote ensemble across individual models'
@@ -86,4 +98,3 @@ def majority_vote(predictions_files, out_file):
     matrix = np.concatenate(matrices, axis=2)
     predictions = np.asarray(mode(matrix, axis=2).mode.squeeze(), dtype=int)
     np.savetxt(out_file, predictions)
-

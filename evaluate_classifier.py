@@ -40,6 +40,26 @@ def return_metrics(train_label_file, predictions):
     return metrics
 
 
+def return_labelwise(train_label_file, predictions):
+    """
+    Calculate metrics for each label in model.
+    """
+    df = pd.read_csv(train_label_file, dtype=int)
+    label_names = list(df.columns.values)[1:]
+    true_labels = df.as_matrix()[:, 1:]
+    
+    metrics = [f1_score, precision_score, recall_score, hamming_loss]
+    metrics_array = np.zeros((len(label_names), len(metrics)))
+    for i in range(len(label_names)):
+        label_true = true_labels[:, i]
+        label_pred = predictions[:, i]
+        for j in range(len(metrics)):
+            metrics_array[i, j] = metrics[j](label_true, label_pred)
+    metric_df = pd.DataFrame(columns=["F1", "Precision", "Recall", "Hamming Loss"],
+                            index=label_names, data=metrics_array)
+    return metric_df
+
+
 def return_all(train_label_file, predictions_dir):
     """
     Calculate the metrics for all csv files in the folder, except for
@@ -75,3 +95,5 @@ def test():
     f1, mac_prec, mic_prec, mac_rec, mic_rec, hl = metrics
     out_df = return_all(train_label_file, predictions_dir)
     out_df.to_csv("/Users/salo/NBCLab/athena-data/predictions/compiled.csv", index=False)
+    labelwise_df = return_labelwise(train_label_file, predictions_dir)
+    labelwise_df.to_csv("/Users/salo/NBCLab/athena-data/predictions/compiled_labelwise.csv", index=False)
