@@ -15,8 +15,9 @@ import numpy as np
 import os
 import sys
 import csv
+from collections import Counter
 
-tokenizer = RegexpTokenizer("[\s:\.]+", gaps=True)
+tokenizer = RegexpTokenizer("[\W+]", gaps=True)
 stop = stopwords.words("english")
 
 Entrez.email = "tsalo90@gmail.com"
@@ -55,10 +56,28 @@ def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/proc
             keywords = [keyword.lower() for keyword in record["OT"]]
             keyword_gaz += keywords
     
+    # Remove low-frequency title words
+    tw_dict = Counter(title_word_gaz)
+    for tw in tw_dict.keys():
+        if tw_dict[tw] < 5 or tw.isdigit():
+            del tw_dict[tw]
+    tw_gaz = sorted(tw_dict.keys())
+    
+    # Remove low-frequency authors/years
+    ay_dict = Counter(author_year_gaz)
+    for ay in ay_dict.keys():
+        if ay_dict[ay] < 5:
+            del ay_dict[ay]
+    ay_gaz = sorted(ay_dict.keys())
+    
+    # Remove low-frequency journals
+    j_dict = Counter(journal_gaz)
+    for j in j_dict.keys():
+        if j_dict[j] < 5:
+            del j_dict[j]
+    j_gaz = sorted(j_dict.keys())
+    
     # Remove duplicates
-    ay_gaz = sorted(list(set(author_year_gaz)))
-    j_gaz = sorted(list(set(journal_gaz)))
-    tw_gaz = sorted(list(set(title_word_gaz)))
     k_gaz = sorted(list(set(keyword_gaz)))
     
     save_gaz(ay_gaz, gaz_dir, "ay")
