@@ -14,6 +14,19 @@ import random
 import numpy as np
 
 
+def resplit(labels_file, name_files):
+    """
+    Using existing train and test label files (to get the PMIDs) and existing
+    labels file for all instances, create new train and test label files with
+    new labels.
+    """
+    df = pd.read_csv(labels_file)
+    for fi in name_files:
+        df2 = pd.read_csv(fi)
+        out_df = df[df['pmid'].isin(df2["pmid"])]
+        out_df.to_csv(fi, index=False)
+
+
 def train_test_split(labels_file, test_percent=0.33):
     """
     Find acceptable train/test data split. All labels must be represented in

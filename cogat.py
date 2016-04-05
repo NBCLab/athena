@@ -246,6 +246,7 @@ def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
 
 def apply_weights(input_df, weight_df):
     """
+    Apply weights once. I (TS) doubt this will be used.
     """
     weight_df = weight_df.reindex_axis(sorted(weight_df.columns), axis=1).sort()
     input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
@@ -294,17 +295,16 @@ def apply_weights_recursively(input_df, weight_dfs=None, rel_df=None,
     # Apply vertical relationship weights until relationships are exhausted
     weighted_up = input_df.dot(weights_up)
     while not weighted_up.equals(zero_df):
+        input_df += weighted_up
         weighted_up = weighted_up.dot(weights_up)
 
     weighted_down = input_df.dot(weights_down)
     while not weighted_down.equals(zero_df):
+        input_df += weighted_down
         weighted_down = weighted_down.dot(weights_down)
 
     # Apply horizontal relationship weights once
     weighted_side = input_df.dot(weights_side)
-
-    input_df += weighted_up
-    input_df += weighted_down
     input_df += weighted_side
     return input_df
 

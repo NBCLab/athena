@@ -10,12 +10,16 @@ import pandas as pd
 import numpy as np
 
 
+def clean_str(str_):
+    label = str_.replace(" ", "").replace("'", "").replace("(", ".").replace(")", "").replace("Stroop-", "Stroop.")
+    return label
+
+
 def df_to_list(df, column_name, prefix):
     table = df[pd.notnull(df[column_name])][column_name]
     table.apply(lambda x: "{%s}" % "| ".join(x))
     table = table.tolist()
-    table = [item.replace(" ", "").replace("'", "").replace("(", ".").replace(")", "").replace("Stroop-", "Stroop.") for sublist in
-             table for item in sublist.split("| ")]
+    table = [clean_str(item) for sublist in table for item in sublist.split("| ")]
     
     parents = table
     while parents:
@@ -29,6 +33,10 @@ filenames = ["ExecutiveFunction.csv", "Face.csv", "Pain.csv", "Passive.csv",
              "Reward.csv", "Semantic.csv", "Word.csv", "nBack.csv"]
 data_dir = "/home/tsalo006/cogpo/athena-data/combined/"
 data_dir2 = "/home/tsalo006/cogpo/athena-data/testData/executiveData/"
+
+#folder = "/Users/salo/NBCLab/athena-data/meta_data/"
+#data_dir = "/Users/salo/NBCLab/athena-data/combined/"
+#data_dir2 = "/Users/salo/NBCLab/athena-data/testData/executiveData/"
 
 column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
                    "Behavioral Domain": "Experiments.BehavioralDomain",}
@@ -55,10 +63,7 @@ list_of_pmids = df["PubMed ID"].unique().tolist()
 list_of_files = os.listdir(data_dir) + os.listdir(data_dir2)
 list_of_files = [os.path.splitext(file_)[0] for file_ in list_of_files]
 list_of_files = sorted(list(set(list_of_files)))
-print len(list_of_pmids)
-print len(list_of_files)
 list_of_pmids = sorted(list(set(list_of_pmids).intersection(list_of_files)))
-print len(list_of_pmids)
 
 column_names = ["pmid"] + full_cogpo
 df2 = pd.DataFrame(columns=column_names,
@@ -72,7 +77,7 @@ for row in df.index:
             values = df[column].iloc[row]
             if pd.notnull(values):
                 values = values.split("| ")
-                values = ["{0}.{1}".format(column_to_cogpo[column], item.replace(" ", "").replace("'", "")) for item in values]
+                values = ["{0}.{1}".format(column_to_cogpo[column], clean_str(item)) for item in values]
                 for value in values:
                     for out_column in df2.columns:
                         if out_column in value:
