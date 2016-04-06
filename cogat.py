@@ -310,15 +310,16 @@ def apply_weights_recursively(input_df, weight_dfs=None, rel_df=None,
 
 
 def test():
-    out_dir = "/Users/salo/NBCLab/athena-data/gazetteers/"
+    out_dir = "/home/data/nbc/athena/athena-data/gazetteers/"
     
     # Create and save ID, relationship, and weight files.
-    id_df = create_id_sheet()
-    id_df.to_csv(os.path.join(out_dir, "cogat_ids.csv"), index=False)
+    #id_df = create_id_sheet()
+    #id_df.to_csv(os.path.join(out_dir, "cogat_ids.csv"), index=False)
     
-    rel_df = create_rel_sheet()
-    rel_df.to_csv(os.path.join(out_dir, "cogat_relationships.csv"), index=False)
+    #rel_df = create_rel_sheet()
+    #rel_df.to_csv(os.path.join(out_dir, "cogat_relationships.csv"), index=False)
     
+    rel_df = pd.read_csv(os.path.join(out_dir, "cogat_relationships.csv"))
     weighting_scheme = "ws2"
     weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme)
     date = time.strftime('%Y%m%d')  # We have date here because CogAt is always changing.

@@ -6,6 +6,9 @@ Based off this:
 https://pythonhaven.wordpress.com/2009/12/09/generating_graphs_with_pydot/
 """
 
+from __future__ import division
+import numpy as np
+import seaborn as sns
 import os
 import pydotplus as pydot
 import pandas as pd
@@ -47,3 +50,23 @@ observed_cogpo = df.columns[1:].astype(str).tolist()
 
 for name in ["BehavioralDomain", "ParadigmClass"]:
     plot(observed_cogpo, name)
+
+# Plot heatmap
+data = df.values[:, 1:]
+
+out = np.zeros((data.shape[1], data.shape[1]))
+for i in range(data.shape[1]):
+    for j in range(data.shape[1]):
+        pos_i = np.where(data[:, i]==1)[0]
+        pos_j = np.where(data[:, j]==1)[0]
+        diff = np.setdiff1d(pos_j, pos_i).shape[0]
+        if pos_j.shape[0] == 0:
+            frac = 0
+        else:
+            frac = 1 - (diff / pos_j.shape[0])
+        out[i, j] = frac
+
+cmap = sns.diverging_palette(220, 10, as_cmap=True)
+plot = sns.heatmap(out, cmap=cmap, xticklabels=False, yticklabels=False)
+fig = plot.get_figure()
+fig.savefig("/Users/salo/NBCLab/athena-data/heatmap.png")

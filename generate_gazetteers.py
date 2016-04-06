@@ -16,6 +16,7 @@ import os
 import sys
 import csv
 from collections import Counter
+import re
 
 tokenizer = RegexpTokenizer("[\W+]", gaps=True)
 stop = stopwords.words("english")
@@ -103,7 +104,76 @@ def read_gaz(gaz_dir, gaz_name):
     return gaz_list
 
 
-def count_ay_metadata(list_of_pmids, ay_gaz, out_file):
+def extract_cogat(id_file, cogat_file, data_dir, out_file):
+    """
+    Creates feature table for Cognitive Atlas terms in text.
+    Just a first pass.
+    """
+    # Read in instances
+    id_df = pd.read_csv(id_file)
+    pmids = id_df["pmid"].astype(str).tolist()
+    
+    # Read in features
+    cogat_df = pd.read_csv(cogat_file)
+    unique_terms = sorted(cogat_df["id"].unique().tolist())
+
+    # Count    
+    result_array = np.zeros((len(pmids), len(unique_terms)))
+    for i, pmid in enumerate(pmids):
+        data_file = os.path.join(data_dir, pmid+".txt")
+        if not os.path.isfile(data_file):
+            data_file = "/Users/salo/NBCLab/athena-data/testData/executiveData/{0}.txt".format(pmid)
+        with open(data_file, "r") as fo:
+            text = fo.read()
+    
+        for row in cogat_df.index:
+            term = cogat_df["term"].iloc[row]
+            term_id = cogat_df["id"].iloc[row]
+            col_idx = unique_terms.index(term_id)
+            if term in text:  # To be replaced with more advanced extraction method
+                text.replace(term, term_id)
+                count = len(re.findall(term, text))
+                result_array[i, col_idx] += count
+
+    # Create and save output
+    out_df = pd.DataFrame(columns=unique_terms, index=pmids, data=result_array)
+    out_df.index.name = "pmid"
+    out_df.to_csv(out_file)
+
+
+def extract_kw(id_file, kw_file, data_dir, out_file):
+    """
+    Creates feature table for keyword terms in text.
+    Just a first pass.
+    """
+    # Read in instances
+    id_df = pd.read_csv(id_file)
+    pmids = id_df["pmid"].astype(str).tolist()
+    
+    # Read in features
+    with open(kw_file, "rb") as fo:
+        reader = csv.reader(fo, delimiter="\n")
+        kw_list = list(reader)
+    kw_list = sorted([item for row in kw_list for item in row])
+    
+    # Count
+    result_array = np.zeros((len(pmids), len(kw_list)))
+    for i, pmid in enumerate(pmids):
+        data_file = os.path.join(data_dir, pmid+".txt")
+        with open(data_file, "r") as fo:
+            text = fo.read()
+    
+        for j, kw in enumerate(kw_list):
+            if kw in text:  # To be replaced with more advanced extraction method
+                result_array[i, j] += len(re.findall(kw, text))
+    
+    # Create and save output
+    out_df = pd.DataFrame(columns=kw_list, index=pmids, data=result_array)
+    out_df.index.name = "pmid"
+    out_df.to_csv(out_file)
+
+
+def extract_ay(list_of_pmids, ay_gaz, out_file):
     """
     Creates feature table for authors and year of publication.
     """
@@ -121,7 +191,7 @@ def count_ay_metadata(list_of_pmids, ay_gaz, out_file):
     df.to_csv(out_file, index=False)
 
 
-def count_j_metadata(list_of_pmids, j_gaz, out_file):
+def extract_j(list_of_pmids, j_gaz, out_file):
     """
     Creates feature table for journal of publication.
     """
@@ -138,7 +208,7 @@ def count_j_metadata(list_of_pmids, j_gaz, out_file):
     df.to_csv(out_file, index=False)
 
 
-def count_tw_metadata(list_of_pmids, tw_gaz, out_file):
+def extract_tw(list_of_pmids, tw_gaz, out_file):
     """
     Creates feature table for words in article title.
     
@@ -160,16 +230,16 @@ def count_tw_metadata(list_of_pmids, tw_gaz, out_file):
     df.to_csv(out_file, index=False)
 
 
-def count_gazs(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
-               gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
+def extract_all(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
+                gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
     """
     Calls each of the feature-specific count functions to generate three
     feature count files. Keywords will be extracted from the articles' texts,
     not from their metadata.
     """    
-    gaz_dict = {"ay": count_ay_metadata,
-                "j": count_j_metadata,
-                "tw": count_tw_metadata}
+    gaz_dict = {"ay": extract_ay,
+                "j": extract_j,
+                "tw": extract_tw}
     datasets = ["train", "test"]
                 
     for gaz in gaz_dict.keys():        
@@ -186,4 +256,4 @@ def count_gazs(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
 
 if __name__ == "__main__":
     generate_metadata_gazetteers(os.path.join(sys.argv[1], "all_labels.csv"), sys.argv[2])
-    count_gazs(sys.argv[1], sys.argv[2])
+    extract_all(sys.argv[1], sys.argv[2])
