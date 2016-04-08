@@ -24,8 +24,8 @@ stop = stopwords.words("english")
 Entrez.email = "tsalo90@gmail.com"
 
 
-def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/processed_data/all_labels.csv",
-                                 gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
+def generate_gazetteers(label_file="/Users/salo/NBCLab/athena-data/labels/full.csv",
+                        gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
     """
     Creates list of unique terms for four gazetteers derived from metadata
     available through PubMed:
@@ -38,34 +38,34 @@ def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/proc
     df = pd.read_csv(label_file)
     pmids = df["pmid"].astype(str).tolist()
     
-    author_year_gaz = []
+    authoryear_gaz = []
     journal_gaz = []
-    title_word_gaz = []
+    titleword_gaz = []
     keyword_gaz = []
     
     for pmid in pmids:
         h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
         record = list(Medline.parse(h))[0]
-        author_year_gaz += [author.replace(".", "").lower() for author in record["AU"]]
-        author_year_gaz += [record["DP"][:4]]
+        authoryear_gaz += [author.replace(".", "").lower() for author in record["AU"]]
+        authoryear_gaz += [record["DP"][:4]]
         title = record["TI"]
-        title_words = tokenizer.tokenize(title)
-        title_words = [word.lower() for word in title_words if word.lower() not in stop]
-        title_word_gaz += title_words
+        titlewords = tokenizer.tokenize(title)
+        titlewords = [word.lower() for word in titlewords if word.lower() not in stop]
+        titleword_gaz += titlewords
         journal_gaz += [record["TA"].lower()]
         if "OT" in record.keys():
             keywords = [keyword.lower() for keyword in record["OT"]]
             keyword_gaz += keywords
     
     # Remove low-frequency title words
-    tw_dict = Counter(title_word_gaz)
+    tw_dict = Counter(titleword_gaz)
     for tw in tw_dict.keys():
         if tw_dict[tw] < 5 or tw.isdigit():
             del tw_dict[tw]
     tw_gaz = sorted(tw_dict.keys())
     
     # Remove low-frequency authors/years
-    ay_dict = Counter(author_year_gaz)
+    ay_dict = Counter(authoryear_gaz)
     for ay in ay_dict.keys():
         if ay_dict[ay] < 5:
             del ay_dict[ay]
@@ -81,22 +81,22 @@ def generate_metadata_gazetteers(label_file="/Users/salo/NBCLab/athena-data/proc
     # Remove duplicates
     k_gaz = sorted(list(set(keyword_gaz)))
     
-    save_gaz(ay_gaz, gaz_dir, "ay")
-    save_gaz(j_gaz, gaz_dir, "j")
-    save_gaz(tw_gaz, gaz_dir, "tw")
-    save_gaz(k_gaz, gaz_dir, "k")
+    save_gaz(ay_gaz, gaz_dir, "authoryear")
+    save_gaz(j_gaz, gaz_dir, "journal")
+    save_gaz(tw_gaz, gaz_dir, "titleword")
+    save_gaz(k_gaz, gaz_dir, "keyword")
 
 
-def save_gaz(gaz_list, gaz_dir, gaz_name):
-    gaz_file = os.path.join(gaz_dir, gaz_name + "_gaz.txt")
+def save_gaz(gaz_list, gaz_dir, feature_name):
+    gaz_file = os.path.join(gaz_dir, feature_name+".txt")
     with open(gaz_file, "w") as fo:
         writer = csv.writer(fo, lineterminator="\n")
         for att in gaz_list:
-            writer.writerow([att])    
+            writer.writerow([att])
 
 
-def read_gaz(gaz_dir, gaz_name):
-    gaz_file = os.path.join(gaz_dir, gaz_name + "_gaz.txt")
+def read_gaz(gaz_dir, feature_name):
+    gaz_file = os.path.join(gaz_dir, feature_name+".txt")
     with open(gaz_file, "rb") as fo:
         reader = csv.reader(fo, delimiter="\n")
         gaz_list = list(reader)
@@ -121,8 +121,6 @@ def extract_cogat(id_file, cogat_file, data_dir, out_file):
     result_array = np.zeros((len(pmids), len(unique_terms)))
     for i, pmid in enumerate(pmids):
         data_file = os.path.join(data_dir, pmid+".txt")
-        if not os.path.isfile(data_file):
-            data_file = "/Users/salo/NBCLab/athena-data/testData/executiveData/{0}.txt".format(pmid)
         with open(data_file, "r") as fo:
             text = fo.read()
     
@@ -222,38 +220,40 @@ def extract_tw(list_of_pmids, tw_gaz, out_file):
         record = list(Medline.parse(h))[0]
         
         title = record["TI"]
-        title_words = tokenizer.tokenize(title)
-        title_words = [word.lower() for word in title_words if word.lower() not in stop]
-        for tw in title_words:
+        titlewords = tokenizer.tokenize(title)
+        titlewords = [word.lower() for word in titlewords if word.lower() not in stop]
+        for tw in titlewords:
             if tw in tw_gaz:
                 df[tw].loc[df["pmid"]==pmid] += 1
     df.to_csv(out_file, index=False)
 
 
-def extract_all(label_dir="/Users/salo/NBCLab/athena-data/processed_data/",
-                gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/"):
+def extract_all(data_dir="/Users/salo/NBCLab/athena-data/"):
     """
     Calls each of the feature-specific count functions to generate three
     feature count files. Keywords will be extracted from the articles' texts,
     not from their metadata.
     """    
-    gaz_dict = {"ay": extract_ay,
-                "j": extract_j,
-                "tw": extract_tw}
+    feature_dict = {"authoryear": extract_ay,
+                    "journal": extract_j,
+                    "titlewords": extract_tw}
     datasets = ["train", "test"]
-                
-    for gaz in gaz_dict.keys():        
-        gaz_list = read_gaz(gaz_dir, gaz)
+
+    gazetteers_dir = os.path.join(data_dir, "gazetteers/")
+    label_dir = os.path.join(data_dir, "labels/")
+    feature_dir = os.path.join(data_dir, "features/")
+
+    for feature in feature_dict.keys():        
+        gazetteer = read_gaz(gazetteers_dir, feature)
         
         for dataset in datasets:
-            filename = "{0}_labels.csv".format(dataset)
-            label_file = os.path.join(label_dir, filename)
+            label_file = os.path.join(label_dir, dataset+".csv")
             df = pd.read_csv(label_file)
             pmids = df["pmid"].astype(str).tolist()
 
-            gaz_dict[gaz](pmids, gaz_list, os.path.join(label_dir, "{0}_features_{1}.csv".format(dataset, gaz)))
+            feature_dict[feature](pmids, gazetteer, os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature)))
 
 
 if __name__ == "__main__":
-    generate_metadata_gazetteers(os.path.join(sys.argv[1], "all_labels.csv"), sys.argv[2])
+    generate_gazetteers(os.path.join(sys.argv[1], "full.csv"), sys.argv[2])
     extract_all(sys.argv[1], sys.argv[2])

@@ -20,38 +20,45 @@ import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
 
 
-def return_metrics(train_label_file, predictions):
+def return_metrics(labels, predictions):
     """
     Calculate metrics for model based on predicted labels.
     """
-    df = pd.read_csv(train_label_file, dtype=int)
-    true_labels = df.as_matrix()[:, 1:]
+    if isinstance(labels, str):
+        df = pd.read_csv(labels, dtype=int)
+        labels = df.as_matrix()[:, 1:]
     
-    macro_precision = precision_score(true_labels, predictions, average="macro")
-    micro_precision = precision_score(true_labels, predictions, average="micro")
+    macro_precision = precision_score(labels, predictions, average="macro")
+    micro_precision = precision_score(labels, predictions, average="micro")
     
-    macro_recall = recall_score(true_labels, predictions, average="macro")
-    micro_recall = recall_score(true_labels, predictions, average="micro")
+    macro_recall = recall_score(labels, predictions, average="macro")
+    micro_recall = recall_score(labels, predictions, average="micro")
     
-    hamming_loss_ = hamming_loss(true_labels, predictions)
+    hamming_loss_ = hamming_loss(labels, predictions)
     
-    macro_f1_score_by_example = f1_score(true_labels, predictions, average="samples")
+    macro_f1_score_by_example = f1_score(labels, predictions, average="samples")
     metrics = [macro_f1_score_by_example, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 
-def return_labelwise(train_label_file, predictions):
+def return_labelwise(labels, predictions):
     """
     Calculate metrics for each label in model.
     """
-    df = pd.read_csv(train_label_file, dtype=int)
+    if isinstance(labels, str):
+        df = pd.read_csv(labels, dtype=int)
+    elif isinstance(labels, pd.DataFrame):
+        df = labels
+    else:
+        print "Labels is unrecognized type {0}".format(type(labels))
+        raise Exception()
     label_names = list(df.columns.values)[1:]
-    true_labels = df.as_matrix()[:, 1:]
+    labels = df.as_matrix()[:, 1:]
     
     metrics = [f1_score, precision_score, recall_score, hamming_loss]
     metrics_array = np.zeros((len(label_names), len(metrics)))
     for i in range(len(label_names)):
-        label_true = true_labels[:, i]
+        label_true = labels[:, i]
         label_pred = predictions[:, i]
         for j in range(len(metrics)):
             metrics_array[i, j] = metrics[j](label_true, label_pred)
@@ -62,7 +69,7 @@ def return_labelwise(train_label_file, predictions):
     return metric_df
 
 
-def return_all(train_label_file, predictions_dir):
+def return_all(labels_file, predictions_dir):
     """
     Calculate the metrics for all csv files in the folder, except for
     compiled.csv.
@@ -70,14 +77,13 @@ def return_all(train_label_file, predictions_dir):
     out_metrics = []
     
     predictions_files = glob(os.path.join(predictions_dir, "*.csv"))
-    predictions_files = [file_ for file_ in predictions_files if not "compiled" in file_]
     for predictions_file in predictions_files:
         model_name, _ = os.path.splitext(predictions_file)
         model_name = os.path.basename(model_name)
         
         predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
         
-        metrics = return_metrics(train_label_file, predictions)
+        metrics = return_metrics(labels_file, predictions)
         metrics.insert(0, model_name)
         out_metrics += [metrics]
     out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
@@ -88,7 +94,7 @@ def return_all(train_label_file, predictions_dir):
 
 
 def test():
-    train_label_file = "/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv"
+    train_label_file = "/Users/salo/NBCLab/athena-data/labels/train.csv"
     predictions_file = "/Users/salo/NBCLab/athena-data/predictions/predictions.csv"
     predictions_dir = "/Users/salo/NBCLab/athena-data/predictions/"
     predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
@@ -96,6 +102,6 @@ def test():
     metrics = return_metrics(train_label_file, predictions)
     f1, mac_prec, mic_prec, mac_rec, mic_rec, hl = metrics
     out_df = return_all(train_label_file, predictions_dir)
-    out_df.to_csv("/Users/salo/NBCLab/athena-data/predictions/compiled.csv", index=False)
+    out_df.to_csv("/Users/salo/NBCLab/athena-data/statistics/metrics.csv", index=False)
     labelwise_df = return_labelwise(train_label_file, predictions_dir)
-    labelwise_df.to_csv("/Users/salo/NBCLab/athena-data/predictions/compiled_labelwise.csv", index=False)
+    labelwise_df.to_csv("/Users/salo/NBCLab/athena-data/statistics/labelwise_metrics.csv", index=False)

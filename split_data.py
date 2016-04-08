@@ -61,11 +61,11 @@ def train_test_split(labels_file, test_percent=0.33):
     train_data = all_data[sorted(shuf_index[n_test:]), :]
     test_data = all_data[sorted(shuf_index[:n_test]), :]
     df_train = pd.DataFrame(columns=column_names, data=train_data)
-    df_train.to_csv(os.path.join(data_dir, "train_labels.csv"), index=False)
+    df_train.to_csv(os.path.join(data_dir, "train.csv"), index=False)
     df_test = pd.DataFrame(columns=column_names, data=test_data)
-    df_test.to_csv(os.path.join(data_dir, "test_labels.csv"), index=False)
+    df_test.to_csv(os.path.join(data_dir, "test.csv"), index=False)
 
 
 def run():
-    labels_file = "/Users/salo/NBCLab/athena-data/processed_data/all_labels.csv"
+    labels_file = "/Users/salo/NBCLab/athena-data/labels/full.csv"
     train_test_split(labels_file)

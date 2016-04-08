@@ -28,15 +28,12 @@ def df_to_list(df, column_name, prefix):
     table = ["{0}.{1}".format(prefix, item) for item in table]
     return table
 
-folder = "/home/tsalo006/cogpo/athena-data/meta_data/"
+data_dir = "/home/tsalo006/cogpo/athena-data/"
+
+metadata_dir = os.path.join(data_dir, "metadata/")
 filenames = ["ExecutiveFunction.csv", "Face.csv", "Pain.csv", "Passive.csv",
              "Reward.csv", "Semantic.csv", "Word.csv", "nBack.csv"]
-data_dir = "/home/tsalo006/cogpo/athena-data/combined/"
-data_dir2 = "/home/tsalo006/cogpo/athena-data/testData/executiveData/"
-
-#folder = "/Users/salo/NBCLab/athena-data/meta_data/"
-#data_dir = "/Users/salo/NBCLab/athena-data/combined/"
-#data_dir2 = "/Users/salo/NBCLab/athena-data/testData/executiveData/"
+text_dir = "/home/tsalo006/cogpo/athena-data/text/full/"
 
 column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
                    "Behavioral Domain": "Experiments.BehavioralDomain",}
@@ -48,7 +45,7 @@ column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
 #                   "Instructions": "Conditions.Instruction"}
 
 full_cogpo = []
-dfs = [pd.read_csv(os.path.join(folder, file_), dtype=str)[["PubMed ID"] + column_to_cogpo.keys()] for file_ in filenames]
+dfs = [pd.read_csv(os.path.join(metadata_dir, file_), dtype=str)[["PubMed ID"] + column_to_cogpo.keys()] for file_ in filenames]
 df = pd.concat(dfs, ignore_index=True)
 
 for column in column_to_cogpo.keys():
@@ -60,7 +57,7 @@ full_cogpo = sorted(list(set(full_cogpo)))
 # Preallocate label DataFrame
 df = df[df["PubMed ID"].str.contains("^\d+$")].reset_index()
 list_of_pmids = df["PubMed ID"].unique().tolist()
-list_of_files = os.listdir(data_dir) + os.listdir(data_dir2)
+list_of_files = os.listdir(text_dir)
 list_of_files = [os.path.splitext(file_)[0] for file_ in list_of_files]
 list_of_files = sorted(list(set(list_of_files)))
 list_of_pmids = sorted(list(set(list_of_pmids).intersection(list_of_files)))
@@ -90,4 +87,5 @@ rep_labels = label_counts[label_counts>4].index
 df2 = df2[rep_labels]
 df2 = df2[(df2.T != 0).any()]
 
-df2.to_csv("/home/tsalo006/cogpo/all_labels.csv", index=False)
+out_file = os.path.join(data_dir, "labels/full.csv")
+df2.to_csv(out_file, index=False)

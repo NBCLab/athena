@@ -325,11 +325,11 @@ def test():
     out_dir = "/home/data/nbc/athena/athena-data/gazetteers/"
     
     # Create and save ID, relationship, and weight files.
-    #id_df = create_id_sheet()
-    #id_df.to_csv(os.path.join(out_dir, "cogat_ids.csv"), index=False)
+    id_df = create_id_sheet()
+    id_df.to_csv(os.path.join(out_dir, "cogat_gaz.csv"), index=False)
     
-    #rel_df = create_rel_sheet()
-    #rel_df.to_csv(os.path.join(out_dir, "cogat_relationships.csv"), index=False)
+    rel_df = create_rel_sheet()
+    rel_df.to_csv(os.path.join(out_dir, "cogat_relationships.csv"), index=False)
     
     rel_df = pd.read_csv(os.path.join(out_dir, "cogat_relationships.csv"))
     weighting_scheme = "ws2"
