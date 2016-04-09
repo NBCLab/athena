@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Apr  2 16:25:01 2016
-Glossary:
-- Features:
-  - ay: Authors/Year
-  - j: Journal
-  - cogat: Cognitive Atlas
-  - ref: References
-  - nbow: Naive bag of words
-  - kw: PubMed keywords
-  - tw: Title words
+
+Performs simple classification of combinations of features to identify useful
+features for final ATHENA model.
 
 @author: salo
 """

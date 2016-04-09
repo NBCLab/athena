@@ -11,7 +11,7 @@ zeros =      1297515
 """
 
 import pandas as pd
-from cogat import apply_weights_recursively
+#from cogat import apply_weights_recursively
 
 input_df = pd.read_csv("/Users/salo/NBCLab/athena-data/features/cogat_res.csv")
 
