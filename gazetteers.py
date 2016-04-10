@@ -10,7 +10,6 @@ import sys
 import csv
 from Bio import Entrez
 from Bio import Medline
-import pandas as pd
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from collections import Counter
@@ -23,45 +22,9 @@ stop = stopwords.words("english")
 Entrez.email = "tsalo90@gmail.com"
 
 
-def generate_gazetteers(label_file="/Users/salo/NBCLab/athena-data/labels/full.csv",
-                        gaz_dir="/Users/salo/NBCLab/athena-data/gazetteers/",
-                        text_dir="/Users/salo/NBCLab/athena-data/text/"):
-    """
-    Creates list of unique terms for four gazetteers derived from metadata
-    available through PubMed:
-        - Authors and year of publication
-        - Journal of publication
-        - Words in title (not including stopwords)
-        - Author-generated keywords (if available on PubMed)
-            - This includes multiword expressions.
-    """
-    combined_text_dir = os.path.join(text_dir, "combined/")
-    full_text_dir = os.path.join(text_dir, "full/")
-    
-    df = pd.read_csv(label_file)
-    pmids = df["pmid"].astype(str).tolist()
-    
-    cogat_gaz, cogat_rels = generate_cogat_gazetteer()
-    nbow_gaz = generate_nbow_gazetteer(pmids, combined_text_dir)
-    references_gaz = generate_references_gazetteer(pmids, full_text_dir)
-    metadata_gazs = generate_metadata_gazetteers(pmids)
-    
-    authoryear_gaz, journal_gaz, keyword_gaz, titleword_gaz = metadata_gazs
-    
-    save_gaz(cogat_gaz, gaz_dir, "cogat")
-    save_gaz(nbow_gaz, gaz_dir, "nbow")
-    save_gaz(references_gaz, gaz_dir, "references")
-    save_gaz(authoryear_gaz, gaz_dir, "authoryear")
-    save_gaz(journal_gaz, gaz_dir, "journal")
-    save_gaz(titleword_gaz, gaz_dir, "titleword")
-    save_gaz(keyword_gaz, gaz_dir, "keyword")
-
-
-def generate_cogat_gazetteer():
-    pass
-
-
 def generate_nbow_gazetteer(pmids, text_dir):
+    """
+    """
     text_list = [[] for _ in pmids]
     for i, pmid in enumerate(pmids):
         file_ = os.path.join(text_dir, pmid+".txt")
@@ -78,10 +41,14 @@ def generate_nbow_gazetteer(pmids, text_dir):
 
 
 def generate_references_gazetteer(pmids, text_dir):
+    """
+    """
     pass
 
 
 def generate_metadata_gazetteers(pmids):
+    """
+    """
     authoryear_gaz = []
     journal_gaz = []
     keyword_gaz = []
@@ -102,25 +69,25 @@ def generate_metadata_gazetteers(pmids):
             keyword_gaz += keywords
     
     # Remove low-frequency title words
-    tw_dict = Counter(titleword_gaz)
-    for tw in tw_dict.keys():
-        if tw_dict[tw] < 5 or tw.isdigit():
-            del tw_dict[tw]
-    titleword_gaz = sorted(tw_dict.keys())
+    titleword_count = Counter(titleword_gaz)
+    for tw in titleword_count.keys():
+        if titleword_count[tw] < 5 or tw.isdigit():
+            del titleword_count[tw]
+    titleword_gaz = sorted(titleword_count.keys())
     
     # Remove low-frequency authors/years
-    ay_dict = Counter(authoryear_gaz)
-    for ay in ay_dict.keys():
-        if ay_dict[ay] < 5:
-            del ay_dict[ay]
-    authoryear_gaz = sorted(ay_dict.keys())
+    authoryear_count = Counter(authoryear_gaz)
+    for ay in authoryear_count.keys():
+        if authoryear_count[ay] < 5:
+            del authoryear_count[ay]
+    authoryear_gaz = sorted(authoryear_count.keys())
     
     # Remove low-frequency journals
-    j_dict = Counter(journal_gaz)
-    for j in j_dict.keys():
-        if j_dict[j] < 5:
-            del j_dict[j]
-    journal_gaz = sorted(j_dict.keys())
+    journal_count = Counter(journal_gaz)
+    for j in journal_count.keys():
+        if journal_count[j] < 5:
+            del journal_count[j]
+    journal_gaz = sorted(journal_count.keys())
     
     # Remove duplicate keywords
     keyword_gaz = sorted(list(set(keyword_gaz)) + titleword_gaz)
@@ -128,6 +95,8 @@ def generate_metadata_gazetteers(pmids):
     
 
 def save_gaz(gaz_list, gaz_dir, feature_name):
+    """
+    """
     gaz_file = os.path.join(gaz_dir, feature_name+".txt")
     with open(gaz_file, "w") as fo:
         writer = csv.writer(fo, lineterminator="\n")

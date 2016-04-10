@@ -32,3 +32,18 @@ def tokenize(text):
     tokens = word_tokenize(text)
     stems = stem_tokens(tokens, stemmer)
     return stems
+
+
+def cogpo_columns(columns):
+    """
+    """
+    column_to_cogpo = {"Paradigm Class": "Experiments.ParadigmClass",
+                       "Behavioral Domain": "Experiments.BehavioralDomain",
+                       "Diagnosis": "Subjects.Diagnosis",
+                       "Stimulus Modality": "Conditions.StimulusModality",
+                       "Stimulus Type": "Conditions.StimulusType",
+                       "Response Modality": "Conditions.OvertResponseModality",
+                       "Response Type": "Conditions.OvertResponseType",
+                       "Instructions": "Conditions.Instruction"}
+    subset = { key:value for key, value in column_to_cogpo.items() if key in columns }
+    return subset

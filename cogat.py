@@ -11,8 +11,6 @@ import pandas as pd
 import re
 import numpy as np
 import itertools
-import time
-
 from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
 from cognitiveatlas.api import get_disorder
@@ -209,7 +207,7 @@ def create_rel_sheet(id_df):
     return rel_df
 
 
-def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
+def weight_rels(rel_df, weighting_scheme="none"):
     """
     """
     weights = get_weights(weighting_scheme)
@@ -267,7 +265,6 @@ def test():
     
     rel_df = pd.read_csv(os.path.join(out_dir, "cogat_relationships.csv"))
     weighting_scheme = "ws2"
-    weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme)
-    date = time.strftime('%Y%m%d')  # We have date here because CogAt is always changing.
-    weight_df.to_csv(os.path.join(out_dir, "cogat_weights_{0}_{1}.csv".format(weighting_scheme, date)),
+    weight_df = weight_rels(rel_df, weighting_scheme)
+    weight_df.to_csv(os.path.join(out_dir, "cogat_weights_{0}.csv".format(weighting_scheme)),
                      index=True)

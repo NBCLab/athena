@@ -148,7 +148,6 @@ def apply_weights_recursively(input_df, weight_dfs=None, weighting_scheme="ws2")
     zero_df = copy.deepcopy(input_df)
     zero_df[zero_df>-1]=0
 
-
     # Apply vertical relationship weights until relationships are exhausted
     counter = 0
     weighted_up = input_df.dot(weights_up)
