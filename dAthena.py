@@ -30,7 +30,7 @@ class Athena:
 	#Called when the class is initialized
 	def __init__(self):
 		'''-----	Text Variables   -----'''
-		dataFolder = os.path.join(os.path.expanduser("~"), "dAthena/data/")
+		dataFolder = os.path.join(os.path.expanduser("~"), "athena-data/text/")
 		#Location the abstracts' plain-text are located
 		
 		#self.corpus_directory = os.path.join(dataFolder, 'stemmed/abstracts/*.txt')
@@ -43,7 +43,7 @@ class Athena:
 		#self.corpus_directory = os.path.join(dataFolder, '2013_abstracts/*.txt')
 
 		#Location of stopword list
-		self.stopword_file = os.path.join(dataFolder,'misc_data/onix_stopwords.txt')
+		self.stopword_file = os.path.join(dataFolder,'misc/onix_stopwords.txt')
 		#Total # of abstracts/methods loaded
 		self.text_files_loaded = 0
 		#Names of all loaded files
@@ -53,7 +53,7 @@ class Athena:
 
 		'''-----	Meta-data Variables   -----'''
 		#Location of meta_data
-		self.meta_data_directory = os.path.join(dataFolder, 'meta_data/*.csv')
+		self.meta_data_directory = os.path.join(dataFolder, 'metadata/*.csv')
 		self.meta_data = None
 		#Column names we want to keep
 		self.index_name = ['Year', 'First Author', 'Journal', 'PubMed ID']
