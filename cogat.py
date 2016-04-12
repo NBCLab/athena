@@ -247,7 +247,7 @@ def weight_rels(rel_df, weighting_scheme="none"):
         row_counter += 1
 
     weight_df = weight_df.pivot(index="input", columns="output", values="weight")
-    del weight_df.index.name
+    weight_df.index.name = "term"
     del weight_df.columns.name
 
     return weight_df

@@ -65,6 +65,9 @@ def extract_nbow(pmids, gazetteer_file, count_file, text_dir):
     tfidf = TfidfVectorizer(tokenizer=tokenize, vocabulary=gazetteer)
     result_array = tfidf.fit_transform(text_list).toarray()
     
+    # Normalize matrix
+    result_array = result_array / result_array.sum(axis=1)[:, None]
+    
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
@@ -98,14 +101,14 @@ def extract_cogat(pmids, gazetteer_file, count_file, text_dir):
             term = cogat_df["term"].iloc[row]
             term_id = cogat_df["id"].iloc[row]
             col_idx = gazetteer.index(term_id)
-            if term in text:  # To be replaced with more advanced extraction method
-                text.replace(term, term_id)
-                count = len(re.findall(term, text))
-                count_array[i, col_idx] += count
+            # To be replaced with more advanced extraction method
+            count = len(re.findall(term, text))
+            count_array[i, col_idx] += count
+            text = text.replace(term, term_id)
 
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=count_array)
-    count_df.index.name = "pmid"
+    count_df.index.name = "pmid"    
     count_df.to_csv(count_file)
 
 
@@ -115,11 +118,15 @@ def apply_weights(input_df, weight_df):
     """
     weight_df = weight_df.reindex_axis(sorted(weight_df.columns), axis=1).sort()
     input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
+    
+    if not (weight_df.columns == input_df.columns):
+        raise Exception("Columns do not match between DataFrames!")
+
     weighted_df = input_df.dot(weight_df)
     return weighted_df
 
 
-def apply_weights_recursively(input_df, weight_dfs=None, weighting_scheme="ws2"):
+def apply_weights_recursively(input_df, weight_dfs, weighted_file):
     """
     First pass at trying to apply parent- and child-directed weights all the
     way to their ends. Sideways weights are only applied once.
@@ -129,13 +136,6 @@ def apply_weights_recursively(input_df, weight_dfs=None, weighting_scheme="ws2")
     weight_dfs:         A list of DataFrames corresponding to upward-,
                         downward-, and side-directed relationships. Either
                         weight_dfs or rel_df must be defined.
-
-    rel_df:             A DataFrame of existing relationships from the
-                        Cognitive Atlas. Will be used with weighting_scheme to
-                        create weight_dfs. Either weight_dfs or rel_df must be
-                        defined.
-    weighting_scheme:   The weighting scheme. Must match a set of keys from
-                        get_weights.
     """
     weights_up = weight_dfs[0].reindex_axis(sorted(weight_dfs[0].columns), axis=1).sort()
     weights_down = weight_dfs[1].reindex_axis(sorted(weight_dfs[1].columns), axis=1).sort()
@@ -143,6 +143,9 @@ def apply_weights_recursively(input_df, weight_dfs=None, weighting_scheme="ws2")
 
     input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
     n_features = input_df.shape[1]
+    
+    if not (weights_up.columns == weights_down.columns == weights_side.columns == input_df.columns):
+        raise Exception("Columns do not match across DataFrames!")
     
     count_df = copy.deepcopy(input_df)
     zero_df = copy.deepcopy(input_df)
@@ -156,7 +159,7 @@ def apply_weights_recursively(input_df, weight_dfs=None, weighting_scheme="ws2")
         weighted_up = weighted_up.dot(weights_up)
         count_df += weighted_up
         counter += 1
-        if counter > (n_features-1):
+        if counter == (n_features-1):
             break
 
     counter = 0
@@ -172,7 +175,10 @@ def apply_weights_recursively(input_df, weight_dfs=None, weighting_scheme="ws2")
     # Apply horizontal relationship weights once
     weighted_side = input_df.dot(weights_side)
     count_df += weighted_side
-    return input_df
+    
+    # Normalize data
+    weighted_df = count_df.div(count_df.sum(axis=1), axis=0)
+    weighted_df.to_csv(weighted_file)
 
 
 def extract_keywords(pmids, gazetteer_file, count_file, text_dir):
@@ -191,8 +197,11 @@ def extract_keywords(pmids, gazetteer_file, count_file, text_dir):
             text = fo.read()
     
         for j, keyword in enumerate(gazetteer):
-            if keyword in text:  # To be replaced with more advanced extraction method
-                result_array[i, j] += len(re.findall(keyword, text))
+            # To be replaced with more advanced extraction method
+            result_array[i, j] += len(re.findall(keyword, text))
+
+    # Normalize matrix
+    result_array = result_array / result_array.sum(axis=1)[:, None]    
     
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
@@ -217,7 +226,10 @@ def extract_authoryear(pmids, gazetteer_file, count_file):
         for j, authoryear in enumerate(gazetteer):
             if authoryear in authoryears:
                 result_array[i, j] += 1
-    
+
+    # Normalize matrix
+    result_array = result_array / result_array.sum(axis=1)[:, None]
+
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
@@ -240,6 +252,9 @@ def extract_journal(pmids, gazetteer_file, count_file):
         for j, journal in enumerate(gazetteer):
             if journal in journals:
                 result_array[i, j] += 1
+    
+    # Normalize matrix
+    result_array = result_array / result_array.sum(axis=1)[:, None]
     
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
@@ -265,6 +280,9 @@ def extract_titlewords(pmids, gazetteer_file, count_file, text_dir):
         for j, titleword in enumerate(gazetteer):
             if titleword in titlewords:
                 result_array[i, j] += 1
+    
+    # Normalize matrix
+    result_array = result_array / result_array.sum(axis=1)[:, None]
     
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
@@ -306,6 +324,20 @@ def extract_features(data_dir="/Users/salo/NBCLab/athena-data/"):
                 feature_dict[feature](pmids, gazetteer, count_file)
             else:
                 feature_dict[feature](pmids, gazetteer, count_file, text_dir)
+    
+    # Now a special step for CogAt weighting
+    weighting_scheme = "ws2"
+    directions = ["up", "down", "side"]
+    weight_dfs = [[] for _ in directions]
+    for i, dir_ in enumerate(directions):
+        weight_dfs[i] = pd.read_csv(os.path.join(feature_dir, "cogat_weights_{0}_{1}.csv".format(weighting_scheme, dir_)))
+        weight_dfs[i].set_index("term", inplace=True)
+        
+    for dataset in datasets:
+        count_file = os.path.join(feature_dir, "{0}_cogat.csv".format(dataset))
+        count_df = pd.read_csv(count_file, index_col="pmid")
+        weighted_file = os.path.join(feature_dir, "{0}_cogat_weighted.csv".format(dataset))
+        apply_weights_recursively(count_df, weight_dfs, weighted_file)
 
 
 if __name__ == "__main__":
