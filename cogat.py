@@ -10,9 +10,6 @@ import pandas as pd
 import re
 import numpy as np
 import itertools
-import time
-import copy
-
 from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
 from cognitiveatlas.api import get_disorder
@@ -184,7 +181,7 @@ def clean_rel_sheet(df):
     return rel_df
 
 
-def create_rel_sheet():
+def create_rel_sheet(id_df):
     """
     """
     concepts = get_concept().pandas
@@ -194,10 +191,22 @@ def create_rel_sheet():
     t_rel_df = clean_rel_sheet(tasks)
     d_rel_df = clean_rel_sheet(disorders)
     rel_df = pd.concat([c_rel_df, t_rel_df, d_rel_df], ignore_index=True)
+    
+    cogat_terms = id_df.columns.values.tolist()
+    rel_terms = rel_df.columns.values.tolist()
+    
+    # Some terms may no longer exist, but may still be referenced in assertions.
+    # These terms must be removed from the set of relationships.
+    not_in_gaz = list(set(rel_terms) - set(cogat_terms))
+    drop = [term for term in not_in_gaz if not term.startswith("ctp")]
+    
+    keep_terms = sorted(list(set(rel_terms) - set(drop)))
+    rel_df = rel_df[keep_terms]
+    
     return rel_df
 
 
-def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
+def weight_rels(rel_df, weighting_scheme="none"):
     """
     """
     weights = get_weights(weighting_scheme)
@@ -237,87 +246,7 @@ def create_weighted_rel_sheet(rel_df, weighting_scheme="none"):
         row_counter += 1
 
     weight_df = weight_df.pivot(index="input", columns="output", values="weight")
-    del weight_df.index.name
+    weight_df.index.name = "term"
     del weight_df.columns.name
 
     return weight_df
-
-
-def apply_weights(input_df, weight_df):
-    """
-    """
-    weight_df = weight_df.reindex_axis(sorted(weight_df.columns), axis=1).sort()
-    input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
-    weighted_df = input_df.dot(weight_df)
-    return weighted_df
-
-
-def apply_weights_recursively(input_df, weight_dfs=None, rel_df=None,
-                              weighting_scheme="ws2"):
-    """
-    First pass at trying to apply parent- and child-directed weights all the
-    way to their ends. Sideways weights are only applied once.
-
-    input_df:           A DataFrame with observed feature counts.
-
-    weight_dfs:         A list of DataFrames corresponding to upward-,
-                        downward-, and side-directed relationships. Either
-                        weight_dfs or rel_df must be defined.
-
-    rel_df:             A DataFrame of existing relationships from the
-                        Cognitive Atlas. Will be used with weighting_scheme to
-                        create weight_dfs. Either weight_dfs or rel_df must be
-                        defined.
-    weighting_scheme:   The weighting scheme. Must match a set of keys from
-                        get_weights.
-    """
-    if type(weight_dfs) == list:
-        weights_up = weight_dfs[0]
-        weights_down = weight_dfs[1]
-        weights_side = weight_dfs[2]
-    elif rel_df:
-        weights_up = create_weighted_rel_sheet(rel_df, weighting_scheme+"_up")
-        weights_down = create_weighted_rel_sheet(rel_df, weighting_scheme+"_down")
-        weights_side = create_weighted_rel_sheet(rel_df, weighting_scheme+"_side")
-    else:
-        raise Exception("Neither weight_dfs nor rel_df defined.")
-
-    weights_up = weights_up.reindex_axis(sorted(weights_up.columns), axis=1).sort()
-    weights_down = weights_down.reindex_axis(sorted(weights_down.columns), axis=1).sort()
-    weights_side = weights_side.reindex_axis(sorted(weights_side.columns), axis=1).sort()
-    input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
-    
-    zero_df = copy.deepcopy(input_df)
-    zero_df[zero_df>-1]=0
-
-    # Apply vertical relationship weights until relationships are exhausted
-    weighted_up = input_df.dot(weights_up)
-    while not weighted_up.equals(zero_df):
-        weighted_up = weighted_up.dot(weights_up)
-
-    weighted_down = input_df.dot(weights_down)
-    while not weighted_down.equals(zero_df):
-        weighted_down = weighted_down.dot(weights_down)
-
-    # Apply horizontal relationship weights once
-    weighted_side = input_df.dot(weights_side)
-
-    input_df += weighted_up
-    input_df += weighted_down
-    input_df += weighted_side
-    return input_df
-
-
-def test():
-    # Create and save ID, relationship, and weight files.
-    id_df = create_id_sheet()
-    id_df.to_csv("cogat_ids.csv", index=False)
-    
-    rel_df = create_rel_sheet()
-    rel_df.to_csv("cogat_relationships.csv", index=False)
-    
-    weighting_scheme = "ws2"
-    weight_df = create_weighted_rel_sheet(rel_df, weighting_scheme)
-    date = time.strftime('%Y%m%d')  # We have date here because CogAt is always changing.
-    weight_df.to_csv("cogat_weights_{0}_{1}.csv".format(weighting_scheme, date),
-                     index=True)

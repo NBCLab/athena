@@ -7,22 +7,21 @@ import pandas as pd
 import os
 
 
-def convert_to_arff(feature_files,
-                    label_file="/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv"):
+def convert_to_arff(data_dir="/Users/salo/NBCLab/athena-data/",
+                    dataset, feature_files):
     """
     Convert pandas DataFrames to arff format. Allows user to use combinations
     of features.
     """
-    out_dir = os.path.dirname(label_file)
+    label_file = os.path.join(data_dir, "labels/{0}.csv".format(dataset))
+    out_dir = os.path.join(data_dir, "weka_files")
     
     # Load and combine data
-    out_name = "train_data"
+    out_name = dataset
     feature_dfs = [[] for i in feature_files]
     for i, feature_file in enumerate(feature_files):
         file_ = os.path.basename(feature_file)
-        if i == 0:
-            out_name = file_.split("features_")[0][:-1]
-        feature_name = "_" + file_.split("features_")[-1].split(".csv")[0]
+        feature_name = "_" + "_".join(file_.split(".csv")[0].split("_")[1:])
         out_name += feature_name
         
         feature_dfs[i] = pd.read_csv(feature_file, dtype=float)
@@ -36,7 +35,7 @@ def convert_to_arff(feature_files,
     label_df = label_df.set_index("pmid")
     labels = label_df.columns.tolist()
     
-    out_string = "@relation TrainingData\n"
+    out_string = "@relation {0}\n".format(dataset)
     for feature in features:
         if " " in feature:
             out_string += '@attribute "{0}" numeric\n'.format(feature)
@@ -78,12 +77,12 @@ def gen_string(dict_, tabs, in_string):
     return in_string
 
 
-def gen_hier_label_file(label_file="/Users/salo/NBCLab/athena-data/processed_data/train_labels.csv"):
+def gen_hier_label_file(data_dir):
     """
     Creates MULAN-format XML file to specify hierarchical labels.
     """
-    out_dir = os.path.dirname(label_file)
-    out_file = os.path.join(out_dir, "label_hierarchy.xml")
+    label_file = os.path.join(data_dir, "labels/full.csv")
+    out_file = os.path.join(data_dir, "weka_files/label_hierarchy.xml")
     
     df = pd.read_csv(label_file)
     labels = df.columns.tolist()[1:]
@@ -106,12 +105,12 @@ def gen_hier_label_file(label_file="/Users/salo/NBCLab/athena-data/processed_dat
 
 
 def test():
-    feature_files = ["/Users/salo/NBCLab/athena-data/processed_data/train_features_ay.csv",
-                     "/Users/salo/NBCLab/athena-data/processed_data/train_features_j.csv"]
-    convert_to_arff(feature_files)
+    data_dir = "/Users/salo/NBCLab/athena-data/"
+    feature_files = ["/Users/salo/NBCLab/athena-data/features/train_authoryear.csv",
+                     "/Users/salo/NBCLab/athena-data/features/train_journal.csv"]
+    convert_to_arff(data_dir, "train", feature_files)
     
-#    feature_files = ["/Users/salo/NBCLab/athena-data/processed_data/test_features_ay.csv",
-#                     "/Users/salo/NBCLab/athena-data/processed_data/test_features_j.csv"]
-#    convert_to_arff(feature_files,
-#                    "/Users/salo/NBCLab/athena-data/processed_data/test_labels.csv")
-    gen_hier_label_file()
+    feature_files = ["/Users/salo/NBCLab/athena-data/features/test_authoryear.csv",
+                     "/Users/salo/NBCLab/athena-data/features/test_journal.csv"]
+    convert_to_arff(data_dir, "test", feature_files)
+    gen_hier_label_file(data_dir)

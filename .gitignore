@@ -85,6 +85,7 @@ ENV/
 .spyderproject
 
 # Athena project settings
+word_counts/
 data/
 ALL/
 *.textClipping
