@@ -6,7 +6,6 @@ Created on Thu Jan 28 12:35:54 2016
 """
 
 from __future__ import division
-import os
 import pandas as pd
 import re
 import numpy as np
@@ -251,20 +250,3 @@ def weight_rels(rel_df, weighting_scheme="none"):
     del weight_df.columns.name
 
     return weight_df
-
-
-def test():
-    out_dir = "/home/data/nbc/athena/athena-data/gazetteers/"
-    
-    # Create and save ID, relationship, and weight files.
-    id_df = create_id_sheet()
-    id_df.to_csv(os.path.join(out_dir, "cogat_gaz.csv"), index=False)
-    
-    rel_df = create_rel_sheet(id_df)
-    rel_df.to_csv(os.path.join(out_dir, "cogat_relationships.csv"), index=False)
-    
-    rel_df = pd.read_csv(os.path.join(out_dir, "cogat_relationships.csv"))
-    weighting_scheme = "ws2"
-    weight_df = weight_rels(rel_df, weighting_scheme)
-    weight_df.to_csv(os.path.join(out_dir, "cogat_weights_{0}.csv".format(weighting_scheme)),
-                     index=True)

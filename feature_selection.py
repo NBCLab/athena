@@ -56,8 +56,7 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
     
     kf = KFold(labels.shape[0], 10)
     
-    k = 0
-    for train_index, test_index in kf:
+    for k, (train_index, test_index) in enumerate(kf):
         features_train, features_test = features[train_index, :], features[test_index, :]
         labels_train, labels_test = labels[train_index, :], labels[test_index, :]
         labels_test_df = labels_df.iloc[test_index]
@@ -80,19 +79,16 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
         else:
             lb_df_average += lb_df
         average_array[k, :] = metrics
-        k += 1
     metrics_average = list(np.mean(average_array, axis=0))
     lb_df_average /= len(kf)
     return metrics_average, lb_df_average
 
 
-def run_feature_selection():
+def run_feature_selection(data_dir="/home/data/nbc/athena/athena-data/"):
     """
     Create all possible combination feature count files, run simple classifier
     on each, and output summary statistics.
-    """
-    data_dir = "/Users/salo/NBCLab/athena-data/"
-    
+    """    
     labels_dir = os.path.join(data_dir, "labels/")
     features_dir = os.path.join(data_dir, "features/")
     fs_dir = os.path.join(data_dir, "feature_selection/")
@@ -136,4 +132,3 @@ def run_feature_selection():
                                    "Macro Recall", "Micro Recall",
                                    "Hamming Loss"], data=out_metrics)
     out_df.to_csv(os.path.join(fs_results_dir, "results.csv"), index=False)
-

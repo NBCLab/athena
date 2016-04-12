@@ -6,7 +6,6 @@ Generate keyword, author/year, journal, and title-word gazetteers.
 """
 
 import os
-import sys
 import csv
 from Bio import Entrez
 from Bio import Medline
@@ -102,7 +101,3 @@ def save_gaz(gaz_list, gaz_dir, feature_name):
         writer = csv.writer(fo, lineterminator="\n")
         for att in gaz_list:
             writer.writerow([att])
-
-
-if __name__ == "__main__":
-    generate_gazetteers(os.path.join(sys.argv[1], "full.csv"), sys.argv[2])

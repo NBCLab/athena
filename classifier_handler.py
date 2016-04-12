@@ -52,8 +52,7 @@ def statistics(label_df, feature_df, dataset_name):
     return out_df
 
 
-def dataset_statistics(data_dir="/Users/salo/NBCLab/athena-data/",
-                       feature_name="authoryear"):
+def dataset_statistics(data_dir="/home/data/nbc/athena/athena-data/", feature_name="authoryear"):
     labels_dir = os.path.join(data_dir, "labels")
     features_dir = os.path.join(data_dir, "features")
     statistics_file = os.path.join(data_dir, "statistics/dataset_statistics.csv")

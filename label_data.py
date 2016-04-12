@@ -31,7 +31,7 @@ def df_to_list(df, column_name, prefix):
     return table
 
 
-def label_data(data_dir="/Users/salo/NBCLab/athena-data/"):
+def label_data(data_dir="/home/data/nbc/athena/athena-data/"):
     """
     Convert metadata files to instance-by-label matrix.
     """
@@ -60,8 +60,7 @@ def label_data(data_dir="/Users/salo/NBCLab/athena-data/"):
     list_of_pmids = sorted(list(set(list_of_pmids).intersection(list_of_files)))
     
     column_names = ["pmid"] + full_cogpo
-    label_df = pd.DataFrame(columns=column_names,
-                            data=np.zeros((len(list_of_pmids), len(column_names))))
+    label_df = pd.DataFrame(columns=column_names, data=np.zeros((len(list_of_pmids), len(column_names))))
     label_df["pmid"] = list_of_pmids
     
     for row in metadata_df.index:
