@@ -67,5 +67,5 @@ def train_test_split(labels_file, test_percent=0.33):
 
 
 def run():
-    labels_file = "/Users/salo/NBCLab/athena-data/labels/full.csv"
+    labels_file = "/home/data/nbc/athena/athena-data/labels/full.csv"
     train_test_split(labels_file)

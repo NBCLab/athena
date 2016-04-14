@@ -296,11 +296,19 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     feature count files. Keywords will be extracted from the articles' texts,
     not from their metadata.
     """    
-    feature_dict = {"authoryear": extract_authoryear,
+#    feature_dict = {"nbow": extract_nbow,
+#                    "authoryear": extract_authoryear,
+#                    "journal": extract_journal,
+#                    "titlewords": extract_titlewords,
+#                    "keywords": extract_keywords,
+#                    "references": extract_references,
+#                    "cogat": extract_cogat,
+#                    }
+    feature_dict = {"nbow": extract_nbow,
+                    "authoryear": extract_authoryear,
                     "journal": extract_journal,
                     "titlewords": extract_titlewords,
                     "keywords": extract_keywords,
-                    "references": extract_references,
                     "cogat": extract_cogat,
                     }
     datasets = ["train", "test"]

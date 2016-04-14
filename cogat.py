@@ -78,7 +78,7 @@ def clean_id_sheet(df):
         
         aliases = df["alias"].loc[i].encode("utf-8").strip()
         aliases = re.sub(r"\s+\(([^)]+)\)", "", aliases)
-        aliases.replace("; ", ", ").split(", ")
+        aliases = aliases.replace("; ", ", ").split(", ")
         aliases = [alias for alias in aliases if alias]
         for alias in aliases:
             # Protect case of acronyms. Lower everything else.
@@ -191,9 +191,11 @@ def create_rel_sheet(id_df):
     t_rel_df = clean_rel_sheet(tasks)
     d_rel_df = clean_rel_sheet(disorders)
     rel_df = pd.concat([c_rel_df, t_rel_df, d_rel_df], ignore_index=True)
-    
-    cogat_terms = id_df.columns.values.tolist()
-    rel_terms = rel_df.columns.values.tolist()
+
+    cogat_terms = id_df["id"].tolist()
+    rel_inputs = rel_df["input"].tolist()
+    rel_outputs = rel_df["output"].tolist()
+    rel_terms = list(set(rel_inputs + rel_outputs))
     
     # Some terms may no longer exist, but may still be referenced in assertions.
     # These terms must be removed from the set of relationships.
@@ -201,7 +203,9 @@ def create_rel_sheet(id_df):
     drop = [term for term in not_in_gaz if not term.startswith("ctp")]
     
     keep_terms = sorted(list(set(rel_terms) - set(drop)))
-    rel_df = rel_df[keep_terms]
+    
+    rel_df = rel_df.loc[rel_df["input"].isin(keep_terms)]
+    rel_df = rel_df.loc[rel_df["output"].isin(keep_terms)]
     
     return rel_df
 

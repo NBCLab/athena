@@ -51,7 +51,7 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     df = pd.read_csv(label_file)
     pmids = df["pmid"].astype(str).tolist()
     
-    nbow_gaz = gazetteers.generate_nbow_gazetteer(pmids, combined_text_dir)
+    nbow_gaz = gazetteers.generate_nbow_gazetteer(pmids, full_text_dir)
     references_gaz = gazetteers.generate_references_gazetteer(pmids, full_text_dir)
     metadata_gazs = gazetteers.generate_metadata_gazetteers(pmids)
     
@@ -70,7 +70,7 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     cogat_df.to_csv(os.path.join(gaz_dir, "cogat.csv"), index=False)
     rel_df.to_csv(os.path.join(gaz_dir, "cogat_relationships.csv"), index=False)
     gazetteers.save_gaz(nbow_gaz, gaz_dir, "nbow")
-    gazetteers.save_gaz(references_gaz, gaz_dir, "references")
+    #gazetteers.save_gaz(references_gaz, gaz_dir, "references")
     gazetteers.save_gaz(authoryear_gaz, gaz_dir, "authoryear")
     gazetteers.save_gaz(journal_gaz, gaz_dir, "journal")
     gazetteers.save_gaz(titleword_gaz, gaz_dir, "titleword")
