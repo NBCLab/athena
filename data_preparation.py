@@ -41,9 +41,9 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
         - Author-generated keywords (if available on PubMed)
             - This includes multiword expressions.
     """
-    label_file = os.path.join(data_dir, "/labels/full.csv")
-    gaz_dir = os.path.join(data_dir, "/gazetteers/")
-    text_dir = os.path.join(data_dir, "/text/")
+    label_file = os.path.join(data_dir, "labels/full.csv")
+    gaz_dir = os.path.join(data_dir, "gazetteers/")
+    text_dir = os.path.join(data_dir, "text/")
     
     combined_text_dir = os.path.join(text_dir, "combined/")
     full_text_dir = os.path.join(text_dir, "full/")
