@@ -37,7 +37,7 @@ def label_data(data_dir="/home/data/nbc/athena/athena-data/"):
     """
     metadata_dir = os.path.join(data_dir, "metadata/")
     filenames = sorted(glob(os.path.join(metadata_dir, "*.csv")))
-    text_dir = os.path.join(data_dir, "/text/full/")
+    text_dir = os.path.join(data_dir, "text/full/")
     
     columns = ["Paradigm Class", "Behavioral Domain"]
     column_to_cogpo = cogpo_columns(columns)
