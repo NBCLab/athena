@@ -55,7 +55,7 @@ class ReferenceEntry(object):
                 self.authorsArray.append(a.group(2))
                 self.authorsLastNameArray.append(a.group(3))
     def getTitleRegEx(self):
-        return re.compile(title.toLower(), re.MULTILINE)
+        return re.compile(title.lower(), re.MULTILINE)
     def toArray(self):
         str_name = str(self.index)
         while len(str_name) < 5:
@@ -72,7 +72,7 @@ class ReferenceGaz(object):
         title = re.sub(newLinePattern, " ", title)
         #print "testing insert"
         for r in self.refs:
-            if r.title.toLower() == title.toLower():
+            if r.title.lower() == title.lower():
                 r.count += 1
                 return
 
@@ -124,23 +124,28 @@ def getReferences(fileName, reference, datesReg, names, gaz):
     print "found"
     sys.stdout.flush()
     previousEnd = 0
-
+    alarmAmount = 1
+    curr = -1
+    prev = time.clock()
     signal.signal(signal.SIGALRM, timeout)
     try:
-        signal.alarm(1)
+        signal.alarm(alarmAmount)
+        curr = time.clock()
+        print curr - prev
         for match in dates:
             signal.alarm(0)
+            print time.clock()
             if match is not None:
                 #print match.group(), match.start(), match.end()
                 matchRefs = re.finditer(reference, text[max(match.start() -100, previousEnd):match.end()+300])
-                signal.alarm(1)
+                signal.alarm(alarmAmount)
                 for matchRef in matchRefs:
                     signal.alarm(0)
                     if matchRef is not None:
                         gaz.insert(matchRef.group(1), matchRef.group(14), matchRef.group(15), names)
                         wasChange = True
                         previousEnd = matchRef.end()
-            signal.alarm(1)
+            signal.alarm(alarmAmount)
     except:
         pass
     print "done"
