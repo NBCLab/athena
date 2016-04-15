@@ -32,6 +32,31 @@ class RelException(Exception):
             Exception.__init__(self, """Unknown term type {0}""".format(term_type))
 
 
+def clean_string(string):
+    """
+    Clean CogAt terms.
+    """
+    # Convert apostrophe symbols to apostrophes.
+    string = str(string.replace("&#39;", "'"))
+    
+    # Terms that start and end with parentheses are generally abbreviation aliases.
+    if string.startswith("(") and string.endswith(")"):
+        string = string.replace("(", "").replace(")", "")
+    
+    # Remove parenthetical statements.
+    string = re.sub(r"\(.*\)", "", string)
+    string = re.sub(r"\[.*\]", "", string)  
+    
+    # Remove extra spaces.
+    string = re.sub("\s+", " ", string)
+
+    # Protect case of acronyms
+    if string != string.upper():
+        string = string.lower()
+
+    return string
+
+
 def clean_disorders_id_sheet(df):
     """
     """
@@ -39,22 +64,22 @@ def clean_disorders_id_sheet(df):
     
     row_counter = 0
     for i in range(len(df)):
-        # Protect case of acronyms. Lower everything else.
-        # Also convert apostrophe symbols to apostrophes.
         name = df["name"].loc[i].encode("utf-8").strip()
-        name = str(name.replace("&#39;", "'"))
+        name = clean_string(name)
         if name:
-            if name != name.upper():
-                name = name.lower()
             id_df.loc[row_counter] = [name, df["id"].loc[i], name]
             row_counter += 1
         
-        aliases = [alias_dict["synonym"] for alias_dict in df["synonyms"].loc[i]]
-        aliases = [alias.lower() if alias != alias.upper() else alias for alias in aliases]
-        aliases = list(set(aliases))
-        for alias in aliases:
-            id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
-            row_counter += 1        
+            aliases = [alias_dict["synonym"] for alias_dict in df["synonyms"].loc[i]]
+            for j in range(len(aliases)):
+                aliases[j] = clean_string(aliases[j])
+    
+            # Remove duplicates
+            aliases = list(set(aliases))
+            for alias in aliases:
+                if alias:
+                    id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
+                    row_counter += 1        
     return id_df
 
 
@@ -65,30 +90,24 @@ def clean_id_sheet(df):
     
     row_counter = 0
     for i in range(len(df)):
-        # Protect case of acronyms. Lower everything else.
-        # Also convert apostrophe symbols to apostrophes.
         name = df["name"].loc[i].encode("utf-8").strip()
-        name = str(name.replace("&#39;", "'"))
-
+        name = clean_string(name)
         if name:
-            if name != name.upper():
-                name = name.lower()
             id_df.loc[row_counter] = [name, df["id"].loc[i], name]
             row_counter += 1
         
-        aliases = df["alias"].loc[i].encode("utf-8").strip()
-        aliases = re.sub(r"\s+\(([^)]+)\)", "", aliases)
-        aliases = aliases.replace("; ", ", ").split(", ")
-        aliases = [alias for alias in aliases if alias]
-        for alias in aliases:
-            # Protect case of acronyms. Lower everything else.
-            # Also convert apostrophe symbols to apostrophes.
-            alias = str(alias.replace("&#39;", "'"))
-        
-            if alias != alias.upper():
-                alias = alias.lower()
-            id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
-            row_counter += 1
+            aliases = df["alias"].loc[i].encode("utf-8").strip()
+            aliases = aliases.replace("; ", ", ").split(", ")
+            aliases = [alias for alias in aliases if alias]
+            for j in range(len(aliases)):
+                aliases[j] = clean_string(aliases[j])
+            
+            # Remove duplicates
+            aliases = list(set(aliases))
+            for alias in aliases:
+                if alias:
+                    id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
+                    row_counter += 1
     return id_df
 
 

@@ -60,11 +60,11 @@ def generate_metadata_gazetteers(pmids):
         authoryear_gaz += [record["DP"][:4]]
         title = record["TI"]
         titlewords = tokenizer.tokenize(title)
-        titlewords = [word.lower() for word in titlewords if word.lower() not in stop]
+        titlewords = [stemmer.stem(word) for word in titlewords if word.lower() not in stop]
         titleword_gaz += titlewords
         journal_gaz += [record["TA"].lower()]
         if "OT" in record.keys():
-            keywords = [keyword.lower() for keyword in record["OT"]]
+            keywords = [stemmer.stem(keyword) for keyword in record["OT"]]
             keyword_gaz += keywords
     
     # Remove low-frequency title words
@@ -89,7 +89,7 @@ def generate_metadata_gazetteers(pmids):
     journal_gaz = sorted(journal_count.keys())
     
     # Remove duplicate keywords
-    keyword_gaz = sorted(list(set(keyword_gaz)) + titleword_gaz)
+    keyword_gaz = sorted(list(set(keyword_gaz + titleword_gaz)))
     return [authoryear_gaz, journal_gaz, keyword_gaz, titleword_gaz]
     
 

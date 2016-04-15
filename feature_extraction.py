@@ -49,7 +49,7 @@ def read_gazetteer(gazetteer_file):
 
 def extract_nbow(pmids, gazetteer_file, count_file, text_dir):
     """
-    Creates feature table for naive bag of words feature from text.
+    Creates feature table for naive bag of words feature from stemmed text.
     """
     # Read in features
     gazetteer = read_gazetteer(gazetteer_file)
@@ -83,7 +83,7 @@ def extract_references(pmids, gazetteer_file, count_file, text_dir):
 
 def extract_cogat(pmids, gazetteer_file, count_file, text_dir):
     """
-    Creates feature table for Cognitive Atlas terms from text.
+    Creates feature table for Cognitive Atlas terms from full, unstemmed text.
     Just a first pass.
     """
     # Read in features
@@ -99,10 +99,14 @@ def extract_cogat(pmids, gazetteer_file, count_file, text_dir):
     
         for row in cogat_df.index:
             term = cogat_df["term"].iloc[row]
+            words = term.split(" ")
+            regex = "\\s*(\\(.*\\))?\\s*".join(words)
+            pattern = re.compile(regex, re.MULTILINE|re.DOTALL)
+            
             term_id = cogat_df["id"].iloc[row]
             col_idx = gazetteer.index(term_id)
-            # To be replaced with more advanced extraction method
-            count = len(re.findall(term, text))
+            
+            count = len(re.findall(pattern, text))
             count_array[i, col_idx] += count
             text = text.replace(term, term_id)
 
@@ -183,7 +187,7 @@ def apply_weights_recursively(input_df, weight_dfs, weighted_file):
 
 def extract_keywords(pmids, gazetteer_file, count_file, text_dir):
     """
-    Creates feature table for keyword terms from text.
+    Creates feature table for keyword terms from full text.
     Just a first pass.
     """
     # Read in features
@@ -262,7 +266,7 @@ def extract_journal(pmids, gazetteer_file, count_file):
     count_df.to_csv(count_file)
 
 
-def extract_titlewords(pmids, gazetteer_file, count_file, text_dir):
+def extract_titlewords(pmids, gazetteer_file, count_file):
     """
     Creates feature table for words in article title.
     """
@@ -296,42 +300,49 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     feature count files. Keywords will be extracted from the articles' texts,
     not from their metadata.
     """    
-#    feature_dict = {"nbow": extract_nbow,
-#                    "authoryear": extract_authoryear,
-#                    "journal": extract_journal,
-#                    "titlewords": extract_titlewords,
-#                    "keywords": extract_keywords,
-#                    "references": extract_references,
-#                    "cogat": extract_cogat,
-#                    }
-    feature_dict = {"nbow": extract_nbow,
-                    "authoryear": extract_authoryear,
-                    "journal": extract_journal,
-                    "titlewords": extract_titlewords,
-                    "keywords": extract_keywords,
-                    "cogat": extract_cogat,
-                    }
+    metadata_features = {"authoryear": extract_authoryear,
+                         "journal": extract_journal,
+                         "titlewords": extract_titlewords,
+                         }
+    fulltext_features = {"cogat": extract_cogat,
+                         "keywords": extract_keywords,
+                         }
     datasets = ["train", "test"]
 
     gazetteers_dir = os.path.join(data_dir, "gazetteers/")
     label_dir = os.path.join(data_dir, "labels/")
     feature_dir = os.path.join(data_dir, "features/")
-    text_dir = os.path.join(data_dir, "text/full/")
+    fulltext_dir = os.path.join(data_dir, "text/full/")
+    stemtext_dir = os.path.join(data_dir, "text/full_stemmed/")
+#    reftext_dir = os.path.join(data_dir, "text/references/")
 
-    for feature in feature_dict.keys():   
-        gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
+    for dataset in datasets:
+        label_file = os.path.join(label_dir, dataset+".csv")
+        df = pd.read_csv(label_file)
+        pmids = df["pmid"].astype(str).tolist()
         
-        for dataset in datasets:
-            label_file = os.path.join(label_dir, dataset+".csv")
+        for feature in metadata_features:
+            gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
             count_file = os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature))
-            df = pd.read_csv(label_file)
-            pmids = df["pmid"].astype(str).tolist()
-
-            n_args = feature_dict[feature].func_code.co_argcount
-            if n_args == 3:
-                feature_dict[feature](pmids, gazetteer_file, count_file)
-            else:
-                feature_dict[feature](pmids, gazetteer_file, count_file, text_dir)
+            metadata_features[feature](pmids, gazetteer_file, count_file)
+            print("Completed {0}".format(feature))
+        
+        for feature in fulltext_features:
+            gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
+            count_file = os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature))
+            fulltext_features[feature](pmids, gazetteer_file, count_file, fulltext_dir)
+            print("Completed {0}".format(feature))
+        
+        # nbow and references
+        gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
+        count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
+        extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
+        print("Completed nbow")
+        
+#        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
+#        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
+#        extract_cogat(pmids, gazetteer_file, count_file, reftext_dir)
+#        print("Completed cogat")
     
     # Now a special step for CogAt weighting
     weighting_scheme = "ws2"
@@ -348,5 +359,5 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
         apply_weights_recursively(count_df, weight_dfs, weighted_file)
 
 
-if __name__ == "__main__":
-    extract_features(sys.argv[1])
+#if __name__ == "__main__":
+#    extract_features(sys.argv[1])
