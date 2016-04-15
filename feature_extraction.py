@@ -313,7 +313,7 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     label_dir = os.path.join(data_dir, "labels/")
     feature_dir = os.path.join(data_dir, "features/")
     fulltext_dir = os.path.join(data_dir, "text/full/")
-    stemtext_dir = os.path.join(data_dir, "text/full_stemmed/")
+#    stemtext_dir = os.path.join(data_dir, "text/full_stemmed/")
 #    reftext_dir = os.path.join(data_dir, "text/references/")
 
     for dataset in datasets:

@@ -49,6 +49,9 @@ def clean_string(string):
     
     # Remove extra spaces.
     string = re.sub("\s+", " ", string)
+    
+    # One more pass to remove any unpaired parentheses.
+    string = string.replace("(", "").replace(")", "")
 
     # Protect case of acronyms
     if string != string.upper():
