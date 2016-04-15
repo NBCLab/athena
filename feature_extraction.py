@@ -318,8 +318,8 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     feature_dir = os.path.join(data_dir, "features/")
     text_dir = os.path.join(data_dir, "text/full/")
 
-    for feature in feature_dict.keys():        
-        gazetteer = read_gazetteer(gazetteers_dir, feature)
+    for feature in feature_dict.keys():   
+        gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
         
         for dataset in datasets:
             label_file = os.path.join(label_dir, dataset+".csv")
@@ -329,9 +329,9 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
 
             n_args = feature_dict[feature].func_code.co_argcount
             if n_args == 3:
-                feature_dict[feature](pmids, gazetteer, count_file)
+                feature_dict[feature](pmids, gazetteer_file, count_file)
             else:
-                feature_dict[feature](pmids, gazetteer, count_file, text_dir)
+                feature_dict[feature](pmids, gazetteer_file, count_file, text_dir)
     
     # Now a special step for CogAt weighting
     weighting_scheme = "ws2"

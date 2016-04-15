@@ -82,6 +82,6 @@ def label_data(data_dir="/home/data/nbc/athena/athena-data/"):
     keep_labels = label_counts[label_counts>4].index
     label_df = label_df[keep_labels]
     label_df = label_df[(label_df.T != 0).any()]
-    
+    label_df = label_df.astype(int).astype(str)
     out_file = os.path.join(data_dir, "labels/full.csv")
     label_df.to_csv(out_file, index=False)

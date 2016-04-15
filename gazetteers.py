@@ -96,7 +96,7 @@ def generate_metadata_gazetteers(pmids):
 def save_gaz(gaz_list, gaz_dir, feature_name):
     """
     """
-    gaz_file = os.path.join(gaz_dir, feature_name+".txt")
+    gaz_file = os.path.join(gaz_dir, feature_name+".csv")
     with open(gaz_file, "w") as fo:
         writer = csv.writer(fo, lineterminator="\n")
         for att in gaz_list:

@@ -73,5 +73,5 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     #gazetteers.save_gaz(references_gaz, gaz_dir, "references")
     gazetteers.save_gaz(authoryear_gaz, gaz_dir, "authoryear")
     gazetteers.save_gaz(journal_gaz, gaz_dir, "journal")
-    gazetteers.save_gaz(titleword_gaz, gaz_dir, "titleword")
-    gazetteers.save_gaz(keyword_gaz, gaz_dir, "keyword")
+    gazetteers.save_gaz(titleword_gaz, gaz_dir, "titlewords")
+    gazetteers.save_gaz(keyword_gaz, gaz_dir, "keywords")
