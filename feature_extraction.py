@@ -334,10 +334,10 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
             print("Completed {0}".format(feature))
         
         # nbow and references
-        gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
-        count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
-        extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
-        print("Completed nbow")
+#        gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
+#        count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
+#        extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
+#        print("Completed nbow")
         
 #        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
 #        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
