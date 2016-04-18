@@ -145,10 +145,16 @@ def apply_weights_recursively(input_df, weight_dfs, weighted_file):
     weights_down = weight_dfs[1].reindex_axis(sorted(weight_dfs[1].columns), axis=1).sort()
     weights_side = weight_dfs[2].reindex_axis(sorted(weight_dfs[2].columns), axis=1).sort()
 
+    # Add categories
+    not_in_gaz = list(set(weights_up.columns.tolist()) - set(input_df.columns.tolist()))
+    add = [term for term in not_in_gaz if term.startswith("ctp")]
+    for term in add:
+        input_df[term] = 0
+
     input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
     n_features = input_df.shape[1]
-    
-    if not (weights_up.columns == weights_down.columns == weights_side.columns == input_df.columns):
+
+    if not (weights_up.columns.tolist() == weights_down.columns.tolist() == weights_side.columns.tolist() == input_df.columns.tolist()):
         raise Exception("Columns do not match across DataFrames!")
     
     count_df = copy.deepcopy(input_df)
@@ -325,13 +331,13 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
             gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
             count_file = os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature))
             metadata_features[feature](pmids, gazetteer_file, count_file)
-            print("Completed {0}".format(feature))
+            print("Completed {0} {1}".format(dataset, feature))
         
         for feature in fulltext_features:
             gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
             count_file = os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature))
             fulltext_features[feature](pmids, gazetteer_file, count_file, fulltext_dir)
-            print("Completed {0}".format(feature))
+            print("Completed {0} {1}".format(dataset, feature))
         
         # nbow and references
 #        gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
@@ -349,13 +355,14 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     directions = ["up", "down", "side"]
     weight_dfs = [[] for _ in directions]
     for i, dir_ in enumerate(directions):
-        weight_dfs[i] = pd.read_csv(os.path.join(feature_dir, "cogat_weights_{0}_{1}.csv".format(weighting_scheme, dir_)))
+        weight_dfs[i] = pd.read_csv(os.path.join(gazetteers_dir, "cogat_weights_{0}_{1}.csv".format(weighting_scheme, dir_)))
         weight_dfs[i].set_index("term", inplace=True)
         
     for dataset in datasets:
-        count_file = os.path.join(feature_dir, "{0}_cogat.csv".format(dataset))
+	os.rename(os.path.join(feature_dir, "{0}_cogat.csv".format(dataset)), os.path.join(feature_dir, "{0}_cogat_count.csv".format(dataset)))
+        count_file = os.path.join(feature_dir, "{0}_cogat_count.csv".format(dataset))
         count_df = pd.read_csv(count_file, index_col="pmid")
-        weighted_file = os.path.join(feature_dir, "{0}_cogat_weighted.csv".format(dataset))
+        weighted_file = os.path.join(feature_dir, "{0}_cogat.csv".format(dataset))
         apply_weights_recursively(count_df, weight_dfs, weighted_file)
 
 if __name__ == "__main__":
