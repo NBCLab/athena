@@ -358,6 +358,39 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
         weighted_file = os.path.join(feature_dir, "{0}_cogat_weighted.csv".format(dataset))
         apply_weights_recursively(count_df, weight_dfs, weighted_file)
 
-if __name__ == "__main__":
-    extract_features(sys.argv[1])
+def tester_extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
+    """
+    Calls each of the feature-specific count functions to generate three
+    feature count files. Keywords will be extracted from the articles' texts,
+    not from their metadata.
+    """    
+    metadata_features = {"authoryear": extract_authoryear,
+                         "journal": extract_journal,
+                         "titlewords": extract_titlewords,
+                         }
+    fulltext_features = {"cogat": extract_cogat,
+                         "keywords": extract_keywords,
+                         }
+    datasets = ["train", "test"]
 
+    gazetteers_dir = os.path.join(data_dir, "gazetteers/")
+    label_dir = os.path.join(data_dir, "labels/")
+    feature_dir = os.path.join(data_dir, "features/")
+    fulltext_dir = os.path.join(data_dir, "text/full/")
+#    stemtext_dir = os.path.join(data_dir, "text/full_stemmed/")
+#    reftext_dir = os.path.join(data_dir, "text/references/")
+
+    for dataset in datasets:
+        label_file = os.path.join(label_dir, dataset+".csv")
+        df = pd.read_csv(label_file)
+        pmids = df["pmid"].astype(str).tolist()
+        
+        for feature in fulltext_features:
+            gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
+            count_file = os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature))
+            fulltext_features[feature](pmids, gazetteer_file, count_file, fulltext_dir)
+            print("Completed {0}".format(feature))
+
+if __name__ == "__main__":
+    #    extract_features(sys.argv[1])
+    tester_extract_features()

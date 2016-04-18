@@ -50,9 +50,6 @@ def clean_string(string):
     # Remove extra spaces.
     string = re.sub("\s+", " ", string)
     
-    # literalize plus signs
-    string = string.replace("+", "\+", string)
-    
     # One more pass to remove any unpaired parentheses.
     string = string.replace("(", "").replace(")", "")
 
