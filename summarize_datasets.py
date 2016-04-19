@@ -15,6 +15,7 @@ training and test datasets:
 from __future__ import division
 import pandas as pd
 import numpy as np
+import os
 
 
 def statistics(label_df, feature_df, dataset_name):
@@ -57,10 +58,11 @@ def statistics(label_df, feature_df, dataset_name):
     return out_df
 
 # Run function for both datasets
-train_labels = "/Users/salo/NBCLab/athena-data/labels/train.csv"
-train_features = "/Users/salo/NBCLab/athena-data/features/train_authoryear.csv"
-test_labels = "/Users/salo/NBCLab/athena-data/labels/test.csv"
-test_features = "/Users/salo/NBCLab/athena-data/features/test_authoryear.csv"
+data_dir = "/home/data/nbc/athena/athena-data/"
+train_labels = os.path.join(data_dir, "labels/train.csv")
+train_features = os.path.join(data_dir, "features/train_cogat.csv")
+test_labels = os.path.join(data_dir, "labels/test.csv")
+test_features = os.path.join(data_dir, "features/test_cogat.csv")
 
 # Load and combine data
 train_label_df = pd.read_csv(train_labels, dtype=int)
@@ -76,4 +78,9 @@ print("Test dataset statistics:")
 test_df = statistics(test_label_df, test_feature_df, "Test")
 
 out_df = pd.concat([train_df, test_df])
-out_df.to_csv("/Users/salo/NBCLab/athena-data/statistics/dataset_statistics.csv")
+out_df.to_csv(os.path.join(data_dir, "statistics/dataset_statistics.csv"))
+
+# Also output file with labels
+labels = train_label_df.columns.tolist()[1:]
+out_df = pd.DataFrame(columns=["Label"], data=labels)
+out_df.to_csv(os.path.join(data_dir, "statistics/labels.csv"), index=False)

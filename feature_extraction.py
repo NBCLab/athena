@@ -71,6 +71,7 @@ def extract_nbow(pmids, gazetteer_file, count_file, text_dir):
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
+    count_df = count_df.fillna(0)
     count_df.to_csv(count_file)
 
 
@@ -187,7 +188,8 @@ def apply_weights_recursively(input_df, weight_dfs, weighted_file):
     count_df += weighted_side
     
     # Normalize data
-    weighted_df = count_df.div(count_df.sum(axis=1), axis=0, fill_value=0)
+    weighted_df = count_df.div(count_df.sum(axis=1), axis=0)
+    weighted_df = weighted_df.fillna(0)
     weighted_df.to_csv(weighted_file)
 
 
@@ -216,6 +218,7 @@ def extract_keywords(pmids, gazetteer_file, count_file, text_dir):
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
+    count_df = count_df.fillna(0)
     count_df.to_csv(count_file)
 
 
@@ -243,6 +246,7 @@ def extract_authoryear(pmids, gazetteer_file, count_file):
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
+    count_df = count_df.fillna(0)
     count_df.to_csv(count_file)
 
 
@@ -269,6 +273,7 @@ def extract_journal(pmids, gazetteer_file, count_file):
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
+    count_df = count_df.fillna(0)
     count_df.to_csv(count_file)
 
 
@@ -297,6 +302,7 @@ def extract_titlewords(pmids, gazetteer_file, count_file):
     # Create and save output
     count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=result_array)
     count_df.index.name = "pmid"
+    count_df = count_df.fillna(0)
     count_df.to_csv(count_file)
 
 
