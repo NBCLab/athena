@@ -41,6 +41,38 @@ def return_metrics(labels, predictions):
     return metrics
 
 
+def return_primary(labels, predictions):
+    """
+    Calculate metrics for model based on predicted labels. But only for
+    primary labels.
+    """
+    # Primary labels
+    primary_labels = ["Experiments.ParadigmClass.FaceMonitor/Discrimination",
+                      "Experiments.ParadigmClass.Reward",
+                      "Experiments.ParadigmClass.SemanticMonitor/Discrimination",
+                      "Experiments.ParadigmClass.WordGeneration",
+                      "Experiments.ParadigmClass.PainMonitor/Discrimination",
+                      "Experiments.ParadigmClass.n-back"]
+    
+    if isinstance(labels, str):
+        df = pd.read_csv(labels, dtype=int)
+        col_idx = np.where(df.columns.isin(primary_labels))[0]
+        labels = df.as_matrix()[:, col_idx]
+        predictions = predictions[:, col_idx-1]
+    
+    macro_precision = precision_score(labels, predictions, average="macro")
+    micro_precision = precision_score(labels, predictions, average="micro")
+    
+    macro_recall = recall_score(labels, predictions, average="macro")
+    micro_recall = recall_score(labels, predictions, average="micro")
+    
+    hamming_loss_ = hamming_loss(labels, predictions)
+    
+    macro_f1_score_by_example = f1_score(labels, predictions, average="samples")
+    metrics = [macro_f1_score_by_example, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    return metrics
+
+
 def return_labelwise(labels, predictions):
     """
     Calculate metrics for each label in model.
@@ -105,3 +137,8 @@ def test():
     out_df.to_csv("/Users/salo/NBCLab/athena-data/statistics/metrics.csv", index=False)
     labelwise_df = return_labelwise(train_label_file, predictions_dir)
     labelwise_df.to_csv("/Users/salo/NBCLab/athena-data/statistics/labelwise_metrics.csv", index=False)
+
+    df = pd.read_csv(train_label_file, dtype=int)
+    
+
+
