@@ -187,7 +187,7 @@ def apply_weights_recursively(input_df, weight_dfs, weighted_file):
     count_df += weighted_side
     
     # Normalize data
-    weighted_df = count_df.div(count_df.sum(axis=1), axis=0)
+    weighted_df = count_df.div(count_df.sum(axis=1), axis=0, fill_value=0)
     weighted_df.to_csv(weighted_file)
 
 
@@ -359,7 +359,8 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
         weight_dfs[i].set_index("term", inplace=True)
         
     for dataset in datasets:
-	os.rename(os.path.join(feature_dir, "{0}_cogat.csv".format(dataset)), os.path.join(feature_dir, "{0}_cogat_count.csv".format(dataset)))
+        os.rename(os.path.join(feature_dir, "{0}_cogat.csv".format(dataset)),
+                  os.path.join(feature_dir, "{0}_cogat_count.csv".format(dataset)))
         count_file = os.path.join(feature_dir, "{0}_cogat_count.csv".format(dataset))
         count_df = pd.read_csv(count_file, index_col="pmid")
         weighted_file = os.path.join(feature_dir, "{0}_cogat.csv".format(dataset))
