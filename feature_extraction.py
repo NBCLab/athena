@@ -29,6 +29,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from utils import tokenize
+from abbreviation_extraction import PhraseFinder
 
 stop = stopwords.words("english")
 tokenizer = RegexpTokenizer("[\W+]", gaps=True)
@@ -97,7 +98,11 @@ def extract_cogat(pmids, gazetteer_file, count_file, text_dir):
         text_file = os.path.join(text_dir, pmid+".txt")
         with open(text_file, "r") as fo:
             text = fo.read()
-    
+        
+        p = PhraseFinder()
+        p.setup(text)
+        text = p.fullText
+        
         for row in cogat_df.index:
             term = cogat_df["term"].iloc[row]
             words = term.split(" ")
@@ -207,6 +212,10 @@ def extract_keywords(pmids, gazetteer_file, count_file, text_dir):
         text_file = os.path.join(text_dir, pmid+".txt")
         with open(text_file, "r") as fo:
             text = fo.read()
+    
+        p = PhraseFinder()
+        p.setup(text)
+        text = p.fullText
     
         for j, keyword in enumerate(gazetteer):
             # To be replaced with more advanced extraction method
@@ -325,7 +334,7 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     label_dir = os.path.join(data_dir, "labels/")
     feature_dir = os.path.join(data_dir, "features/")
     fulltext_dir = os.path.join(data_dir, "text/full/")
-#    stemtext_dir = os.path.join(data_dir, "text/full_stemmed/")
+    stemtext_dir = os.path.join(data_dir, "text/stemmed_full/")
 #    reftext_dir = os.path.join(data_dir, "text/references/")
 
     for dataset in datasets:
@@ -346,15 +355,15 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
             print("Completed {0} {1}".format(dataset, feature))
         
         # nbow and references
-#        gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
-#        count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
-#        extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
-#        print("Completed nbow")
+        gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
+        count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
+        extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
+        print("Completed {0} nbow".format(dataset))
         
 #        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
 #        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
-#        extract_cogat(pmids, gazetteer_file, count_file, reftext_dir)
-#        print("Completed cogat")
+#        extract_rferences(pmids, gazetteer_file, count_file, reftext_dir)
+#        print("Completed {0} references".format(dataset))
     
     # Now a special step for CogAt weighting
     weighting_scheme = "ws2"
