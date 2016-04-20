@@ -103,10 +103,9 @@ def generate_references_gazetteer(pmids, text_dir):
     gaz = ReferenceGaz()
     for i, pmid in enumerate(pmids):
         file_ = os.path.join(text_dir, pmid+".txt")
-        print("Article {0}: {1}".format(i, file_))
+        print("Article {0}: {1}".format(i, pmid))
         sys.stdout.flush()
         getReferences(file_, reference, re.compile(datePar), re.compile(names, re.MULTILINE|re.DOTALL), gaz)
-        print len(gaz.refs)
 
     outputArr = []
     for r in gaz.refs:
@@ -125,12 +124,10 @@ def getReferences(fileName, reference, datesReg, names, gaz):
     with open(fileName, 'r') as f:
         for l in f:
             text += l
-    print "finding"
     sys.stdout.flush()
     #print text
     text = text[len(text)*3/4:]
     dates = re.finditer(datesReg, text)
-    print "found"
     sys.stdout.flush()
     previousEnd = 0
     alarmAmount = 1
@@ -143,7 +140,6 @@ def getReferences(fileName, reference, datesReg, names, gaz):
         print curr - prev
         for match in dates:
             signal.alarm(0)
-            print time.clock()
             if match is not None:
                 #print match.group(), match.start(), match.end()
                 matchRefs = re.finditer(reference, text[max(match.start() -100, previousEnd):match.end()+300])
