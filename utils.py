@@ -47,3 +47,22 @@ def cogpo_columns(columns):
                        "Instructions": "Conditions.Instruction"}
     subset = { key:value for key, value in column_to_cogpo.items() if key in columns }
     return subset
+
+
+def clean_str(str_):
+    label = str_.replace(" ", "").replace("'", "").replace("(", ".").replace(")", "").replace("Stroop-", "Stroop.")
+    return label
+
+
+def df_to_list(df, column_name, prefix):
+    table = df[pd.notnull(df[column_name])][column_name]
+    table.apply(lambda x: "{%s}" % "| ".join(x))
+    table = table.tolist()
+    table = [clean_str(item) for sublist in table for item in sublist.split("| ")]
+    
+    parents = table
+    while parents:
+        parents = [".".join(item.split(".")[:-1]) for item in parents if len(item.split("."))>1]
+        table += parents
+    table = ["{0}.{1}".format(prefix, item) for item in table]
+    return table

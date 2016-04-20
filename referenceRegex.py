@@ -3,14 +3,17 @@ Created on Mar 11, 2016
 
 @author: Jason
 '''
+
 import re
-import numpy as np
 import pandas as pd
 from os import listdir
 from os.path import join, isfile
 import sys, time
 import signal
+
 newLinePattern = re.compile("[\\n\\r]+")
+
+
 class ReferenceEntry(object):
     def __init__(self, authors, year, title, names):
         global newLinePattern
@@ -18,11 +21,8 @@ class ReferenceEntry(object):
         self.authorsArray = []
         self.authorsLastNameArray = []
         self.year = year
-        #self.title = re.sub(newLinePattern, " ", title)
         self.title = title
         self.names = names
-        #self.getAuthors()
-        #self.citationPattern = self.citationRegEx()
         self.index = -1
         self.count = 1
 
@@ -35,6 +35,7 @@ class ReferenceEntry(object):
                 pat += "(and|&)\\s*"
         pat+=self.year+"[;\\)]"
         return pat
+
     def referenceRegEx(self):
         ''' in text reference finder generator -- may be better to find the title '''
         pat = ""
@@ -43,6 +44,7 @@ class ReferenceEntry(object):
 
         pat+= self.year+".{,4}"+self.title
         return pat
+
     def getAuthors(self):
         global newLinePattern
         authorStr = re.sub(newLinePattern, " ", self.authors)
@@ -54,8 +56,10 @@ class ReferenceEntry(object):
                 #print a.group(2)
                 self.authorsArray.append(a.group(2))
                 self.authorsLastNameArray.append(a.group(3))
+
     def getTitleRegEx(self):
-        return re.compile(title.lower(), re.MULTILINE)
+        return re.compile(self.title.lower(), re.MULTILINE)
+
     def toArray(self):
         str_name = str(self.index)
         while len(str_name) < 5:
@@ -63,10 +67,12 @@ class ReferenceEntry(object):
         str_name = "ref_"+str_name
         return [self.authors, self.year, self.title, str_name, self.count]
 
+
 class ReferenceGaz(object):
     def __init__(self):
         self.refs = []
         self.index = 0
+
     def insert(self, authors, year, title, names):
         global newLinePattern
         title = re.sub(newLinePattern, " ", title)
@@ -80,6 +86,11 @@ class ReferenceGaz(object):
         self.refs.append(ref)
         self.index += 1
         ref.index = self.index
+
+
+class MyException(Exception):
+    pass
+
 
 def create_gaz(article_root):
     name = "([A-Z][^\\s\\d\\;\\:0-9\\.\\,\\)\\(]{,12})"
@@ -106,10 +117,12 @@ def create_gaz(article_root):
     df = pd.DataFrame(outputArr)
     df.columns = ['authors', 'year', 'title', 'ref_id', 'occurrences']
     df.to_csv("references_gaz.csv")
-class MyException(Exception):
-    pass
+
+
 def timeout(signum, frame):
     raise MyException
+
+
 def getReferences(fileName, reference, datesReg, names, gaz):
     #print reg
     text = ""
@@ -143,13 +156,13 @@ def getReferences(fileName, reference, datesReg, names, gaz):
                     signal.alarm(0)
                     if matchRef is not None:
                         gaz.insert(matchRef.group(1), matchRef.group(14), matchRef.group(15), names)
-                        wasChange = True
                         previousEnd = matchRef.end()
             signal.alarm(alarmAmount)
     except:
         pass
     print "done"
     sys.stdout.flush()
+
 
 if __name__ == "__main__":
     create_gaz("../ReferenceData")

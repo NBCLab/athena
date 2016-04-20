@@ -21,14 +21,18 @@ import os
 import pandas as pd
 import gazetteers
 import cogat
+import process_data
 
 
-def process_raw_data():
+def process_raw_data(data_dir="/home/data/nbc/athena/athena-data/"):
     """
     Label data using metadata files, split data into training and test
     datasets.
     """
-    pass
+    process_data.stem_corpus(data_dir)
+    process_data.label_data(data_dir)
+    labels_file = os.path.join(data_dir, "labels/full.csv")
+    process_data.split_data(labels_file, test_percent=0.33)
 
 
 def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
@@ -44,7 +48,6 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     label_file = os.path.join(data_dir, "labels/full.csv")
     gaz_dir = os.path.join(data_dir, "gazetteers/")
     text_dir = os.path.join(data_dir, "text/")
-    
     stem_text_dir = os.path.join(text_dir, "stemmed_full/")
     
     df = pd.read_csv(label_file)
