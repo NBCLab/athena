@@ -13,12 +13,11 @@ from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
-from utils import tokenize
 
 tokenizer = RegexpTokenizer("[\W+]", gaps=True)
 stop = stopwords.words("english")
 
-Entrez.email = "tsalo90@gmail.com"
+Entrez.email = "tsalo006@fiu.edu"
 
 
 def generate_nbow_gazetteer(pmids, text_dir):
@@ -31,11 +30,14 @@ def generate_nbow_gazetteer(pmids, text_dir):
             text = fo.read()
             text_list[i] = text
     
-    tfidf = TfidfVectorizer(tokenizer=tokenize,
-                            stop_words=stop,
-                            ngram_range=(1, 2))
+    tfidf = TfidfVectorizer(stop_words=stop,
+                            token_pattern="(?!\\[)[A-z\\-]{3,}",
+                            ngram_range=(1, 2),
+                            sublinear_tf=True,
+                            min_df=75, max_df=0.8, max_features=2000)
     tfidf.fit(text_list)
-    nbow_gaz = tfidf.get_feature_names()
+    unicode_gaz = tfidf.vocabulary_.keys()
+    nbow_gaz = [str(w) for w in unicode_gaz]
     return nbow_gaz
 
 

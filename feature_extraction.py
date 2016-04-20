@@ -28,7 +28,6 @@ from Bio import Medline
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from utils import tokenize
 from abbreviation_extraction import PhraseFinder
 
 stop = stopwords.words("english")
@@ -63,7 +62,7 @@ def extract_nbow(pmids, gazetteer_file, count_file, text_dir):
             text = fo.read()
             text_list[i] = text
     
-    tfidf = TfidfVectorizer(tokenizer=tokenize, vocabulary=gazetteer)
+    tfidf = TfidfVectorizer(vocabulary=gazetteer)
     result_array = tfidf.fit_transform(text_list).toarray()
     
     # Normalize matrix

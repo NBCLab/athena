@@ -45,12 +45,12 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     gaz_dir = os.path.join(data_dir, "gazetteers/")
     text_dir = os.path.join(data_dir, "text/")
     
-    full_text_dir = os.path.join(text_dir, "full/")
+    stem_text_dir = os.path.join(text_dir, "stemmed_full/")
     
     df = pd.read_csv(label_file)
     pmids = df["pmid"].astype(str).tolist()
     
-    nbow_gaz = gazetteers.generate_nbow_gazetteer(pmids, full_text_dir)
+    nbow_gaz = gazetteers.generate_nbow_gazetteer(pmids, stem_text_dir)
     #references_gaz = gazetteers.generate_references_gazetteer(pmids, full_text_dir)
     metadata_gazs = gazetteers.generate_metadata_gazetteers(pmids)
     
