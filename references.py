@@ -137,7 +137,6 @@ def getReferences(fileName, reference, datesReg, names, gaz):
     try:
         signal.alarm(alarmAmount)
         curr = time.clock()
-        print curr - prev
         for match in dates:
             signal.alarm(0)
             if match is not None:
@@ -152,5 +151,4 @@ def getReferences(fileName, reference, datesReg, names, gaz):
             signal.alarm(alarmAmount)
     except:
         pass
-    print "done"
     sys.stdout.flush()
