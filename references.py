@@ -6,9 +6,9 @@ Created on Mar 11, 2016
 
 import re
 import pandas as pd
-from os import listdir
-from os.path import join, isfile
-import sys, time
+import os
+import sys
+import time
 import signal
 
 newLinePattern = re.compile("[\\n\\r]+")
@@ -92,31 +92,28 @@ class MyException(Exception):
     pass
 
 
-def create_gaz(article_root):
+def generate_references_gaz(pmids, text_dir):
     name = "([A-Z][^\\s\\d\\;\\:0-9\\.\\,\\)\\(]{,12})"
     names = "(("+name+"((,\\s{1,4})"+name+"\\.?)?(\\s{,4}"+name+"\\.?)?)(,\\s{1,4}((&|AND)\\s+)?)?)"
     datePar = "(\\(?(\\d{4})[a-f]?\\)?[\\.:]?)"
     title = "\\s{,4}([A-Z][^\\.0-9?!]+)(?<!\\s[A-z0-9])[\\.?!]"
-    #reg = "[\\n\\r]+("+names+"{1,6})\\s+"+datePar+title
     reg = "("+names+"{1,5})\\s{1,4}"+datePar+title
     reference = re.compile(reg, re.MULTILINE|re.DOTALL)
     
-    articleList = [join(article_root, f) for f in listdir(article_root) if isfile(join(article_root, f)) and f[-3:] == "txt"]
     gaz = ReferenceGaz()
-    print reg
-    for i, a in enumerate(articleList):
-        print 'article', i, a
+    for i, pmid in enumerate(pmids):
+        file_ = os.path.join(text_dir, pmid+".txt")
+        print("Article {0}: {1}".format(i, file_))
         sys.stdout.flush()
-        getReferences(a, reference, re.compile(datePar), re.compile(names, re.MULTILINE|re.DOTALL), gaz)
+        getReferences(file_, reference, re.compile(datePar), re.compile(names, re.MULTILINE|re.DOTALL), gaz)
         print len(gaz.refs)
 
     outputArr = []
-
     for r in gaz.refs:
         outputArr.append(r.toArray())
-    df = pd.DataFrame(outputArr)
-    df.columns = ['authors', 'year', 'title', 'ref_id', 'occurrences']
-    df.to_csv("references_gaz.csv")
+
+    df = pd.DataFrame(data=outputArr, columns=["authors", "year", "title", "ref_id", "occurrences"])
+    return df
 
 
 def timeout(signum, frame):
@@ -124,7 +121,6 @@ def timeout(signum, frame):
 
 
 def getReferences(fileName, reference, datesReg, names, gaz):
-    #print reg
     text = ""
     with open(fileName, 'r') as f:
         for l in f:
@@ -162,7 +158,3 @@ def getReferences(fileName, reference, datesReg, names, gaz):
         pass
     print "done"
     sys.stdout.flush()
-
-
-if __name__ == "__main__":
-    create_gaz("../ReferenceData")

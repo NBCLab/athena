@@ -21,6 +21,7 @@ import os
 import pandas as pd
 import gazetteers
 import cogat
+import references
 import process_data
 
 
@@ -49,15 +50,15 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     gaz_dir = os.path.join(data_dir, "gazetteers/")
     text_dir = os.path.join(data_dir, "text/")
     stem_text_dir = os.path.join(text_dir, "stemmed_full/")
+    ref_text_dir = os.path.join(text_dir, "reference_data/")
     
     df = pd.read_csv(label_file)
     pmids = df["pmid"].astype(str).tolist()
     
     nbow_gaz = gazetteers.generate_nbow_gazetteer(pmids, stem_text_dir)
-    #references_gaz = gazetteers.generate_references_gazetteer(pmids, full_text_dir)
     metadata_gazs = gazetteers.generate_metadata_gazetteers(pmids)
-    
     authoryear_gaz, journal_gaz, keyword_gaz, titleword_gaz = metadata_gazs
+    references_df = references.generate_references_gazetteer(pmids, ref_text_dir)
     
     cogat_df = cogat.create_id_sheet()
     rel_df = cogat.create_rel_sheet(cogat_df)
@@ -71,8 +72,8 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     # Save gazetteers
     cogat_df.to_csv(os.path.join(gaz_dir, "cogat.csv"), index=False)
     rel_df.to_csv(os.path.join(gaz_dir, "cogat_relationships.csv"), index=False)
+    references_df.to_csv(os.path.join(gaz_dir, "references.csv"), index=False)
     gazetteers.save_gaz(nbow_gaz, gaz_dir, "nbow")
-    #gazetteers.save_gaz(references_gaz, gaz_dir, "references")
     gazetteers.save_gaz(authoryear_gaz, gaz_dir, "authoryear")
     gazetteers.save_gaz(journal_gaz, gaz_dir, "journal")
     gazetteers.save_gaz(titleword_gaz, gaz_dir, "titlewords")
