@@ -92,7 +92,7 @@ class MyException(Exception):
     pass
 
 
-def generate_references_gaz(pmids, text_dir):
+def generate_references_gazetteer(pmids, text_dir):
     name = "([A-Z][^\\s\\d\\;\\:0-9\\.\\,\\)\\(]{,12})"
     names = "(("+name+"((,\\s{1,4})"+name+"\\.?)?(\\s{,4}"+name+"\\.?)?)(,\\s{1,4}((&|AND)\\s+)?)?)"
     datePar = "(\\(?(\\d{4})[a-f]?\\)?[\\.:]?)"
