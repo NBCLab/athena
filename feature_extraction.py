@@ -29,6 +29,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from abbreviation_extraction import PhraseFinder
+from references import extract_references
 
 stop = stopwords.words("english")
 tokenizer = RegexpTokenizer("[\W+]", gaps=True)
@@ -73,13 +74,6 @@ def extract_nbow(pmids, gazetteer_file, count_file, text_dir):
     count_df.index.name = "pmid"
     count_df = count_df.fillna(0)
     count_df.to_csv(count_file)
-
-
-def extract_references(pmids, gazetteer_file, count_file, text_dir):
-    """
-    Creates feature table for references feature from text.
-    """
-    pass
 
 
 def extract_cogat(pmids, gazetteer_file, count_file, text_dir):
@@ -359,8 +353,8 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
         extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
         print("Completed {0} nbow".format(dataset))
         
-#        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
-#        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
+        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
+        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
 #        extract_rferences(pmids, gazetteer_file, count_file, reftext_dir)
 #        print("Completed {0} references".format(dataset))
     
