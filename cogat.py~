@@ -49,7 +49,7 @@ def clean_string(string):
     
     # Remove extra spaces.
     string = re.sub("\s+", " ", string)
-
+    print string
     # literalize plus signs
     string = string.replace("+", "\+")
     

@@ -128,8 +128,6 @@ def getReferences(fileName, reference, datesReg, names, gaz):
             signal.alarm(alarmAmount)
     except:
         pass
-    finally:
-        signal.alarm(0)
     sys.stdout.flush()
 
 
