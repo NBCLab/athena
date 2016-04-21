@@ -22,6 +22,21 @@ import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
 
 
+def combine_features(feature_names, data_dir="/home/data/nbc/athena/athena-data/"):
+    """
+    Produce combined count files for selected features.
+    """
+    features_dir = os.path.join(data_dir, "features/")
+    datasets = ["train", "test"]
+    for dataset in datasets:
+        path = os.path.join(features_dir, "train_")
+        out_name = path + "_".join(feature_names) + ".csv"
+        feature_files = [path+fn+".csv" for fn in feature_names]
+        feature_dfs = [pd.read_csv(ff, dtype=float, index_col="pmid") for ff in feature_files]
+        feature_df = pd.concat(feature_dfs, axis=1, ignore_index=False)
+        feature_df.to_csv(out_name)
+
+
 def statistics(label_df, feature_df, dataset_name):
     out_df = pd.DataFrame(columns=["Number of Instances",
                                    "Number of Features", "Number of Labels",
