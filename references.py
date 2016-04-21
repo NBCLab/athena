@@ -92,29 +92,6 @@ class MyException(Exception):
     pass
 
 
-def generate_references_gazetteer(pmids, text_dir):
-    name = "([A-Z][^\\s\\d\\;\\:0-9\\.\\,\\)\\(]{,12})"
-    names = "(("+name+"((,\\s{1,4})"+name+"\\.?)?(\\s{,4}"+name+"\\.?)?)(,\\s{1,4}((&|AND)\\s+)?)?)"
-    datePar = "(\\(?(\\d{4})[a-f]?\\)?[\\.:]?)"
-    title = "\\s{,4}([A-Z][^\\.0-9?!]+)(?<!\\s[A-z0-9])[\\.?!]"
-    reg = "("+names+"{1,5})\\s{1,4}"+datePar+title
-    reference = re.compile(reg, re.MULTILINE|re.DOTALL)
-    
-    gaz = ReferenceGaz()
-    for i, pmid in enumerate(pmids):
-        file_ = os.path.join(text_dir, pmid+".txt")
-        print("Article {0}: {1}".format(i, pmid))
-        sys.stdout.flush()
-        getReferences(file_, reference, re.compile(datePar), re.compile(names, re.MULTILINE|re.DOTALL), gaz)
-
-    outputArr = []
-    for r in gaz.refs:
-        outputArr.append(r.toArray())
-
-    df = pd.DataFrame(data=outputArr, columns=["authors", "year", "title", "ref_id", "occurrences"])
-    return df
-
-
 def timeout(signum, frame):
     raise MyException
 
@@ -152,3 +129,33 @@ def getReferences(fileName, reference, datesReg, names, gaz):
     except:
         pass
     sys.stdout.flush()
+
+
+def generate_references_gazetteer(pmids, text_dir):
+    name = "([A-Z][^\\s\\d\\;\\:0-9\\.\\,\\)\\(]{,12})"
+    names = "(("+name+"((,\\s{1,4})"+name+"\\.?)?(\\s{,4}"+name+"\\.?)?)(,\\s{1,4}((&|AND)\\s+)?)?)"
+    datePar = "(\\(?(\\d{4})[a-f]?\\)?[\\.:]?)"
+    title = "\\s{,4}([A-Z][^\\.0-9?!]+)(?<!\\s[A-z0-9])[\\.?!]"
+    reg = "("+names+"{1,5})\\s{1,4}"+datePar+title
+    reference = re.compile(reg, re.MULTILINE|re.DOTALL)
+    
+    gaz = ReferenceGaz()
+    for i, pmid in enumerate(pmids):
+        file_ = os.path.join(text_dir, pmid+".txt")
+        print("Article {0}: {1}".format(i, pmid))
+        sys.stdout.flush()
+        getReferences(file_, reference, re.compile(datePar), re.compile(names, re.MULTILINE|re.DOTALL), gaz)
+
+    outputArr = []
+    for r in gaz.refs:
+        outputArr.append(r.toArray())
+
+    df = pd.DataFrame(data=outputArr, columns=["authors", "year", "title", "ref_id", "occurrences"])
+    return df
+
+
+def extract_references(pmids, gazetteer_file, count_file, text_dir):
+    """
+    Creates feature table for references feature from text.
+    """
+    pass
