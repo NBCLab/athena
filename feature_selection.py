@@ -70,18 +70,22 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
         
         # Evaluate
         metrics = ec.return_metrics(labels_test, predictions)
+        primary_metrics = ec.return_primary(labels_test, predictions)
         lb_df = ec.return_labelwise(labels_test_df, predictions)
         lb_df.set_index("Label", inplace=True)
         
         if k == 0:
             average_array = np.zeros((len(kf), len(metrics)))
+            primary_array = np.zeros((len(kf), len(metrics)))
             lb_df_average = copy.deepcopy(lb_df)
         else:
             lb_df_average += lb_df
         average_array[k, :] = metrics
+        primary_array[k, :] = primary_metrics
     metrics_average = list(np.mean(average_array, axis=0))
+    primary_metrics_average = list(np.mean(primary_array, axis=0))
     lb_df_average /= len(kf)
-    return metrics_average, lb_df_average
+    return metrics_average, primary_metrics_average, lb_df_average
 
 
 def run_feature_selection(data_dir="/home/data/nbc/athena/athena-data/"):
@@ -118,16 +122,24 @@ def run_feature_selection(data_dir="/home/data/nbc/athena/athena-data/"):
     combos += [features]
     
     out_metrics = []
+    out_primary_metrics = []
     for combo in combos:
         feature_name = "_".join(combo)
         combine_features(combo, fs_features_dir)
-        metrics, lb_df = run_clf(feature_name, fs_labels_dir, fs_features_dir,
+        metrics, primary, lb_df = run_clf(feature_name, fs_labels_dir, fs_features_dir,
                                  fs_predictions_dir)
         metrics.insert(0, feature_name)
+        primary.insert(0, feature_name)
         out_metrics += [metrics]
+        out_primary_metrics += [primary]
         lb_df.to_csv(os.path.join(fs_results_dir, "{0}_labelwise.csv".format(feature_name)))
     out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
                                    "Macro Precision", "Micro Precision",
                                    "Macro Recall", "Micro Recall",
                                    "Hamming Loss"], data=out_metrics)
     out_df.to_csv(os.path.join(fs_results_dir, "results.csv"), index=False)
+    primary_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
+                                       "Macro Precision", "Micro Precision",
+                                       "Macro Recall", "Micro Recall",
+                                       "Hamming Loss"], data=out_primary_metrics)
+    primary_df.to_csv(os.path.join(fs_results_dir, "primary_results.csv"), index=False)
