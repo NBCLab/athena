@@ -328,13 +328,18 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
     feature_dir = os.path.join(data_dir, "features/")
     fulltext_dir = os.path.join(data_dir, "text/full/")
     stemtext_dir = os.path.join(data_dir, "text/stemmed_full/")
-#    reftext_dir = os.path.join(data_dir, "text/references/")
+    reftext_dir = os.path.join(data_dir, "text/reference_data/")
 
     for dataset in datasets:
         label_file = os.path.join(label_dir, dataset+".csv")
         df = pd.read_csv(label_file)
         pmids = df["pmid"].astype(str).tolist()
-        
+
+        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
+        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
+        extract_references(pmids, gazetteer_file, count_file, reftext_dir)
+        print("Completed {0} references".format(dataset))        
+
         for feature in metadata_features:
             gazetteer_file = os.path.join(gazetteers_dir, feature+".csv")
             count_file = os.path.join(feature_dir, "{0}_{1}.csv".format(dataset, feature))
@@ -353,10 +358,7 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
         extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
         print("Completed {0} nbow".format(dataset))
         
-        gazetteer_file = os.path.join(gazetteers_dir, "references.csv")
-        count_file = os.path.join(feature_dir, "{0}_references.csv".format(dataset))
-#        extract_rferences(pmids, gazetteer_file, count_file, reftext_dir)
-#        print("Completed {0} references".format(dataset))
+
     
     # Now a special step for CogAt weighting
     weighting_scheme = "ws2"

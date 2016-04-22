@@ -55,13 +55,13 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
     df = pd.read_csv(label_file)
     pmids = df["pmid"].astype(str).tolist()
     
+    metadata_gazs = gazetteers.generate_metadata_gazetteers(pmids)
+    authoryear_gaz, journal_gaz, keyword_gaz, titleword_gaz = metadata_gazs
+    print("Completed metadata gaz.")
     references_df = references.generate_references_gazetteer(pmids, ref_text_dir)
     print("Completed references gaz.")
     nbow_gaz = gazetteers.generate_nbow_gazetteer(pmids, stem_text_dir)
     print("Completed nbow gaz.")
-    metadata_gazs = gazetteers.generate_metadata_gazetteers(pmids)
-    authoryear_gaz, journal_gaz, keyword_gaz, titleword_gaz = metadata_gazs
-    print("Completed metadata gaz.")
     
     cogat_df = cogat.create_id_sheet()
     rel_df = cogat.create_rel_sheet(cogat_df)
