@@ -185,7 +185,8 @@ def extract_references(pmids, gazetteer_file, count_file, text_dir):
     result_array = result_array / result_array.sum(axis=1)[:, None]    
     
     # Create and save output
-    count_df = pd.DataFrame(columns=gazetteer['ref_id'], index=pmids, data=result_array)
+    count_df = pd.DataFrame(columns=gazetteer['ref_id'].values(), index=pmids,
+                            data=result_array)
     count_df.index.name = "pmid"
     count_df = count_df.fillna(0)
     count_df.to_csv(count_file)

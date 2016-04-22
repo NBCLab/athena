@@ -63,7 +63,6 @@ primary_labels = ["pmid",
                   "Experiments.ParadigmClass.Reward",
                   "Experiments.ParadigmClass.SemanticMonitor/Discrimination",
                   "Experiments.ParadigmClass.WordGeneration",
-                  "Experiments.ParadigmClass.PainMonitor/Discrimination",
                   "Experiments.ParadigmClass.n-back"]
 
 # Run function for both datasets

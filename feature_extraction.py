@@ -322,7 +322,7 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
                          "keywords": extract_keywords,
                          }
     datasets = ["train", "test"]
-
+    datasets = ["test"]
     gazetteers_dir = os.path.join(data_dir, "gazetteers/")
     label_dir = os.path.join(data_dir, "labels/")
     feature_dir = os.path.join(data_dir, "features/")
@@ -357,8 +357,6 @@ def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
         count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
         extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
         print("Completed {0} nbow".format(dataset))
-        
-
     
     # Now a special step for CogAt weighting
     weighting_scheme = "ws2"

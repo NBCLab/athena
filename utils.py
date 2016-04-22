@@ -8,6 +8,7 @@ Created on Sun Apr 10 12:52:44 2016
 from nltk.corpus import stopwords
 from nltk import word_tokenize          
 from nltk.stem.porter import PorterStemmer
+import pandas as pd
 
 stemmer = PorterStemmer()
 stop = stopwords.words("english")

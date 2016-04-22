@@ -102,7 +102,8 @@ def run_feature_selection(data_dir="/home/data/nbc/athena/athena-data/"):
     fs_labels_dir = os.path.join(fs_dir, "labels/")
     fs_results_dir = os.path.join(fs_dir, "results/")
     
-    features = ["authoryear", "cogat", "journal", "keywords", "titlewords"]
+    features = ["authoryear", "cogat", "journal", "keywords", "nbow",
+                "references", "titlewords"]
     
     # Copy files to feature selection directory
     source_file = os.path.join(labels_dir, "train.csv")

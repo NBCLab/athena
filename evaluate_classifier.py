@@ -51,7 +51,6 @@ def return_primary(labels, predictions):
                       "Experiments.ParadigmClass.Reward",
                       "Experiments.ParadigmClass.SemanticMonitor/Discrimination",
                       "Experiments.ParadigmClass.WordGeneration",
-                      "Experiments.ParadigmClass.PainMonitor/Discrimination",
                       "Experiments.ParadigmClass.n-back"]
     
     if isinstance(labels, str):
