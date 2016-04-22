@@ -41,7 +41,7 @@ def return_metrics(labels, predictions):
     return metrics
 
 
-def return_primary(labels, predictions):
+def return_primary(labels, predictions, label_names=None):
     """
     Calculate metrics for model based on predicted labels. But only for
     primary labels.
@@ -56,9 +56,13 @@ def return_primary(labels, predictions):
     if isinstance(labels, str):
         df = pd.read_csv(labels, dtype=int)
         col_idx = np.where(df.columns.isin(primary_labels))[0]
-        labels = df.as_matrix()[:, col_idx]
-        predictions = predictions[:, col_idx-1]
-    
+        col_idx -= 1
+        labels = df.as_matrix()[:, 1:]
+    else:
+        col_idx = np.where(label_names.isin(primary_labels))[0]
+        col_idx -= 1
+    labels = labels[:, col_idx]
+    predictions = predictions[:, col_idx]
     macro_precision = precision_score(labels, predictions, average="macro")
     micro_precision = precision_score(labels, predictions, average="micro")
     

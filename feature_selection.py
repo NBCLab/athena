@@ -52,6 +52,7 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
     features_df = pd.read_csv(features_file)
     features = features_df.as_matrix()[:, 1:]
     labels_df = pd.read_csv(labels_file)
+    label_names = labels_df.columns
     labels = labels_df.as_matrix()[:, 1:]
     
     kf = KFold(labels.shape[0], 10)
@@ -70,7 +71,7 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
         
         # Evaluate
         metrics = ec.return_metrics(labels_test, predictions)
-        primary_metrics = ec.return_primary(labels_test, predictions)
+        primary_metrics = ec.return_primary(labels_test, predictions, label_names)
         lb_df = ec.return_labelwise(labels_test_df, predictions)
         lb_df.set_index("Label", inplace=True)
         

@@ -7,8 +7,8 @@ import pandas as pd
 import os
 
 
-def convert_to_arff(data_dir="/Users/salo/NBCLab/athena-data/",
-                    dataset, feature_files):
+def convert_to_arff(data_dir="/home/data/nbc/athena/athena-data/",
+                    dataset=None, feature_files=None):
     """
     Convert pandas DataFrames to arff format. Allows user to use combinations
     of features.
@@ -21,32 +21,34 @@ def convert_to_arff(data_dir="/Users/salo/NBCLab/athena-data/",
     feature_dfs = [[] for i in feature_files]
     for i, feature_file in enumerate(feature_files):
         file_ = os.path.basename(feature_file)
-        feature_name = "_" + "_".join(file_.split(".csv")[0].split("_")[1:])
+        fn = file_.split(".csv")[0].split("_")[1:]
+        feature_name = "_" + "_".join(fn)
         out_name += feature_name
         
         feature_dfs[i] = pd.read_csv(feature_file, dtype=float)
         feature_dfs[i] = feature_dfs[i].set_index("pmid")
+        feature_dfs[i].rename(columns=lambda x: x+"_"+fn[0], inplace=True)
     out_name += ".arff"
     
     feature_df = pd.concat(feature_dfs, axis=1, ignore_index=False)
     features = feature_df.columns.tolist()
-    
+
     label_df = pd.read_csv(label_file, dtype=int)
     label_df = label_df.set_index("pmid")
     labels = label_df.columns.tolist()
     
-    out_string = "@relation {0}\n".format(dataset)
-    for feature in features:
-        if " " in feature:
-            out_string += '@attribute "{0}" numeric\n'.format(feature)
-        else:
-            out_string += '@attribute {0} numeric\n'.format(feature)
-    
+    out_string = "@relation '{0}: -C {1}'\n".format(dataset, len(labels))
     for label in labels:
         if " " in label:
             out_string += '@attribute "{0}" {{0, 1}}\n'.format(label)
         else:
             out_string += '@attribute {0} {{0, 1}}\n'.format(label)
+    
+    for feature in features:
+        if " " in feature:
+            out_string += '@attribute "{0}" numeric\n'.format(feature)
+        else:
+            out_string += '@attribute {0} numeric\n'.format(feature)
     out_string += "\n@data\n"
     
     for pmid in label_df.index.values:
@@ -56,7 +58,7 @@ def convert_to_arff(data_dir="/Users/salo/NBCLab/athena-data/",
         label_list = label_df.loc[pmid].tolist()
         label_str = ",".join(map(str, label_list))
         
-        out_string += "{0},{1}\n".format(feature_str, label_str)
+        out_string += "{0},{1}\n".format(label_str, feature_str)
     
     out_file = os.path.join(out_dir, out_name)
     with open(out_file, "w") as fo:
@@ -77,7 +79,7 @@ def gen_string(dict_, tabs, in_string):
     return in_string
 
 
-def gen_hier_label_file(data_dir):
+def gen_hier_label_file(data_dir="/home/data/nbc/athena/athena-data/"):
     """
     Creates MULAN-format XML file to specify hierarchical labels.
     """
@@ -105,12 +107,14 @@ def gen_hier_label_file(data_dir):
 
 
 def test():
-    data_dir = "/Users/salo/NBCLab/athena-data/"
-    feature_files = ["/Users/salo/NBCLab/athena-data/features/train_authoryear.csv",
-                     "/Users/salo/NBCLab/athena-data/features/train_journal.csv"]
+    data_dir = "/home/data/nbc/athena/athena-data/"
+    feature_files = ["/home/data/nbc/athena/athena-data/features/train_cogat.csv",
+                     "/home/data/nbc/athena/athena-data/features/train_nbow.csv",
+                     "/home/data/nbc/athena/athena-data/features/train_titlewords.csv"]
     convert_to_arff(data_dir, "train", feature_files)
     
-    feature_files = ["/Users/salo/NBCLab/athena-data/features/test_authoryear.csv",
-                     "/Users/salo/NBCLab/athena-data/features/test_journal.csv"]
+    feature_files = ["/home/data/nbc/athena/athena-data/features/test_cogat.csv",
+                     "/home/data/nbc/athena/athena-data/features/test_nbow.csv",
+                     "/home/data/nbc/athena/athena-data/features/test_titlewords.csv"]
     convert_to_arff(data_dir, "test", feature_files)
     gen_hier_label_file(data_dir)
