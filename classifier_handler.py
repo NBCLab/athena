@@ -22,21 +22,6 @@ import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
 
 
-def combine_features(feature_names, data_dir="/home/data/nbc/athena/v1.1-data/"):
-    """
-    Produce combined count files for selected features.
-    """
-    features_dir = os.path.join(data_dir, "features/")
-    datasets = ["train", "test"]
-    for dataset in datasets:
-        path = os.path.join(features_dir, "train_")
-        out_name = path + "_".join(feature_names) + ".csv"
-        feature_files = [path+fn+".csv" for fn in feature_names]
-        feature_dfs = [pd.read_csv(ff, dtype=float, index_col="pmid") for ff in feature_files]
-        feature_df = pd.concat(feature_dfs, axis=1, ignore_index=False)
-        feature_df.to_csv(out_name)
-
-
 def statistics(label_df, feature_df, dataset_name):
     out_df = pd.DataFrame(columns=["Number of Instances",
                                    "Number of Features", "Number of Labels",
@@ -67,23 +52,25 @@ def statistics(label_df, feature_df, dataset_name):
     return out_df
 
 
-def dataset_statistics(data_dir="/home/data/nbc/athena/v1.1-data/", feature_name="authoryear"):
-    labels_dir = os.path.join(data_dir, "labels")
-    features_dir = os.path.join(data_dir, "features")
-    statistics_file = os.path.join(data_dir, "statistics/dataset_statistics.csv")
+def dataset_statistics(data_dir="/home/data/nbc/athena/v1.1-data/", feature_name="nbow"):
+    for text_type in ["full", "combined"]:
+        type_dir = os.path.join(data_dir, text_type)
+        labels_dir = os.path.join(type_dir, "labels")
+        features_dir = os.path.join(type_dir, "features")
+        statistics_file = os.path.join(type_dir, "statistics/dataset_statistics.csv")
+        
+        # Run function for both datasets
+        datasets = ["train", "test"]
+        dfs = [[] for _ in datasets]
+        for i, dataset in enumerate(datasets):
+            labels_file = os.path.join(labels_dir, "{0}.csv".format(dataset))
+            features_file = os.path.join(features_dir, "{0}_{1}.csv".format(dataset, feature_name))
+            labels = pd.read_csv(labels_file, dtype=int)
+            features = pd.read_csv(features_file, dtype=float)
+            dfs[i] = statistics(labels, features, dataset)
     
-    # Run function for both datasets
-    datasets = ["train", "test"]
-    dfs = [[] for _ in datasets]
-    for i, dataset in enumerate(datasets):
-        labels_file = os.path.join(labels_dir, "{0}.csv".format(dataset))
-        features_file = os.path.join(features_dir, "{0}_{1}.csv".format(dataset, feature_name))
-        labels = pd.read_csv(labels_file, dtype=int)
-        features = pd.read_csv(features_file, dtype=float)
-        dfs[i] = statistics(labels, features, dataset)
-
-    out_df = pd.concat(dfs)
-    out_df.to_csv(statistics_file)
+        out_df = pd.concat(dfs)
+        out_df.to_csv(statistics_file)
 
 
 def return_metrics(labels, predictions):
