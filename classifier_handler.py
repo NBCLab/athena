@@ -23,95 +23,113 @@ from sklearn.metrics import f1_score, precision_score, recall_score, hamming_los
 
 def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
-    Run sklearn OneVsRest multilabel classifier wrapped around a LinearSVC
-    binary classifier with l2 penalty and 1.0 C on a given feature count file.
-    
-    Cross-validation is used to evaluate results.
+    Run sklearn classifiers.
     """
-    feature_name = "nbow"
-    features_dir = "/home/data/nbc/athena/v1.1-data/features/"
-    labels_dir = "/home/data/nbc/athena/v1.1-data/labels/"
-    
-    # Train
-    train_features_file = os.path.join(features_dir, "train_"+feature_name+".csv")
-    test_features_file = os.path.join(features_dir, "test_"+feature_name+".csv")
-    labels_file = os.path.join(labels_dir, "train.csv")
-    
-    train_features_df = pd.read_csv(train_features_file)
-    train_features = train_features_df.as_matrix()[:, 1:]
-    test_features_df = pd.read_csv(test_features_file)
-    test_features = test_features_df.as_matrix()[:, 1:]
-    
-    train_labels_df = pd.read_csv(train_labels_file)
-    train_labels = train_labels_df.as_matrix()[:, 1:]
-    test_labels_df = pd.read_csv(test_labels_file)
-    test_labels = test_labels_df.as_matrix()[:, 1:]
-    
-    label_names = train_labels_df.columns
-    
-    classifiers = {"MNB": MultinomialNB(),
-        		   "BNB": BernoulliNB(),
-        		   "LR1": LogisticRegression(penalty = "l1", class_weight="auto"),
-        		   "LR2": LogisticRegression(penalty = "l2", class_weight="auto"), 
-        		   "SVC1": LinearSVC(penalty = "l1", class_weight="auto", dual=False),
-        		   "SVC2": LinearSVC(penalty = "l2", class_weight="auto", dual=False)]
-        		   }
-    parameters = [
-		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]},
-		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]}, 
-		{'ovr__estimator__C':[0.1, 1, 10, 100]},
-		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
-		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
-		{'ovr__estimator__C':[0.01, 0.1, 1, 10]}]
-		
-	original_params = [
-		{'ovr__estimator__alpha':[0.1]},
-		{'ovr__estimator__alpha':[0.1]}, 
-		{'ovr__estimator__C':[100]},
-		{'ovr__estimator__C':[10]},
-		{'ovr__estimator__C':[10]},
-		{'ovr__estimator__C':[1]}]
-		
-    for i, clf in enumerate(classifiers):
-        ## POST HERE IS FROM FEATURE SELECTION (NOT ADAPTED)
-        ## PERFORM GRID SEARCH HERE
-        grid = GridSearchCV(clf, parameters[i], cv = KFold(len(train_features), n_folds = 10, shuffle=True), scoring = "f1_micro", verbose = 1)
-        grid.fit(train_features, train_labels)
-        parameter = grid.best_params_[parameters[i].keys()[0]]
-        best_estimator = grid.best_estimator_
+    for text_type in ["full", "combined"]:
+        type_dir = os.path.join(data_dir, text_type)
+        features_dir = os.path.join(type_dir, "features/")
+        labels_dir = os.path.join(type_dir, "labels/")
+        stats_dir = os.path.join(type_dir, "statistics/")
         
-        clf.set_params(parameters[i].keys()[0], parameter)
+        # Train
+        train_features_file = os.path.join(features_dir, "train_nbow.csv")
+        test_features_file = os.path.join(features_dir, "test_nbow.csv")
+        labels_file = os.path.join(labels_dir, "train.csv")
         
-        classif = OneVsRestClassifier(clf)
-        classif.fit(train_features, train_labels)
-        name = classifiers.keys()[i]+"_"+parameter+"_new"
-        test_eval(classif, test_features, label_names, test_labels, test_labels_df, name)
+        train_features_df = pd.read_csv(train_features_file)
+        train_features = train_features_df.as_matrix()[:, 1:]
+        test_features_df = pd.read_csv(test_features_file)
+        test_features = test_features_df.as_matrix()[:, 1:]
         
-        parameter = original_params[i][original_params[i].keys()[0]][0]
-        clf.set_params(original_params[i].keys()[0], parameter)
-        classif.fit(train_features, train_labels)
+        train_labels_df = pd.read_csv(train_labels_file)
+        train_labels = train_labels_df.as_matrix()[:, 1:]
+        test_labels_df = pd.read_csv(test_labels_file)
         
-        name = classifiers.keys()[i]+"_"+parameter+"_old"
-        test_eval(classif, test_features, label_names, test_labels, test_labels_df, name)
+        classifiers = {"MNB": MultinomialNB(),
+            		   "BNB": BernoulliNB(),
+            		   "LR1": LogisticRegression(penalty = "l1", class_weight="auto"),
+            		   "LR2": LogisticRegression(penalty = "l2", class_weight="auto"), 
+            		   "SVC1": LinearSVC(penalty = "l1", class_weight="auto", dual=False),
+            		   "SVC2": LinearSVC(penalty = "l2", class_weight="auto", dual=False)]
+            		   }
+        parameters = [
+    		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]},
+    		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]}, 
+    		{'ovr__estimator__C':[0.1, 1, 10, 100]},
+    		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
+    		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
+    		{'ovr__estimator__C':[0.01, 0.1, 1, 10]}]
+    		
+    	original_params = [
+    		{'ovr__estimator__alpha':[0.1]},
+    		{'ovr__estimator__alpha':[0.1]}, 
+    		{'ovr__estimator__C':[100]},
+    		{'ovr__estimator__C':[10]},
+    		{'ovr__estimator__C':[10]},
+    		{'ovr__estimator__C':[1]}]
+    	
+    	out_metrics = []
+    	out_primary_metrics = []
+        for i, clf in enumerate(classifiers):
+            grid = GridSearchCV(clf, parameters[i], cv = KFold(len(train_features), n_folds = 10, shuffle=True),
+            		    scoring = "f1_micro", verbose = 1)
+            grid.fit(train_features, train_labels)
+            parameter = grid.best_params_[parameters[i].keys()[0]]
+            best_estimator = grid.best_estimator_
+            
+            clf.set_params(parameters[i].keys()[0], parameter)
+            
+            classif = OneVsRestClassifier(clf)
+            classif.fit(train_features, train_labels)
+            model_name = classifiers.keys()[i]+"_"+parameter+"_new"
+            metrics, primary = test_eval(classif, test_features, test_labels_df, model_name, type_dir)
+            metrics.insert(0, model_name)
+            primary.insert(0, model_name)
+            out_metrics += [metrics]
+            out_primary_metrics += [primary]
+            
+            parameter = original_params[i][original_params[i].keys()[0]][0]
+            clf.set_params(original_params[i].keys()[0], parameter)
+            classif.fit(train_features, train_labels)
+            
+            model_name = classifiers.keys()[i]+"_"+parameter+"_old"
+            metrics, primary = test_eval(classif, test_features, test_labels_df, model_name, type_dir)
+            metrics.insert(0, model_name)
+            primary.insert(0, model_name)
+            out_metrics += [metrics]
+            out_primary_metrics += [primary]
+        out_df = pd.DataFrame(columns=["Model", "Micro F-Score",
+                                       "Macro Precision", "Micro Precision",
+                                       "Macro Recall", "Micro Recall",
+                                       "Hamming Loss"], data=out_metrics)
+        out_df.to_csv(os.path.join(stats_dir, "results.csv"), index=False)
+        primary_df = pd.DataFrame(columns=["Model", "Micro F-Score",
+                                           "Macro Precision", "Micro Precision",
+                                           "Macro Recall", "Micro Recall",
+                                           "Hamming Loss"], data=out_primary_metrics)
+        primary_df.to_csv(os.path.join(stats_dir, "primary_results.csv"), index=False)
 
-def test_eval(classif, test_features, label_names, test_labels, test_labels_df, name):
+
+def test_eval(classif, test_features, test_labels_df, name, type_dir):
+    test_labels = test_labels_df.as_matrix()[:, 1:]
+    label_names = test_labels_df.columns
+
     # Test
+    preds_dir = os.path.join(type_dir, "predictions/")
     predictions = classif.predict(test_features)
-    out_file = os.path.join(out_folder, "{}_k{}.csv".format(name, k))
+    out_file = os.path.join(preds_dir, "{}.csv".format(name))
     np.savetxt(out_file, predictions, delimiter=",")
     
     # Evaluate
+    stats_dir = os.path.join(type_dir, "statistics/")
     metrics = ec.return_metrics(test_labels, predictions)
     primary_metrics = ec.return_primary(test_labels, predictions, label_names)
     lb_df = ec.return_labelwise(test_labels_df, predictions)
     lb_df.set_index("Label", inplace=True)
-    
-    primary_out_file = os.path.join(out_folder, "{}_k{}.csv".format(name+"_primary_metrics", k))
-    np.savetxt(primary_out_file, primary_metrics, delimiter=",")
-    
-    metrics_out_file = os.path.join(out_folder, "{}_k{}.csv".format(name+"_metrics", k))
-    np.savetxt(metrics_out_file, metrics, delimiter=",")
-    
+    lb_df.to_csv(os.path.join(stats_dir, name+"_labelwise.csv"))
+    return metrics, primary_metrics
+
+
 def statistics(label_df, feature_df, dataset_name):
     out_df = pd.DataFrame(columns=["Number of Instances",
                                    "Number of Features", "Number of Labels",
