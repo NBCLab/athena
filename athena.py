@@ -1,6 +1,12 @@
 """
 Run v1.1 from beginning to end.
 """
+import process_data
+import os
+import gazetteers
+import feature_extraction
+import pandas as pd
+import classifier_handler
 
 process_data.stem_corpus(data_dir)
 process_data.label_data(data_dir)
@@ -32,4 +38,4 @@ for text_type in ["full", "combined"]:
     models_dir = os.path.join(type_dir, "models")
     preds_dir = os.path.join(type_dir, "predictions")
     stats_dir = os.path.join(type_dir, "statistics")
-    run_classifiers(labels_dir, features_dir, models_dir, preds_dir, stats_dir)
+    classifier_handler.run_classifiers(type_dir)
