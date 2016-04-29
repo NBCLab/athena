@@ -129,19 +129,19 @@ def return_all(labels_file, predictions_dir):
 
 
 def test():
-    train_label_file = "/home/data/nbc/athena/v1.1-data/labels/train.csv"
-    predictions_file = "/home/data/nbc/athena/v1.1-data/predictions/predictions.csv"
-    predictions_dir = "/home/data/nbc/athena/v1.1-data/predictions/"
-    predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
+    data_dir = "/home/data/nbc/athena/v1.1-data/"
     
-    metrics = return_metrics(train_label_file, predictions)
-    f1, mac_prec, mic_prec, mac_rec, mic_rec, hl = metrics
-    out_df = return_all(train_label_file, predictions_dir)
-    out_df.to_csv("/home/data/nbc/athena/v1.1-data/statistics/metrics.csv", index=False)
-    labelwise_df = return_labelwise(train_label_file, predictions_dir)
-    labelwise_df.to_csv("/home/data/nbc/athena/v1.1-data/statistics/labelwise_metrics.csv", index=False)
-
-    df = pd.read_csv(train_label_file, dtype=int)
+    for text_type in ["full", "combined"]:
+        type_dir = os.path.join(data_dir, text_type)
+        test_label_file = os.path.join(type_dir, "labels/test.csv"
+        predictions_dir = os.path.join("predictions/")
+        predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
+        
+        metrics = return_metrics(test_label_file, predictions)
+        f1, mac_prec, mic_prec, mac_rec, mic_rec, hl = metrics
+        out_df = return_all(test_label_file, predictions_dir)
+        out_df.to_csv(os.path.join(type_dir, "statistics/metrics.csv", index=False))
+        labelwise_df = return_labelwise(test_label_file, predictions_dir)
+        labelwise_df.to_csv(os.path.join(type_dir, "statistics/labelwise_metrics.csv", index=False))
     
-
-
+        df = pd.read_csv(train_label_file, dtype=int)
