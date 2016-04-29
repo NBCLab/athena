@@ -25,7 +25,7 @@ import references
 import process_data
 
 
-def process_raw_data(data_dir="/home/data/nbc/athena/athena-data/"):
+def process_raw_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Label data using metadata files, split data into training and test
     datasets.
@@ -36,7 +36,7 @@ def process_raw_data(data_dir="/home/data/nbc/athena/athena-data/"):
     process_data.split_data(labels_file, test_percent=0.33)
 
 
-def generate_gazetteers(data_dir="/home/data/nbc/athena/athena-data/"):
+def generate_gazetteers(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Creates list of unique terms for four gazetteers derived from metadata
     available through PubMed:
