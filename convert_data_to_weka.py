@@ -7,7 +7,7 @@ import pandas as pd
 import os
 
 
-def convert_to_arff(data_dir="/home/data/nbc/athena/athena-data/",
+def convert_to_arff(data_dir="/home/data/nbc/athena/v1.1-data/",
                     dataset=None, feature_files=None):
     """
     Convert pandas DataFrames to arff format. Allows user to use combinations
@@ -79,7 +79,7 @@ def gen_string(dict_, tabs, in_string):
     return in_string
 
 
-def gen_hier_label_file(data_dir="/home/data/nbc/athena/athena-data/"):
+def gen_hier_label_file(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Creates MULAN-format XML file to specify hierarchical labels.
     """
@@ -107,14 +107,14 @@ def gen_hier_label_file(data_dir="/home/data/nbc/athena/athena-data/"):
 
 
 def test():
-    data_dir = "/home/data/nbc/athena/athena-data/"
-    feature_files = ["/home/data/nbc/athena/athena-data/features/train_cogat.csv",
-                     "/home/data/nbc/athena/athena-data/features/train_nbow.csv",
-                     "/home/data/nbc/athena/athena-data/features/train_titlewords.csv"]
+    data_dir = "/home/data/nbc/athena/v1.1-data/"
+    feature_files = ["/home/data/nbc/athena/v1.1-data/features/train_cogat.csv",
+                     "/home/data/nbc/athena/v1.1-data/features/train_nbow.csv",
+                     "/home/data/nbc/athena/v1.1-data/features/train_titlewords.csv"]
     convert_to_arff(data_dir, "train", feature_files)
     
-    feature_files = ["/home/data/nbc/athena/athena-data/features/test_cogat.csv",
-                     "/home/data/nbc/athena/athena-data/features/test_nbow.csv",
-                     "/home/data/nbc/athena/athena-data/features/test_titlewords.csv"]
+    feature_files = ["/home/data/nbc/athena/v1.1-data/features/test_cogat.csv",
+                     "/home/data/nbc/athena/v1.1-data/features/test_nbow.csv",
+                     "/home/data/nbc/athena/v1.1-data/features/test_titlewords.csv"]
     convert_to_arff(data_dir, "test", feature_files)
     gen_hier_label_file(data_dir)
