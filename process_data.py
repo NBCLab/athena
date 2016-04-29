@@ -16,7 +16,7 @@ from nltk.stem.porter import PorterStemmer
 from utils import cogpo_columns, clean_str, df_to_list
 
 
-def stem_corpus(data_dir="/home/data/nbc/athena/athena-data/"):
+def process_corpus(data_dir="/home/data/nbc/athena/athena-data/"):
     full_dir = os.path.join(data_dir, "text/full/")
     stem_dir = os.path.join(data_dir, "text/stemmed_full/")
     
@@ -28,6 +28,10 @@ def stem_corpus(data_dir="/home/data/nbc/athena/athena-data/"):
         with open(file_, "r") as fo:
             text = fo.read()
     
+        p = PhraseFinder()
+        p.setup(text)
+        text = p.fullText
+        
         stem_list = []
         for word in text.split():
             stem_list.append(stemmer.stem(word))
