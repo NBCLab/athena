@@ -16,7 +16,7 @@ from nltk.stem.porter import PorterStemmer
 from utils import cogpo_columns, clean_str, df_to_list
 
 
-def stem_corpus(data_dir="/home/data/nbc/athena/athena-data/"):
+def stem_corpus(data_dir="/home/data/nbc/athena/v1.1-data/"):
     full_dir = os.path.join(data_dir, "text/full/")
     stem_dir = os.path.join(data_dir, "text/stemmed_full/")
     
@@ -36,7 +36,7 @@ def stem_corpus(data_dir="/home/data/nbc/athena/athena-data/"):
             fo.write(" ".join(stem_list))
 
 
-def label_data(data_dir="/home/data/nbc/athena/athena-data/"):
+def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Convert metadata files to instance-by-label matrix.
     """
