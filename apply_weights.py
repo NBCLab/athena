@@ -13,11 +13,11 @@ zeros =      1297515
 import pandas as pd
 #from cogat import apply_weights_recursively
 
-input_df = pd.read_csv("/Users/salo/NBCLab/athena-data/features/cogat_res.csv")
+input_df = pd.read_csv("/home/data/nbc/athena/v1.1-data/features/cogat_res.csv")
 
-weight_files = ["/Users/salo/NBCLab/athena-data/gazetteers/cogat_weights_ws2_up_20160406.csv",
-                "/Users/salo/NBCLab/athena-data/gazetteers/cogat_weights_ws2_down_20160406.csv",
-                "/Users/salo/NBCLab/athena-data/gazetteers/cogat_weights_ws2_side_20160406.csv"]
+weight_files = ["/home/data/nbc/athena/v1.1-data/gazetteers/cogat_weights_ws2_up_20160406.csv",
+                "/home/data/nbc/athena/v1.1-data/gazetteers/cogat_weights_ws2_down_20160406.csv",
+                "/home/data/nbc/athena/v1.1-data/gazetteers/cogat_weights_ws2_side_20160406.csv"]
 weight_dfs = [pd.read_csv(file_) for file_ in weight_files]
 
 # Some terms may no longer exist, but may still be referenced in assertions.
