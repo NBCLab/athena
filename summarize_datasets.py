@@ -67,41 +67,44 @@ primary_labels = ["pmid",
 
 # Run function for both datasets
 data_dir = "/home/data/nbc/athena/v1.1-data/"
-train_labels = os.path.join(data_dir, "labels/train.csv")
-train_features = os.path.join(data_dir, "features/train_cogat.csv")
-test_labels = os.path.join(data_dir, "labels/test.csv")
-test_features = os.path.join(data_dir, "features/test_cogat.csv")
 
-# Load and combine data
-train_label_df = pd.read_csv(train_labels, dtype=int)
-train_feature_df = pd.read_csv(train_features, dtype=float)
-
-test_label_df = pd.read_csv(test_labels, dtype=int)
-test_feature_df = pd.read_csv(test_features, dtype=float)
-
-print("Training dataset statistics:")
-train_df = statistics(train_label_df, train_feature_df, "Training")
-
-print("Test dataset statistics:")
-test_df = statistics(test_label_df, test_feature_df, "Test")
-
-out_df = pd.concat([train_df, test_df])
-out_df.to_csv(os.path.join(data_dir, "statistics/dataset_statistics.csv"))
-
-# Also output file with labels
-labels = train_label_df.columns.tolist()[1:]
-out_df = pd.DataFrame(columns=["Label"], data=labels)
-out_df.to_csv(os.path.join(data_dir, "labels/labels.csv"), index=False)
-
-# Limit to primary labels and output reduced file
-train_label_df = train_label_df[primary_labels]
-test_label_df = test_label_df[primary_labels]
-
-print("Primary training dataset statistics:")
-train_df = statistics(train_label_df, train_feature_df, "Training")
-
-print("Primary test dataset statistics:")
-test_df = statistics(test_label_df, test_feature_df, "Test")
-
-out_df = pd.concat([train_df, test_df])
-out_df.to_csv(os.path.join(data_dir, "statistics/dataset_statistics_primary.csv"))
+for text_type in ["full", "combined"]:
+    type_dir = os.path.join(data_dir, text_type)
+    train_labels = os.path.join(type_dir, "labels/train.csv")
+    train_features = os.path.join(type_dir, "features/train_cogat.csv")
+    test_labels = os.path.join(type_dir, "labels/test.csv")
+    test_features = os.path.join(type_dir, "features/test_cogat.csv")
+    
+    # Load and combine data
+    train_label_df = pd.read_csv(train_labels, dtype=int)
+    train_feature_df = pd.read_csv(train_features, dtype=float)
+    
+    test_label_df = pd.read_csv(test_labels, dtype=int)
+    test_feature_df = pd.read_csv(test_features, dtype=float)
+    
+    print("Training dataset statistics:")
+    train_df = statistics(train_label_df, train_feature_df, "Training")
+    
+    print("Test dataset statistics:")
+    test_df = statistics(test_label_df, test_feature_df, "Test")
+    
+    out_df = pd.concat([train_df, test_df])
+    out_df.to_csv(os.path.join(type_dir, "statistics/dataset_statistics.csv"))
+    
+    # Also output file with labels
+    labels = train_label_df.columns.tolist()[1:]
+    out_df = pd.DataFrame(columns=["Label"], data=labels)
+    out_df.to_csv(os.path.join(type_dir, "labels/labels.csv"), index=False)
+    
+    # Limit to primary labels and output reduced file
+    train_label_df = train_label_df[primary_labels]
+    test_label_df = test_label_df[primary_labels]
+    
+    print("Primary training dataset statistics:")
+    train_df = statistics(train_label_df, train_feature_df, "Training")
+    
+    print("Primary test dataset statistics:")
+    test_df = statistics(test_label_df, test_feature_df, "Test")
+    
+    out_df = pd.concat([train_df, test_df])
+    out_df.to_csv(os.path.join(type_dir, "statistics/dataset_statistics_primary.csv"))
