@@ -15,7 +15,10 @@ from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 tokenizer = RegexpTokenizer("[\W+]", gaps=True)
-stop = stopwords.words("english")
+#stop = stopwords.words("english")
+stop = []
+with open("../athena-data/misc/onix_stopwords.txt") as f:
+    stop = f.read().split()
 
 Entrez.email = "tsalo006@fiu.edu"
 
@@ -31,10 +34,8 @@ def generate_nbow_gazetteer(pmids, text_dir):
             text_list[i] = text
     
     tfidf = TfidfVectorizer(stop_words=stop,
-                            token_pattern="(?!\\[)[A-z\\-]{3,}",
-                            ngram_range=(1, 2),
                             sublinear_tf=True,
-                            min_df=75, max_df=0.8, max_features=2000)
+                            min_df=3)
     tfidf.fit(text_list)
     unicode_gaz = tfidf.vocabulary_.keys()
     nbow_gaz = [str(w) for w in unicode_gaz]
