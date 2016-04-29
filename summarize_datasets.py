@@ -66,7 +66,7 @@ primary_labels = ["pmid",
                   "Experiments.ParadigmClass.n-back"]
 
 # Run function for both datasets
-data_dir = "/home/data/nbc/athena/athena-data/"
+data_dir = "/home/data/nbc/athena/v1.1-data/"
 train_labels = os.path.join(data_dir, "labels/train.csv")
 train_features = os.path.join(data_dir, "features/train_cogat.csv")
 test_labels = os.path.join(data_dir, "labels/test.csv")
