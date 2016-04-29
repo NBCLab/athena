@@ -89,7 +89,7 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
     return metrics_average, primary_metrics_average, lb_df_average
 
 
-def run_feature_selection(data_dir="/home/data/nbc/athena/athena-data/"):
+def run_feature_selection(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Create all possible combination feature count files, run simple classifier
     on each, and output summary statistics.
