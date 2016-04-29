@@ -71,7 +71,7 @@ def run_clf(feature_name, labels_dir, features_dir, out_folder):
 
 
 feature_name = "cogat"
-labels_dir = "/home/data/nbc/athena/athena-data/feature_selection/labels/"
-features_dir = "/home/data/nbc/athena/athena-data/feature_selection/features/"
+labels_dir = "/home/data/nbc/athena/v1.1-data/feature_selection/labels/"
+features_dir = "/home/data/nbc/athena/v1.1-data/feature_selection/features/"
 out_folder = "/home/data/nbc/"
 a, b, c = run_clf(feature_name, labels_dir, features_dir, out_folder)
