@@ -51,8 +51,8 @@ def plot_hierarchy(observed_cogpo, domain_name, out_file):
     graph.write_png(out_file)
 
 # Plot hierarchy
-labels_file = "/home/data/nbc/athena/athena-data/labels/full.csv"
-out_dir = "/home/data/nbc/athena/athena-data/figures/"
+labels_file = "/home/data/nbc/athena/v1.1-data/labels/full.csv"
+out_dir = "/home/data/nbc/athena/v1.1-data/figures/"
 
 df = pd.read_csv(labels_file)
 observed_cogpo = df.columns[1:].astype(str).tolist()
