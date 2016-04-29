@@ -30,7 +30,7 @@ def process_raw_data(data_dir="/home/data/nbc/athena/athena-data/"):
     Label data using metadata files, split data into training and test
     datasets.
     """
-    process_data.stem_corpus(data_dir)
+    process_data.process_corpus(data_dir)
     process_data.label_data(data_dir)
     labels_file = os.path.join(data_dir, "labels/full.csv")
     process_data.split_data(labels_file, test_percent=0.33)
