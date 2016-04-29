@@ -31,11 +31,4 @@ for text_type in ["full", "combined"]:
 
 feature_extraction.extract_features()
 import summarize_datasets
-
-for text_type in ["full", "combined"]:
-    features_dir = os.path.join(type_dir, "features")
-    labels_dir = os.path.join(type_dir, "labels")
-    models_dir = os.path.join(type_dir, "models")
-    preds_dir = os.path.join(type_dir, "predictions")
-    stats_dir = os.path.join(type_dir, "statistics")
-    classifier_handler.run_classifiers(type_dir)
+classifier_handler.run_classifiers(data_dir)
