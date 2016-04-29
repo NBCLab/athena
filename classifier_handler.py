@@ -21,14 +21,17 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
 
-
-def run_classifiers(feature_name, labels_dir, features_dir, out_folder):
+def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Run sklearn OneVsRest multilabel classifier wrapped around a LinearSVC
     binary classifier with l2 penalty and 1.0 C on a given feature count file.
     
     Cross-validation is used to evaluate results.
     """
+    feature_name = "nbow"
+    features_dir = "/home/data/nbc/athena/v1.1-data/features/"
+    labels_dir = "/home/data/nbc/athena/v1.1-data/labels/"
+    
     # Train
     train_features_file = os.path.join(features_dir, "train_"+feature_name+".csv")
     test_features_file = os.path.join(features_dir, "test_"+feature_name+".csv")
@@ -53,35 +56,62 @@ def run_classifiers(feature_name, labels_dir, features_dir, out_folder):
         		   "SVC1": LinearSVC(penalty = "l1", class_weight="auto", dual=False),
         		   "SVC2": LinearSVC(penalty = "l2", class_weight="auto", dual=False)]
         		   }
-
-    for clf in classifiers:
+    parameters = [
+		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]},
+		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]}, 
+		{'ovr__estimator__C':[0.1, 1, 10, 100]},
+		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
+		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
+		{'ovr__estimator__C':[0.01, 0.1, 1, 10]}]
+		
+	original_params = [
+		{'ovr__estimator__alpha':[0.1]},
+		{'ovr__estimator__alpha':[0.1]}, 
+		{'ovr__estimator__C':[100]},
+		{'ovr__estimator__C':[10]},
+		{'ovr__estimator__C':[10]},
+		{'ovr__estimator__C':[1]}]
+		
+    for i, clf in enumerate(classifiers):
         ## POST HERE IS FROM FEATURE SELECTION (NOT ADAPTED)
         ## PERFORM GRID SEARCH HERE
-        classif = OneVsRestClassifier(LinearSVC(penalty="l2", C=1.0))
-        classif.fit(features_train, labels_train)
+        grid = GridSearchCV(clf, parameters[i], cv = KFold(len(train_features), n_folds = 10, shuffle=True), scoring = "f1_micro", verbose = 1)
+        grid.fit(train_features, train_labels)
+        parameter = grid.best_params_[parameters[i].keys()[0]]
+        best_estimator = grid.best_estimator_
+        
+        clf.set_params(parameters[i].keys()[0], parameter)
+        
+        classif = OneVsRestClassifier(clf)
+        classif.fit(train_features, train_labels)
+        name = classifiers.keys()[i]+"_"+parameter+"_new"
+        test_eval(classif, test_features, label_names, test_labels, test_labels_df, name)
+        
+        parameter = original_params[i][original_params[i].keys()[0]][0]
+        clf.set_params(original_params[i].keys()[0], parameter)
+        classif.fit(train_features, train_labels)
+        
+        name = classifiers.keys()[i]+"_"+parameter+"_old"
+        test_eval(classif, test_features, label_names, test_labels, test_labels_df, name)
+
+def test_eval(classif, test_features, label_names, test_labels, test_labels_df, name):
+    # Test
+    predictions = classif.predict(test_features)
+    out_file = os.path.join(out_folder, "{}_k{}.csv".format(name, k))
+    np.savetxt(out_file, predictions, delimiter=",")
     
-        # Test
-        predictions = classif.predict(features_test)
-        out_file = os.path.join(out_folder, "{}_k{}.csv".format(feature_name, k))
-        np.savetxt(out_file, predictions, delimiter=",")
-        
-        # Evaluate
-        metrics = ec.return_metrics(labels_test, predictions)
-        primary_metrics = ec.return_primary(labels_test, predictions, label_names)
-        lb_df = ec.return_labelwise(labels_test_df, predictions)
-        lb_df.set_index("Label", inplace=True)
-        
-        if k == 0:
-            average_array = np.zeros((len(kf), len(metrics)))
-            primary_array = np.zeros((len(kf), len(metrics)))
-            lb_df_average = copy.deepcopy(lb_df)
-        else:
-            lb_df_average += lb_df
-        average_array[k, :] = metrics
-        primary_array[k, :] = primary_metrics
-    return metrics_average, primary_metrics_average, lb_df_average
-
-
+    # Evaluate
+    metrics = ec.return_metrics(test_labels, predictions)
+    primary_metrics = ec.return_primary(test_labels, predictions, label_names)
+    lb_df = ec.return_labelwise(test_labels_df, predictions)
+    lb_df.set_index("Label", inplace=True)
+    
+    primary_out_file = os.path.join(out_folder, "{}_k{}.csv".format(name+"_primary_metrics", k))
+    np.savetxt(primary_out_file, primary_metrics, delimiter=",")
+    
+    metrics_out_file = os.path.join(out_folder, "{}_k{}.csv".format(name+"_metrics", k))
+    np.savetxt(metrics_out_file, metrics, delimiter=",")
+    
 def statistics(label_df, feature_df, dataset_name):
     out_df = pd.DataFrame(columns=["Number of Instances",
                                    "Number of Features", "Number of Labels",
