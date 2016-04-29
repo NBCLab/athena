@@ -22,6 +22,66 @@ import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
 
 
+def run_classifiers(feature_name, labels_dir, features_dir, out_folder):
+    """
+    Run sklearn OneVsRest multilabel classifier wrapped around a LinearSVC
+    binary classifier with l2 penalty and 1.0 C on a given feature count file.
+    
+    Cross-validation is used to evaluate results.
+    """
+    # Train
+    train_features_file = os.path.join(features_dir, "train_"+feature_name+".csv")
+    test_features_file = os.path.join(features_dir, "test_"+feature_name+".csv")
+    labels_file = os.path.join(labels_dir, "train.csv")
+    
+    train_features_df = pd.read_csv(train_features_file)
+    train_features = train_features_df.as_matrix()[:, 1:]
+    test_features_df = pd.read_csv(test_features_file)
+    test_features = test_features_df.as_matrix()[:, 1:]
+    
+    train_labels_df = pd.read_csv(train_labels_file)
+    train_labels = train_labels_df.as_matrix()[:, 1:]
+    test_labels_df = pd.read_csv(test_labels_file)
+    test_labels = test_labels_df.as_matrix()[:, 1:]
+    
+    label_names = train_labels_df.columns
+    
+    classifiers = {"MNB": MultinomialNB(),
+        		   "BNB": BernoulliNB(),
+        		   "LR1": LogisticRegression(penalty = "l1", class_weight="auto"),
+        		   "LR2": LogisticRegression(penalty = "l2", class_weight="auto"), 
+        		   "SVC1": LinearSVC(penalty = "l1", class_weight="auto", dual=False),
+        		   "SVC2": LinearSVC(penalty = "l2", class_weight="auto", dual=False)]
+        		   }
+
+    for clf in classifiers:
+        ## POST HERE IS FROM FEATURE SELECTION (NOT ADAPTED)
+        ## PERFORM GRID SEARCH HERE
+        classif = OneVsRestClassifier(LinearSVC(penalty="l2", C=1.0))
+        classif.fit(features_train, labels_train)
+    
+        # Test
+        predictions = classif.predict(features_test)
+        out_file = os.path.join(out_folder, "{}_k{}.csv".format(feature_name, k))
+        np.savetxt(out_file, predictions, delimiter=",")
+        
+        # Evaluate
+        metrics = ec.return_metrics(labels_test, predictions)
+        primary_metrics = ec.return_primary(labels_test, predictions, label_names)
+        lb_df = ec.return_labelwise(labels_test_df, predictions)
+        lb_df.set_index("Label", inplace=True)
+        
+        if k == 0:
+            average_array = np.zeros((len(kf), len(metrics)))
+            primary_array = np.zeros((len(kf), len(metrics)))
+            lb_df_average = copy.deepcopy(lb_df)
+        else:
+            lb_df_average += lb_df
+        average_array[k, :] = metrics
+        primary_array[k, :] = primary_metrics
+    return metrics_average, primary_metrics_average, lb_df_average
+
+
 def statistics(label_df, feature_df, dataset_name):
     out_df = pd.DataFrame(columns=["Number of Instances",
                                    "Number of Features", "Number of Labels",
