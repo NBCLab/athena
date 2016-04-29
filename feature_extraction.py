@@ -308,7 +308,7 @@ def extract_titlewords(pmids, gazetteer_file, count_file):
     count_df.to_csv(count_file)
 
 
-def extract_features(data_dir="/home/data/nbc/athena/athena-data/"):
+def extract_features(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
     Calls each of the feature-specific count functions to generate three
     feature count files. Keywords will be extracted from the articles' texts,
