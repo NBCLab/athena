@@ -20,6 +20,16 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, precision_score, recall_score, hamming_loss
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import KFold
+from collections import OrderedDict
+import evaluate_classifier as ec
+
 
 def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
     """
@@ -34,7 +44,8 @@ def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
         # Train
         train_features_file = os.path.join(features_dir, "train_nbow.csv")
         test_features_file = os.path.join(features_dir, "test_nbow.csv")
-        labels_file = os.path.join(labels_dir, "train.csv")
+        train_labels_file = os.path.join(labels_dir, "train.csv")
+        test_labels_file = os.path.join(labels_dir, "test.csv")
         
         train_features_df = pd.read_csv(train_features_file)
         train_features = train_features_df.as_matrix()[:, 1:]
@@ -45,55 +56,65 @@ def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
         train_labels = train_labels_df.as_matrix()[:, 1:]
         test_labels_df = pd.read_csv(test_labels_file)
         
-        classifiers = {"MNB": MultinomialNB(),
-            		   "BNB": BernoulliNB(),
-            		   "LR1": LogisticRegression(penalty = "l1", class_weight="auto"),
-            		   "LR2": LogisticRegression(penalty = "l2", class_weight="auto"), 
-            		   "SVC1": LinearSVC(penalty = "l1", class_weight="auto", dual=False),
-            		   "SVC2": LinearSVC(penalty = "l2", class_weight="auto", dual=False)]
-            		   }
+        classifiers = OrderedDict([("MNB", MultinomialNB()),
+                                   ("BNB", BernoulliNB()),
+                        		   ("LR1", LogisticRegression(penalty="l1", class_weight="auto")),
+                        		   ("LR2", LogisticRegression(penalty="l2", class_weight="auto")), 
+                        		   ("SVC1", LinearSVC(penalty="l1", class_weight="auto", dual=False)),
+                        		   ("SVC2", LinearSVC(penalty="l2", class_weight="auto", dual=False))])
         parameters = [
-    		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]},
-    		{'ovr__estimator__alpha':[0.01, 0.1, 1, 10]}, 
-    		{'ovr__estimator__C':[0.1, 1, 10, 100]},
-    		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
-    		{'ovr__estimator__C':[0.01, 0.1, 1, 10]},
-    		{'ovr__estimator__C':[0.01, 0.1, 1, 10]}]
+    		{'estimator__alpha': [0.01, 0.1, 1, 10]},
+    		{'estimator__alpha': [0.01, 0.1, 1, 10]}, 
+    		{'estimator__C': [0.1, 1, 10, 100]},
+    		{'estimator__C': [0.01, 0.1, 1, 10]},
+    		{'estimator__C': [0.01, 0.1, 1, 10]},
+    		{'estimator__C': [0.01, 0.1, 1, 10]}]
     		
     	original_params = [
-    		{'ovr__estimator__alpha':[0.1]},
-    		{'ovr__estimator__alpha':[0.1]}, 
-    		{'ovr__estimator__C':[100]},
-    		{'ovr__estimator__C':[10]},
-    		{'ovr__estimator__C':[10]},
-    		{'ovr__estimator__C':[1]}]
+    		{'estimator__alpha': [0.1]},
+    		{'estimator__alpha': [0.1]}, 
+    		{'estimator__C': [100]},
+    		{'estimator__C': [10]},
+    		{'estimator__C': [10]},
+    		{'estimator__C': [1]}]
     	
     	out_metrics = []
     	out_primary_metrics = []
         for i, clf in enumerate(classifiers):
-            grid = GridSearchCV(clf, parameters[i], cv = KFold(len(train_features), n_folds = 10, shuffle=True),
-            		    scoring = "f1_micro", verbose = 1)
+            # BEST
+            grid = GridSearchCV(OneVsRestClassifier(classifiers[clf]), parameters[i],
+                                cv=KFold(len(train_features), n_folds=10, shuffle=True),
+                                scoring="f1_micro", verbose=1)
             grid.fit(train_features, train_labels)
             parameter = grid.best_params_[parameters[i].keys()[0]]
-            best_estimator = grid.best_estimator_
             
-            clf.set_params(parameters[i].keys()[0], parameter)
+            if clf in ["MNB", "BNB"]:
+                classifiers[clf].set_params(alpha=parameter)
+            else:
+                classifiers[clf].set_params(C=parameter)
             
-            classif = OneVsRestClassifier(clf)
+            classif = OneVsRestClassifier(classifiers[clf])
             classif.fit(train_features, train_labels)
-            model_name = classifiers.keys()[i]+"_"+parameter+"_new"
-            metrics, primary = test_eval(classif, test_features, test_labels_df, model_name, type_dir)
+            model_name = classifiers.keys()[i]+"_"+str(parameter).replace(".", "_")+"_best"
+            metrics, primary = test_eval(classif, test_features,
+                                         test_labels_df, model_name, type_dir)
             metrics.insert(0, model_name)
             primary.insert(0, model_name)
             out_metrics += [metrics]
             out_primary_metrics += [primary]
             
+            # OLD
             parameter = original_params[i][original_params[i].keys()[0]][0]
-            clf.set_params(original_params[i].keys()[0], parameter)
+            if clf in ["MNB", "BNB"]:
+                classifiers[clf].set_params(alpha=parameter)
+            else:
+                classifiers[clf].set_params(C=parameter)
+            classif = OneVsRestClassifier(classifiers[clf])
             classif.fit(train_features, train_labels)
             
-            model_name = classifiers.keys()[i]+"_"+parameter+"_old"
-            metrics, primary = test_eval(classif, test_features, test_labels_df, model_name, type_dir)
+            model_name = classifiers.keys()[i]+"_"+str(parameter).replace(".", "_")+"_old"
+            metrics, primary = test_eval(classif, test_features,
+                                         test_labels_df, model_name, type_dir)
             metrics.insert(0, model_name)
             primary.insert(0, model_name)
             out_metrics += [metrics]
@@ -197,8 +218,8 @@ def return_metrics(labels, predictions):
     
     hamming_loss_ = hamming_loss(labels, predictions)
     
-    macro_f1_score_by_example = f1_score(labels, predictions, average="samples")
-    metrics = [macro_f1_score_by_example, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    micro_f1 = f1_score(labels, predictions, average="micro")
+    metrics = [micro_f1, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 

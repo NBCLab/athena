@@ -8,6 +8,8 @@ import feature_extraction
 import pandas as pd
 import classifier_handler
 
+data_dir = "/home/data/nbc/athena/v1.1-data/"
+
 process_data.stem_corpus(data_dir)
 process_data.label_data(data_dir)
 for text_type in ["full", "combined"]:
@@ -18,7 +20,7 @@ for text_type in ["full", "combined"]:
     
     # Generate gazetteer
     gaz_dir = os.path.join(type_dir, "gazetteers/")
-    stem_text_dir = os.path.join(text_dir, "stemmed_"+)
+    stem_text_dir = os.path.join(data_dir, "text", "stemmed_"+text_type)
 
     df = pd.read_csv(label_file)
     pmids = df["pmid"].astype(str).tolist()

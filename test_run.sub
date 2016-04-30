@@ -37,5 +37,5 @@ source /home/data/nbc/athena/athena/bash_environment
 #bsub<ModelJob.sub
 
 #This is where you could input your example code. You can either have all your code live here, or if you have a script written, call it like you would from a terminal window.
-python /scratch/jhays006/athena/test_run.py
+python athena.py
 

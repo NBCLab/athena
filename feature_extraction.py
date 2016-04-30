@@ -26,7 +26,7 @@ import pandas as pd
 from nltk.tokenize import RegexpTokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-with open("misc/onix_stopwords.txt") as f:
+with open("/home/data/nbc/athena/v1.1-data/misc/onix_stopwords.txt") as f:
     stop = f.read().split()
 
 tokenizer = RegexpTokenizer("[\W+]", gaps=True)
@@ -93,7 +93,7 @@ def extract_features(data_dir="/home/data/nbc/athena/v1.1-data/"):
             # nbow and references
             gazetteer_file = os.path.join(gazetteers_dir, "nbow.csv")
             count_file = os.path.join(feature_dir, "{0}_nbow.csv".format(dataset))
-            extract_nbow(pmids, gazetteer_file, count_file, stemtext_dir)
+            extract_nbow(pmids, gazetteer_file, count_file, text_dir)
             print("Completed {0} nbow".format(dataset))
 
 

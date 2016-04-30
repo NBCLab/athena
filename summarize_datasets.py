@@ -71,9 +71,9 @@ data_dir = "/home/data/nbc/athena/v1.1-data/"
 for text_type in ["full", "combined"]:
     type_dir = os.path.join(data_dir, text_type)
     train_labels = os.path.join(type_dir, "labels/train.csv")
-    train_features = os.path.join(type_dir, "features/train_cogat.csv")
+    train_features = os.path.join(type_dir, "features/train_nbow.csv")
     test_labels = os.path.join(type_dir, "labels/test.csv")
-    test_features = os.path.join(type_dir, "features/test_cogat.csv")
+    test_features = os.path.join(type_dir, "features/test_nbow.csv")
     
     # Load and combine data
     train_label_df = pd.read_csv(train_labels, dtype=int)

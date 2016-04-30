@@ -36,8 +36,8 @@ def return_metrics(labels, predictions):
     
     hamming_loss_ = hamming_loss(labels, predictions)
     
-    macro_f1_score_by_example = f1_score(labels, predictions, average="samples")
-    metrics = [macro_f1_score_by_example, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    micro_f1 = f1_score(labels, predictions, average="micro")
+    metrics = [micro_f1, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 
@@ -71,8 +71,8 @@ def return_primary(labels, predictions, label_names=None):
     
     hamming_loss_ = hamming_loss(labels, predictions)
     
-    macro_f1_score_by_example = f1_score(labels, predictions, average="samples")
-    metrics = [macro_f1_score_by_example, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    micro_f1 = f1_score(labels, predictions, average="micro")
+    metrics = [micro_f1, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 
@@ -121,7 +121,7 @@ def return_all(labels_file, predictions_dir):
         metrics = return_metrics(labels_file, predictions)
         metrics.insert(0, model_name)
         out_metrics += [metrics]
-    out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
+    out_df = pd.DataFrame(columns=["Model", "Micro F1",
                                    "Macro Precision", "Micro Precision",
                                    "Macro Recall", "Micro Recall",
                                    "Hamming Loss"], data=out_metrics)
@@ -133,7 +133,7 @@ def test():
     
     for text_type in ["full", "combined"]:
         type_dir = os.path.join(data_dir, text_type)
-        test_label_file = os.path.join(type_dir, "labels/test.csv"
+        test_label_file = os.path.join(type_dir, "labels/test.csv")
         predictions_dir = os.path.join("predictions/")
         predictions = np.loadtxt(predictions_file, dtype=int, delimiter=",")
         

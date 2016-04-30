@@ -1,0 +1,7 @@
+discarding /home/data/nbc/athena/athena/env/bin from PATH
+prepending /home/data/nbc/athena/athena/env/bin to PATH
+/home/data/nbc/athena/athena/env/lib/python2.7/site-packages/pandas/core/indexing.py:128: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  self._setitem_with_indexer(indexer, value)
