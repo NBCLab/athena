@@ -119,12 +119,12 @@ def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
             primary.insert(0, model_name)
             out_metrics += [metrics]
             out_primary_metrics += [primary]
-        out_df = pd.DataFrame(columns=["Model", "Micro F-Score",
+        out_df = pd.DataFrame(columns=["Model", "Macro F1", "Micro F1",
                                        "Macro Precision", "Micro Precision",
                                        "Macro Recall", "Micro Recall",
                                        "Hamming Loss"], data=out_metrics)
         out_df.to_csv(os.path.join(stats_dir, "results.csv"), index=False)
-        primary_df = pd.DataFrame(columns=["Model", "Micro F-Score",
+        primary_df = pd.DataFrame(columns=["Model", "Macro F1", "Micro F1",
                                            "Macro Precision", "Micro Precision",
                                            "Macro Recall", "Micro Recall",
                                            "Hamming Loss"], data=out_primary_metrics)
@@ -210,6 +210,9 @@ def return_metrics(labels, predictions):
         df = pd.read_csv(labels, dtype=int)
         labels = df.as_matrix()[:, 1:]
     
+    macro_f1 = f1_score(labels, predictions, average="macro")
+    micro_f1 = f1_score(labels, predictions, average="micro")
+    
     macro_precision = precision_score(labels, predictions, average="macro")
     micro_precision = precision_score(labels, predictions, average="micro")
     
@@ -218,8 +221,8 @@ def return_metrics(labels, predictions):
     
     hamming_loss_ = hamming_loss(labels, predictions)
     
-    micro_f1 = f1_score(labels, predictions, average="micro")
-    metrics = [micro_f1, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    metrics = [macro_f1, micro_f1, macro_precision, micro_precision,
+               macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 

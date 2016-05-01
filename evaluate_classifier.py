@@ -27,7 +27,10 @@ def return_metrics(labels, predictions):
     if isinstance(labels, str):
         df = pd.read_csv(labels, dtype=int)
         labels = df.as_matrix()[:, 1:]
-    
+
+    macro_f1 = f1_score(labels, predictions, average="macro")
+    micro_f1 = f1_score(labels, predictions, average="micro")
+
     macro_precision = precision_score(labels, predictions, average="macro")
     micro_precision = precision_score(labels, predictions, average="micro")
     
@@ -36,8 +39,8 @@ def return_metrics(labels, predictions):
     
     hamming_loss_ = hamming_loss(labels, predictions)
     
-    micro_f1 = f1_score(labels, predictions, average="micro")
-    metrics = [micro_f1, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    metrics = [macro_f1, micro_f1, macro_precision, micro_precision,
+               macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 
@@ -63,6 +66,10 @@ def return_primary(labels, predictions, label_names=None):
         col_idx -= 1
     labels = labels[:, col_idx]
     predictions = predictions[:, col_idx]
+    
+    macro_f1 = f1_score(labels, predictions, average="macro")
+    micro_f1 = f1_score(labels, predictions, average="micro")
+    
     macro_precision = precision_score(labels, predictions, average="macro")
     micro_precision = precision_score(labels, predictions, average="micro")
     
@@ -71,8 +78,8 @@ def return_primary(labels, predictions, label_names=None):
     
     hamming_loss_ = hamming_loss(labels, predictions)
     
-    micro_f1 = f1_score(labels, predictions, average="micro")
-    metrics = [micro_f1, macro_precision, micro_precision, macro_recall, micro_recall, hamming_loss_]
+    metrics = [macro_f1, micro_f1, macro_precision, micro_precision,
+               macro_recall, micro_recall, hamming_loss_]
     return metrics
 
 
@@ -121,7 +128,7 @@ def return_all(labels_file, predictions_dir):
         metrics = return_metrics(labels_file, predictions)
         metrics.insert(0, model_name)
         out_metrics += [metrics]
-    out_df = pd.DataFrame(columns=["Model", "Micro F1",
+    out_df = pd.DataFrame(columns=["Model", "Macro F1", "Micro F1",
                                    "Macro Precision", "Micro Precision",
                                    "Macro Recall", "Micro Recall",
                                    "Hamming Loss"], data=out_metrics)
