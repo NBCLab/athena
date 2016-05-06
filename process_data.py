@@ -63,6 +63,7 @@ def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
     full_cogpo = []
     metadata_dfs = [pd.read_csv(file_, dtype=str)[["PubMed ID"] + column_to_cogpo.keys()] for file_ in filenames]
     metadata_df = pd.concat(metadata_dfs, ignore_index=True)
+    metadata_df = metadata_df[metadata_df["PubMed ID"].str.contains("^\d+$")].reset_index()
     list_of_metadata_pmids = metadata_df["PubMed ID"].unique().tolist()
     
     for column in column_to_cogpo.keys():
@@ -76,8 +77,6 @@ def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
         text_dir = os.path.join(data_dir, "text/", text_type)
 
         # Preallocate label DataFrame
-        metadata_df = metadata_df[metadata_df["PubMed ID"].str.contains("^\d+$")].reset_index()
-        
         list_of_files = [os.path.splitext(file_)[0] for file_ in os.listdir(text_dir)]
         list_of_files = sorted(list(set(list_of_files)))
         list_of_pmids = sorted(list(set(list_of_metadata_pmids).intersection(list_of_files)))
@@ -107,9 +106,16 @@ def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
         keep_labels = label_counts[label_counts>=min_].index
         label_df = label_df[keep_labels]
         label_df = label_df[(label_df.T != 0).any()]
+        count_df = label_df.sum().to_frame()
         label_df = label_df.astype(int).astype(str)
         out_file = os.path.join(type_dir, "labels/full.csv")
         label_df.to_csv(out_file, index=False)
+    
+        count_file = os.path.join(type_dir, "labels/labels.csv")
+        count_df = count_df.ix[1:]
+        count_df.index.name = "Label"
+        count_df.columns = ["Count"]
+        count_df.to_csv(count_file, index=True)
 
 
 def split_data(labels_file, test_percent=0.3):

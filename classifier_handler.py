@@ -96,8 +96,7 @@ def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
             classif = OneVsRestClassifier(classifiers[clf])
             classif.fit(train_features, train_labels)
             model_name = classifiers.keys()[i]+"_"+str(parameter).replace(".", "_")+"_best"
-            metrics, primary = test_eval(classif, test_features,
-                                         test_labels_df, model_name, type_dir)
+            metrics, primary = test_eval(classif, test_features, test_labels_df, model_name, type_dir)
             metrics.insert(0, model_name)
             primary.insert(0, model_name)
             out_metrics += [metrics]
@@ -113,8 +112,7 @@ def run_classifiers(data_dir="/home/data/nbc/athena/v1.1-data/"):
             classif.fit(train_features, train_labels)
             
             model_name = classifiers.keys()[i]+"_"+str(parameter).replace(".", "_")+"_old"
-            metrics, primary = test_eval(classif, test_features,
-                                         test_labels_df, model_name, type_dir)
+            metrics, primary = test_eval(classif, test_features, test_labels_df, model_name, type_dir)
             metrics.insert(0, model_name)
             primary.insert(0, model_name)
             out_metrics += [metrics]

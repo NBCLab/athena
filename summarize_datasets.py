@@ -59,11 +59,11 @@ def statistics(label_df, feature_df, dataset_name):
 
 # Primary labels
 primary_labels = ["pmid",
-                  "Experiments.ParadigmClass.FaceMonitor/Discrimination",
-                  "Experiments.ParadigmClass.Reward",
-                  "Experiments.ParadigmClass.SemanticMonitor/Discrimination",
-                  "Experiments.ParadigmClass.WordGeneration",
-                  "Experiments.ParadigmClass.n-back"]
+                  "ParadigmClass.FaceMonitor/Discrimination",
+                  "ParadigmClass.Reward",
+                  "ParadigmClass.SemanticMonitor/Discrimination",
+                  "ParadigmClass.WordGeneration",
+                  "ParadigmClass.n-back"]
 
 # Run function for both datasets
 data_dir = "/home/data/nbc/athena/v1.1-data/"
@@ -90,11 +90,6 @@ for text_type in ["full", "combined"]:
     
     out_df = pd.concat([train_df, test_df])
     out_df.to_csv(os.path.join(type_dir, "statistics/dataset_statistics.csv"))
-    
-    # Also output file with labels
-    labels = train_label_df.columns.tolist()[1:]
-    out_df = pd.DataFrame(columns=["Label"], data=labels)
-    out_df.to_csv(os.path.join(type_dir, "labels/labels.csv"), index=False)
     
     # Limit to primary labels and output reduced file
     train_label_df = train_label_df[primary_labels]

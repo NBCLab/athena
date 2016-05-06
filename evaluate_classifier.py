@@ -50,11 +50,11 @@ def return_primary(labels, predictions, label_names=None):
     primary labels.
     """
     # Primary labels
-    primary_labels = ["Experiments.ParadigmClass.FaceMonitor/Discrimination",
-                      "Experiments.ParadigmClass.Reward",
-                      "Experiments.ParadigmClass.SemanticMonitor/Discrimination",
-                      "Experiments.ParadigmClass.WordGeneration",
-                      "Experiments.ParadigmClass.n-back"]
+    primary_labels = ["ParadigmClass.FaceMonitor/Discrimination",
+                      "ParadigmClass.Reward",
+                      "ParadigmClass.SemanticMonitor/Discrimination",
+                      "ParadigmClass.WordGeneration",
+                      "ParadigmClass.n-back"]
     
     if isinstance(labels, str):
         df = pd.read_csv(labels, dtype=int)
