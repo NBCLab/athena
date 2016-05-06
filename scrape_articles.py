@@ -17,11 +17,11 @@ MH = MeSH Terms
 @author: salo
 """
 
-import os
-import csv
 from Bio import Entrez
 from Bio import Medline
 import pandas as pd
+import nltk
+from find_subjects import convert_words_to_numbers
 
 
 Entrez.email = "tsalo006@fiu.edu"
@@ -42,11 +42,20 @@ pmids = sorted(list(result_all['IdList']))
 df = pd.DataFrame(columns=["PMID"], data=pmids)
 df.to_csv("fmri_pmids.csv", index=False)
 
-#for pmid in pmids:
-#    try:
-#        h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
-#        record = list(Medline.parse(h))[0]
-#        abstract = record["AB"]
-#    except:
-#        print pmid
-#        print "Failed."
+pmids = pmids[:20]
+abstracts = []
+for pmid in pmids:
+    try:
+        h = Entrez.efetch(db="pubmed", id=pmid, rettype="medline", retmode="text")
+        record = list(Medline.parse(h))[0]
+        abstracts += [record["AB"]]
+    except:
+        print pmid
+        print "Failed."
+
+abstracts2 = []
+for abstract in abstracts:
+    sentences = nltk.sent_tokenize(abstract)
+    abstract2 = " ".join([convert_words_to_numbers(sentence) for sentence in sentences])
+    abstracts2 += [abstract2]
+    
