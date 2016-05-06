@@ -51,7 +51,7 @@ def generate_gazetteers(data_dir="/home/data/nbc/athena/v1.1-data/"):
         type_dir = os.path.join(data_dir, text_type)
         label_file = os.path.join(type_dir, "labels/full.csv")
         gaz_dir = os.path.join(type_dir, "gazetteers/")
-        stem_text_dir = os.path.join(text_dir, "stemmed_"+)
+        stem_text_dir = os.path.join(text_dir, "stemmed_"+text_type)
 
         df = pd.read_csv(label_file)
         pmids = df["pmid"].astype(str).tolist()

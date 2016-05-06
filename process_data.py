@@ -13,29 +13,39 @@ import pandas as pd
 import random
 import numpy as np
 from nltk.stem.snowball import EnglishStemmer
+from nltk.stem.porter import PorterStemmer
 from utils import cogpo_columns, clean_str, df_to_list
 
 
 def stem_corpus(data_dir="/home/data/nbc/athena/v1.1-data/"):
-    for text_type in ["full", "combined"]:
+    for text_type in ["combined", "full"]:
         print("Processing {0}".format(text_type))
-        full_dir = os.path.join(data_dir, "text/", text_type)
+        text_dir = os.path.join(data_dir, "text/", text_type)
         stem_dir = os.path.join(data_dir, "text/", "stemmed_"+text_type)
     
         stemmer = EnglishStemmer()
+        stemmerTest = PorterStemmer()
         
-        for file_ in glob(os.path.join(full_dir, "*.txt")):
+        for file_ in glob(os.path.join(text_dir, "*.txt")):
             filename = os.path.basename(file_)
             print("\tStemming {0}".format(filename))
             with open(file_, "r") as fo:
                 text = fo.read()
         
             stem_list = []
+
             for word in text.split():
+                try:
+                    test = " ".join(["kdkd", stemmerTest.stem(word), "kdkd"])
+                    
+                except:
+                    word = word.decode('utf8', 'ignore').encode('ascii','ignore')
+                    
                 stem_list.append(stemmer.stem(word))
-                
+        
             with open(os.path.join(stem_dir, filename), "w") as fo:
                 fo.write(" ".join(stem_list))
+
 
 
 def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
@@ -45,9 +55,9 @@ def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
     metadata_dir = os.path.join(data_dir, "metadata/")
     filenames = sorted(glob(os.path.join(metadata_dir, "*.csv")))
     
-    columns = ["Diagnosis", "Stimulus Modality", "Response Modality",
-               "Response Type", "Stimulus Type", "Instructions",
-               "Behavioral Domain", "Paradigm Class"]
+    columns = ["Paradigm Class", "Behavioral Domain", "Diagnosis",
+               "Stimulus Modality", "Stimulus Type", "Response Modality",
+               "Response Type", "Instructions", "Context"]
     column_to_cogpo = cogpo_columns(columns)
     
     full_cogpo = []
@@ -62,6 +72,7 @@ def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
     full_cogpo = sorted(list(set(full_cogpo)))
     
     for text_type in ["full", "combined"]:
+        type_dir = os.path.join(data_dir, text_type)
         text_dir = os.path.join(data_dir, "text/", text_type)
 
         # Preallocate label DataFrame
@@ -89,10 +100,15 @@ def label_data(data_dir="/home/data/nbc/athena/v1.1-data/"):
                                     ind = label_df.loc[label_df["pmid"]==pmid].index[0]
                                     label_df[out_column].iloc[ind] = 1
         
-        # Reduce DataFrame
+        # Reduce DataFrame.
+        # Only include labels with at least 30 samples
+        min_ = 30
+        label_counts = label_df.sum()
+        keep_labels = label_counts[label_counts>=min_].index
+        label_df = label_df[keep_labels]
         label_df = label_df[(label_df.T != 0).any()]
         label_df = label_df.astype(int).astype(str)
-        out_file = os.path.join(data_dir, text_type, "labels/full.csv")
+        out_file = os.path.join(type_dir, "labels/full.csv")
         label_df.to_csv(out_file, index=False)
 
 
