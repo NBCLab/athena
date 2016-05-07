@@ -21,7 +21,8 @@ from Bio import Entrez
 from Bio import Medline
 import pandas as pd
 import nltk
-from find_subjects import convert_words_to_numbers
+from find_subjects import convert_words_to_numbers, find_candidates, reduce_candidates
+from pattern.en import parsetree
 
 
 Entrez.email = "tsalo006@fiu.edu"
@@ -32,12 +33,12 @@ FORMATS = ["journal article", "introductory journal article"]
 
 
 
-h = Entrez.esearch(db='pubmed', retmax='2', term=TERM)
+h = Entrez.esearch(db="pubmed", retmax="2", term=TERM)
 result = Entrez.read(h)
 print("Total number of publications containing {0}: {1}".format(TERM, result["Count"]))
-h_all = Entrez.esearch(db='pubmed', retmax=result['Count'], term=TERM, )
+h_all = Entrez.esearch(db="pubmed", retmax=result["Count"], term=TERM, )
 result_all = Entrez.read(h_all)
-pmids = sorted(list(result_all['IdList']))
+pmids = sorted(list(result_all["IdList"]))
 
 df = pd.DataFrame(columns=["PMID"], data=pmids)
 df.to_csv("fmri_pmids.csv", index=False)
@@ -58,4 +59,18 @@ for abstract in abstracts:
     sentences = nltk.sent_tokenize(abstract)
     abstract2 = " ".join([convert_words_to_numbers(sentence) for sentence in sentences])
     abstracts2 += [abstract2]
-    
+
+for abstract in abstracts2:
+    sentences = nltk.sent_tokenize(abstract)
+    print len(sentences)
+    sentences2 = find_candidates(sentences)
+    print len(sentences2)
+    sentences3 = reduce_candidates(sentences2)
+    print len(sentences3)
+    print sentences3
+
+p = parsetree(sentences3[0], relations=True, lemmata=True)
+
+for sentence in p:
+    for chunk in sentence.chunks:
+        print chunk.type, [(w.string, w.type) for w in chunk.words]
