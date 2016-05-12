@@ -7,7 +7,6 @@ Number words.
 @author: salo
 """
 import re
-import itertools
 import nltk
 from itertools import groupby
 from operator import itemgetter
@@ -29,7 +28,8 @@ def convert_words_to_numbers(sentence):
                "zero", "ten", "eleven", "twelve", "thirteen", "fourteen",
                "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
                "hundred", "thousand", "million", "billion", "trillion"]
-    
+    numbers.sort(key=len, reverse=True)
+
     string = "|".join(numbers)
     full = "((" + string + ").+(" + string + "))|(" + string + ")"
     bb = re.compile(full, re.IGNORECASE)
@@ -40,7 +40,6 @@ def convert_words_to_numbers(sentence):
     if any(number in nltk.word_tokenize(sentence2.lower()) for number in numbers):
         found = re.search(bb, sentence2).group()
         words = nltk.word_tokenize(found)
-        
         idx = [i for i in range(len(words)) if words[i].lower() in numbers]
         idx2 = consec(idx)
         groups = [[words[i] for i in group] for group in idx2]
@@ -52,7 +51,7 @@ def convert_words_to_numbers(sentence):
 
 
 def find_candidates(sentences):
-    candidate_terms = ["subjects", "users", "patients", "men", "women", "male", "female", "controls"]
+    candidate_terms = ["subjects", "adults", "children", "users", "patients", "men", "women", "controls"]
     or_term = "|".join(candidate_terms)
     search_term = re.compile(r"\b(%s)\b" % or_term, re.IGNORECASE)
     
