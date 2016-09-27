@@ -6,6 +6,7 @@ Created on Thu Jan 28 12:35:54 2016
 """
 
 from __future__ import division
+import os
 import pandas as pd
 import re
 import numpy as np
@@ -14,6 +15,12 @@ from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
 from cognitiveatlas.api import get_disorder
 from cogat_weighting_schemes import get_weights
+from sklearn.feature_extraction.text import TfidfTransformer
+
+# Constants
+spell_file = os.path.join("/home/data/nbc/athena/athena-data/misc/english_spellings.csv")
+spell_df = pd.read_csv(spell_file, index_col="UK")
+spell_dict = spell_df["US"].to_dict()
 
 
 class RelException(Exception):
@@ -36,31 +43,63 @@ def clean_string(string):
     """
     Clean CogAt terms.
     """
-    # Convert apostrophe symbols to apostrophes.
-    string = str(string.replace("&#39;", "'"))
+    # Convert apostrophe symbols to apostrophes. Also strip whitespace.
+    string = str(string.replace("&#39;", "'")).strip()
     
+    # Convert British to American English
+    pattern = re.compile(r"\b(" + "|".join(spell_dict.keys()) + r")\b")
+    string = pattern.sub(lambda x: spell_dict[x.group()], string)
+
     # Terms that start and end with parentheses are generally abbreviation aliases.
+    # Also remove unpaired parentheses
     if string.startswith("(") and string.endswith(")"):
         string = string.replace("(", "").replace(")", "")
+    elif "(" in string and ")" not in string:
+        string = string.replace("(", "")
+    elif "(" not in string and ")" in string:
+        string = string.replace(")", "")
+    
+    # literalize plus signs
+    string = string.replace("+", "\+")
+    
+    # Create list for alternate forms
+    string_set = [string]
+
+    # For one alternate form, put contents of parentheses at beginning of term
+    if "(" in string:
+        prefix = string[string.find("(")+1:string.find(")")]
+    else:
+        prefix = ""
     
     # Remove parenthetical statements.
     string = re.sub(r"\([^\)]*\)", "", string)
     string = re.sub(r"\[[^\]]*\]", "", string)  
-    
+    string_set.append(string)
+
+    if prefix:
+        string = "{0} {1}".format(prefix, string)
+        string_set.append(string)
+
     # Remove extra spaces.
-    string = re.sub("\s+", " ", string)
-
-    # literalize plus signs
-    string = string.replace("+", "\+")
+    string_set = [re.sub("\s+", " ", str_).lower() for str_ in string_set]
+    string_set = [string.strip() for string in string_set]
     
-    # One more pass to remove any unpaired parentheses.
-    string = string.replace("(", "").replace(")", "")
-
-    # Protect case of acronyms
-    if string != string.upper():
-        string = string.lower()
-
-    return string
+    new_strings = []
+    for str_ in string_set:
+        new_strings.append(str_.replace("-", ""))
+        new_strings.append(str_.replace("-", " "))
+        new_strings.append(str_.replace("'s", " s"))
+        new_strings.append(str_.replace("'s", "s"))
+        new_strings.append(str_.replace("-", "").replace("'s", " s"))
+        new_strings.append(str_.replace("-", "").replace("'s", "s"))
+        new_strings.append(str_.replace("-", " ").replace("'s", " s"))
+        new_strings.append(str_.replace("-", " ").replace("'s", "s"))
+        new_strings.append(str_.replace(" / ", "/"))
+    string_set += new_strings
+    
+    # Remove duplicates
+    string_set = list(set(string_set))
+    return string_set
 
 
 def clean_disorders_id_sheet(df):
@@ -71,21 +110,24 @@ def clean_disorders_id_sheet(df):
     row_counter = 0
     for i in range(len(df)):
         name = df["name"].loc[i].encode("utf-8").strip()
-        name = clean_string(name)
-        if name:
-            id_df.loc[row_counter] = [name, df["id"].loc[i], name]
-            row_counter += 1
-        
+        names = clean_string(name)
+        if names:
+            pref_name = names[0]
+            for name in names:
+                id_df.loc[row_counter] = [name, df["id"].loc[i], pref_name]
+                row_counter += 1
+            
             aliases = [alias_dict["synonym"] for alias_dict in df["synonyms"].loc[i]]
             for j in range(len(aliases)):
                 aliases[j] = clean_string(aliases[j])
     
-            # Remove duplicates
-            aliases = list(set(aliases))
-            for alias in aliases:
-                if alias:
-                    id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
-                    row_counter += 1        
+            # Add aliases to DataFrame
+            alias_list = [item for sublist in aliases for item in sublist]
+            alias_list = list(set(alias_list))
+            if alias_list:
+                for alias in alias_list:
+                    id_df.loc[row_counter] = [alias, df["id"].loc[i], pref_name]
+                    row_counter += 1
     return id_df
 
 
@@ -97,27 +139,30 @@ def clean_id_sheet(df):
     row_counter = 0
     for i in range(len(df)):
         name = df["name"].loc[i].encode("utf-8").strip()
-        name = clean_string(name)
-        if name:
-            id_df.loc[row_counter] = [name, df["id"].loc[i], name]
-            row_counter += 1
+        names = clean_string(name)
+        if names:
+            pref_name = names[0]
+            for name in names:
+                id_df.loc[row_counter] = [name, df["id"].loc[i], pref_name]
+                row_counter += 1
         
             aliases = df["alias"].loc[i].encode("utf-8").strip()
-            aliases = aliases.replace("; ", ", ").split(", ")
+            aliases = aliases.replace("; ", ", ").split(",")
             aliases = [alias for alias in aliases if alias]
             for j in range(len(aliases)):
                 aliases[j] = clean_string(aliases[j])
-            
-            # Remove duplicates
-            aliases = list(set(aliases))
-            for alias in aliases:
-                if alias:
-                    id_df.loc[row_counter] = [alias, df["id"].loc[i], name]
+
+            # Add aliases to DataFrame
+            alias_list = [item for sublist in aliases for item in sublist]
+            alias_list = list(set(alias_list))
+            if alias_list:
+                for alias in alias_list:
+                    id_df.loc[row_counter] = [alias, df["id"].loc[i], pref_name]
                     row_counter += 1
     return id_df
 
 
-def create_id_sheet():
+def create_id_sheet(pmids, text_dir):
     """
     Create spreadsheet with all terms (including synonyms) and their IDs.
     """
@@ -129,13 +174,45 @@ def create_id_sheet():
     d_id_df = clean_disorders_id_sheet(disorders)
     id_df = pd.concat([c_id_df, t_id_df, d_id_df], ignore_index=True)
     
-    # Sort by name length (current substitute for searching by term level)
+    # Sort by name length (current substitute for searching by term level)   
     lens = id_df["term"].str.len()
     lens.sort_values(ascending=False, inplace=True)
     lens = lens.reset_index()
     df = id_df.loc[lens["index"]]
+    
+    # Keep the first of duplicates (not the strongest)
+    df.drop_duplicates(subset=["term"], inplace=True)
     df = df.reset_index(drop=True)
-    return df
+    df = df.replace("", np.nan)
+    df.dropna(subset=["term"], inplace=True)
+    
+    gazetteer = sorted(df["id"].unique().tolist())
+
+    # Count    
+    count_array = np.zeros((len(pmids), len(gazetteer)))
+    for i, pmid in enumerate(pmids):
+        text_file = os.path.join(text_dir, pmid+".txt")
+        with open(text_file, "r") as fo:
+            text = fo.read()
+        
+        for row in df.index:
+            term = df["term"].iloc[row]
+            words = term.split(" ")
+            regex = "\\s*(\\(.*\\))?\\s*".join(words)
+            regex = "\\b"+regex+"\\b"
+            pattern = re.compile(regex, re.MULTILINE|re.DOTALL)
+            
+            term_id = df["id"].iloc[row]
+            col_idx = gazetteer.index(term_id)
+            
+            count = len(re.findall(pattern, text))
+            count_array[i, col_idx] += count
+            text = re.sub(pattern, term_id, text)
+    
+    # Create and save output
+    cogat_tfidf = TfidfTransformer()
+    cogat_tfidf.fit(count_array)
+    return df, cogat_tfidf
 
 
 def clean_rel_sheet(df):

@@ -59,18 +59,19 @@ def statistics(label_df, feature_df, dataset_name):
 
 # Primary labels
 primary_labels = ["pmid",
-                  "Experiments.ParadigmClass.FaceMonitor/Discrimination",
-                  "Experiments.ParadigmClass.Reward",
-                  "Experiments.ParadigmClass.SemanticMonitor/Discrimination",
-                  "Experiments.ParadigmClass.WordGeneration",
-                  "Experiments.ParadigmClass.n-back"]
+                  "ParadigmClass.FaceMonitor/Discrimination",
+                  "ParadigmClass.Reward",
+                  "ParadigmClass.SemanticMonitor/Discrimination",
+                  "ParadigmClass.WordGeneration",
+                  "ParadigmClass.n-back",
+                  "ParadigmClass.PainMonitor/Discrimination"]
 
 # Run function for both datasets
 data_dir = "/home/data/nbc/athena/athena-data/"
 train_labels = os.path.join(data_dir, "labels/train.csv")
-train_features = os.path.join(data_dir, "features/train_cogat.csv")
+train_features = os.path.join(data_dir, "features/train_nbow.csv")
 test_labels = os.path.join(data_dir, "labels/test.csv")
-test_features = os.path.join(data_dir, "features/test_cogat.csv")
+test_features = os.path.join(data_dir, "features/test_nbow.csv")
 
 # Load and combine data
 train_label_df = pd.read_csv(train_labels, dtype=int)
@@ -87,11 +88,6 @@ test_df = statistics(test_label_df, test_feature_df, "Test")
 
 out_df = pd.concat([train_df, test_df])
 out_df.to_csv(os.path.join(data_dir, "statistics/dataset_statistics.csv"))
-
-# Also output file with labels
-labels = train_label_df.columns.tolist()[1:]
-out_df = pd.DataFrame(columns=["Label"], data=labels)
-out_df.to_csv(os.path.join(data_dir, "labels/labels.csv"), index=False)
 
 # Limit to primary labels and output reduced file
 train_label_df = train_label_df[primary_labels]

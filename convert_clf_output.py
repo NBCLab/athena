@@ -97,4 +97,4 @@ def majority_vote(predictions_files, out_file):
     
     matrix = np.concatenate(matrices, axis=2)
     predictions = np.asarray(mode(matrix, axis=2).mode.squeeze(), dtype=int)
-    np.savetxt(out_file, predictions)
+    np.savetxt(out_file, predictions, delimiter=",")

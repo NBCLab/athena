@@ -135,12 +135,12 @@ def run_feature_selection(data_dir="/home/data/nbc/athena/athena-data/"):
         out_metrics += [metrics]
         out_primary_metrics += [primary]
         lb_df.to_csv(os.path.join(fs_results_dir, "{0}_labelwise.csv".format(feature_name)))
-    out_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
+    out_df = pd.DataFrame(columns=["Model", "Micro F-Score",
                                    "Macro Precision", "Micro Precision",
                                    "Macro Recall", "Micro Recall",
                                    "Hamming Loss"], data=out_metrics)
     out_df.to_csv(os.path.join(fs_results_dir, "results.csv"), index=False)
-    primary_df = pd.DataFrame(columns=["Model", "F1 (macro-averaged by example)",
+    primary_df = pd.DataFrame(columns=["Model", "Micro F-Score",
                                        "Macro Precision", "Micro Precision",
                                        "Macro Recall", "Micro Recall",
                                        "Hamming Loss"], data=out_primary_metrics)
