@@ -4,6 +4,8 @@ Created on Sat Apr  9 00:07:14 2016
 
 Prepare data for extraction and analysis.
 
+I want to add fuzzy wuzzy
+
 Inputs:
 - IDs
 - Raw text
