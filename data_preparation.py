@@ -116,7 +116,7 @@ def process_corpus(data_dir="/home/data/nbc/athena/athena-data/"):
         # Defines stem_list which will be a list of all the words in the file, not including spaces
         stem_list = []
         for word in text.split():
-                # Skips the spaces, appends the word to stem_list
+                # Use Porter stemmer to test for string unicode encoding, then use English stemmer to perform stemming
                 try:
                     test = " ".join(["kdkd", test_stemmer.stem(word), "kdkd"])
                 except:
