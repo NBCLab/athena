@@ -6,7 +6,7 @@ Created on Sun Apr 10 12:52:44 2016
 """
 
 from nltk.corpus import stopwords
-from nltk import word_tokenize          
+from nltk import word_tokenize
 from nltk.stem.porter import PorterStemmer
 import pandas as pd
 
@@ -52,19 +52,24 @@ def cogpo_columns(columns):
 
 
 def clean_str(str_):
-    label = str_.replace(" ", "").replace("'", "").replace("(", ".").replace(")", "").replace("Stroop-", "Stroop.")
+    """
+    """
+    label = str_.replace(' ', '').replace("'", '').replace('(', '.').replace(')', '').replace('Stroop-', 'Stroop.')
     return label
 
 
-def df_to_list(df, column_name, prefix):
-    table = df[pd.notnull(df[column_name])][column_name]
-    table.apply(lambda x: "{%s}" % "| ".join(x))
-    table = table.tolist()
-    table = [clean_str(item) for sublist in table for item in sublist.split("| ")]
-    
-    parents = table
+def get_label_parents(df, column, dimension):
+    """
+    Create full list of labels (and their parents) in DataFrame column.
+    """
+    col_labels = df[pd.notnull(df[column])][column]
+    col_labels.apply(lambda x: '{%s}' % '| '.join(x))
+    col_labels = col_labels.tolist()
+    dim_labels = [clean_str(label) for exp_labels in col_labels for label in exp_labels.split('| ')]
+
+    parents = dim_labels[:]
     while parents:
-        parents = [".".join(item.split(".")[:-1]) for item in parents if len(item.split("."))>1]
-        table += parents
-    table = ["{0}.{1}".format(prefix, item) for item in table]
+        parents = ['.'.join(item.split('.')[:-1]) for item in parents if len(item.split('.'))>1]
+        dim_labels += parents
+    dim_labels = ['{0}.{1}'.format(dimension, label) for label in dim_labels]
     return table
