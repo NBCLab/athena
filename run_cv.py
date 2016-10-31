@@ -40,9 +40,6 @@ def run_svm_bow_cv(label_df, text_df, source):
     space = 'bow'
     classifier = 'svm'
 
-    # Number of random trials
-    NUM_TRIALS = 30
-
     # We will use a Support Vector Classifier with "rbf" kernel
     svm = SVC(kernel='rbf', class_weight='balanced')
 
@@ -59,72 +56,94 @@ def run_svm_bow_cv(label_df, text_df, source):
 
     # Loop for each trial
     rows = []
-    for i in range(NUM_TRIALS):
-        print(i)
-        # Choose cross-validation techniques for the inner and outer loops,
-        # independently of the dataset. Classic 5x2 split.
-        # 5x2 popularized in http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
-        outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=i)
-        inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=i)
 
-        preds_array = np.zeros(labels.shape)
-        for j_label in range(labels.shape[1]):
-            test_label = label_names[j_label]
-            print('\t{0}'.format(test_label))
-            for k_fold, (train_idx, test_idx) in enumerate(outer_cv.split(features,
-                                                                          labels[:, j_label])):
-                print('\t\t{0}'.format(k_fold))
-                # Define gaz, extract features, and perform feature selection here.
-                tfidf = TfidfVectorizer(stop_words=stop,
-                                token_pattern="(?!\\[)[A-z\\-]{3,}",
-                                ngram_range=(1, 2),
-                                sublinear_tf=True,
-                                min_df=75, max_df=0.8, max_features=2000)
+    # Choose cross-validation techniques for the inner and outer loops,
+    # independently of the dataset. Classic 5x2 split.
+    # 5x2 popularized in http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
+    outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+    inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=0)
 
-                train_texts = [texts[i] for i in train_idx]
-                tfidf.fit(train_texts)
-                features = tfidf.transform(texts)
+    preds_array = np.zeros(labels.shape)
+    f_alllabels = []
+    for i_label in range(labels.shape[1]):
+        test_label = label_names[i_label]
+        print('{0}'.format(test_label))
+        f_label_row = []
+        for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(features,
+                                                                      labels[:, i_label])):
+            print('\t{0}'.format(j_fold))
 
-                # Do we choose best params across labels or per label?
-                # Let's say per label for now, so Cody can analyze variability
-                # between labels/dimensions as well as between folds.
-                X_train = features[train_idx, :]
-                y_train = labels[train_idx, j_label]
-                X_test = features[test_idx, :]
-                y_test = labels[test_idx, j_label]
+            # Define gaz, extract features, and perform feature selection here.
+            tfidf = TfidfVectorizer(stop_words=stop,
+                            token_pattern="(?!\\[)[A-z\\-]{3,}",
+                            ngram_range=(1, 2),
+                            sublinear_tf=True,
+                            min_df=75, max_df=0.8, max_features=2000)
 
-                # Select hyperparameters using inner CV
-                gs_clf = GridSearchCV(estimator=svm, param_grid=p_grid, cv=inner_cv)
-                gs_clf.fit(X_train, y_train)
+            # TODO: Feature selection.
+            print('\t\tDo feature selection.')
 
-                # Train/test outer CV using best parameters from inner CV
-                params = gs_clf.best_params_
+            # Get features.
+            train_texts = [texts[i] for i in train_idx]
+            tfidf.fit(train_texts)
+            features = tfidf.transform(texts)
 
-                # Track best parameters from inner cvs and use to train outer CV model
-                cv_clf = svm.set_params(C=params['C'], gamma=params['gamma'])
-                cv_clf.fit(X_train, y_train)
-                preds = cv_clf.predict(X_test)
+            # Do we choose best params across labels or per label?
+            # Let's say per label for now, so Cody can analyze variability
+            # between labels/dimensions as well as between folds.
+            X_train = features[train_idx, :]
+            y_train = labels[train_idx, i_label]
+            X_test = features[test_idx, :]
+            y_test = labels[test_idx, i_label]
 
-                # Write out 1x[nTest] array of predictions to file.
-                filename = '{0}_{1}_{2}_{3}_{4}_{5}.csv'.format(classifier, source, space, i, j_label, k_fold)
+            # Select hyperparameters using inner CV.
+            gs_clf = GridSearchCV(estimator=svm, param_grid=p_grid, cv=inner_cv)
+            gs_clf.fit(X_train, y_train)
 
-                preds_array[test_idx, j_label] = preds
+            # Train/test outer CV using best parameters from inner CV.
+            params = gs_clf.best_params_
 
-                # Put hyperparameters in dataframe
-                row = [label_names[j_label], classifier, source, space,
-                       i, k_fold, params['C'], params['gamma']]
-                rows += [row]
+            # Track best parameters from inner cvs and use to train outer CV model.
+            cv_clf = svm.set_params(C=params['C'], gamma=params['gamma'])
+            cv_clf.fit(X_train, y_train)
+            preds = cv_clf.predict(X_test)
 
-        # Save predictions array.
-        df = pd.DataFrame(data=preds_array, columns=label_names, index=label_df.index)
-        df.index.name = 'pmid'
-        df.to_csv('{0}_{1}_{2}_trial{3}.csv'.format(classifier, source,
-                                                    space, i))
+            f_fold_label = f1_score(y_test, preds)
+            f_label_row += f_fold_label
+
+            # Write out 1x[nTest] array of predictions to file.
+            filename = 'preds_{0}_{1}_{2}_{3}_{4}.csv'.format(classifier,
+                                                              source, space,
+                                                              i_label, j_fold)
+            df = pd.DataFrame(data=[preds, y_test],
+                              columns=['predictions', 'true'])
+            df.to_csv(filename, index=False)
+
+            # Add new predictions to overall array.
+            preds_array[test_idx, i_label] = preds
+
+            # Put hyperparameters in dataframe.
+            row = [label_names[i_label], classifier, source, space,
+                   j_fold, params['C'], params['gamma']]
+            rows += [row]
+        f_alllabels += [f_label_row]
+
+    # Write out [nFolds]x[nLabels] array of F1-scores to file.
+    f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
+    f_cols = ['Fold_{0}'.format(f) for f in range(j_fold)]
+    df = pd.DataFrame(data=f_alllabels, columns=f_cols, index=label_names)
+    df.index.name = 'label'
+    df.to_csv(f_filename)
+
+    # Save predictions array to file.
+    p_filename = '{0}_{1}_{2}_preds.csv'.format(classifier, source, space)
+    df = pd.DataFrame(data=preds_array, columns=label_names, index=label_df.index)
+    df.index.name = 'pmid'
+    df.to_csv(p_filename)
 
     # Save hyperparameter values to file.
-    df = pd.DataFrame(data=rows,
-                      columns=['label', 'classifier', 'feature source',
-                               'feature space', 'trial', 'fold', 'C', 'gamma'])
-    df.to_csv('{0}_{1}_{2}_params.csv'.format(classifier, source,
-                                              space),
-              index=False)
+    hp_filename = '{0}_{1}_{2}_params.csv'.format(classifier, source, space)
+    hp_cols = ['label', 'classifier', 'feature source', 'feature space',
+               'fold', 'C', 'gamma']
+    df = pd.DataFrame(data=rows, columns=hp_cols)
+    df.to_csv(hp_filename, index=False)
