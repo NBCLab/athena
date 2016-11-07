@@ -27,6 +27,10 @@ from sklearn.naive_bayes import BernoulliNB as BNB
 from sklearn.linear_model import LogisticRegression as LR
 
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+from sklearn.metrics import f1_score
+
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -36,6 +40,8 @@ stop = stopwords.words("english")
 
 
 def run_svm_bow_cv(label_df, text_df, source):
+    n_cogat = 3000
+    
     ## Settings
     space = 'bow'
     classifier = 'svm'
@@ -49,6 +55,7 @@ def run_svm_bow_cv(label_df, text_df, source):
 
     # Get data from DataFrame
     texts = text_df['text'].tolist()
+    feature_range = np.arange(len(texts))
 
     # Pull info from label_df
     labels = label_df.as_matrix()
@@ -69,22 +76,42 @@ def run_svm_bow_cv(label_df, text_df, source):
         test_label = label_names[i_label]
         print('{0}'.format(test_label))
         f_label_row = []
-        for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(features,
+        for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(feature_range,
                                                                       labels[:, i_label])):
             print('\t{0}'.format(j_fold))
 
             # Define gaz, extract features, and perform feature selection here.
             tfidf = TfidfVectorizer(stop_words=stop,
-                            token_pattern="(?!\\[)[A-z\\-]{3,}",
-                            ngram_range=(1, 2),
-                            sublinear_tf=True,
-                            min_df=75, max_df=0.8, max_features=2000)
+                                    token_pattern="(?!\\[)[A-z\\-]{3,}",
+                                    ngram_range=(1, 2),
+                                    sublinear_tf=True,
+                                    min_df=80, max_df=1.)
 
-            # TODO: Feature selection.
-            print('\t\tDo feature selection.')
-
-            # Get features.
+            # Get classes.
+            y_train = labels[train_idx, i_label]
+            y_test = labels[test_idx, i_label]
+            
+            # Get raw data.
             train_texts = [texts[i] for i in train_idx]
+            
+            # Feature selection.
+            features = tfidf.fit_transform(train_texts)
+            names = tfidf.get_feature_names()
+            
+            skb = SelectKBest(chi2, k=n_cogat)
+            skb.fit(features, y_train)
+            neg_n = -1 * n_cogat
+            keep_idx = np.argpartition(skb.scores_, neg_n)[neg_n:]
+            
+            vocabulary = [str(names[i]) for i in keep_idx]
+            
+            # Now feature extraction with the new vocabulary
+            tfidf = TfidfVectorizer(stop_words=stop,
+                                    vocabulary=vocabulary,
+                                    token_pattern='(?!\\[)[A-z\\-]{3,}',
+                                    ngram_range=(1, 2),
+                                    sublinear_tf=True,
+                                    min_df=80, max_df=1.)
             tfidf.fit(train_texts)
             features = tfidf.transform(texts)
 
@@ -92,10 +119,8 @@ def run_svm_bow_cv(label_df, text_df, source):
             # Let's say per label for now, so Cody can analyze variability
             # between labels/dimensions as well as between folds.
             X_train = features[train_idx, :]
-            y_train = labels[train_idx, i_label]
             X_test = features[test_idx, :]
-            y_test = labels[test_idx, i_label]
-
+            
             # Select hyperparameters using inner CV.
             gs_clf = GridSearchCV(estimator=svm, param_grid=p_grid, cv=inner_cv)
             gs_clf.fit(X_train, y_train)
