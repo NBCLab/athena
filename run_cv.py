@@ -36,10 +36,12 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 
-stop = stopwords.words("english")
+stop = stopwords.words('english')
 
 
 def run_svm_bow_cv(label_df, text_df, source):
+    # We'll use n_cogat for now because we think it makes CogAt/BOW comparison
+    # make more sense, but will ask others about it later.
     n_cogat = 3000
     
     ## Settings
@@ -82,7 +84,7 @@ def run_svm_bow_cv(label_df, text_df, source):
 
             # Define gaz, extract features, and perform feature selection here.
             tfidf = TfidfVectorizer(stop_words=stop,
-                                    token_pattern="(?!\\[)[A-z\\-]{3,}",
+                                    token_pattern='(?!\\[)[A-z\\-]{3,}',
                                     ngram_range=(1, 2),
                                     sublinear_tf=True,
                                     min_df=80, max_df=1.)
