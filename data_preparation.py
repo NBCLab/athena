@@ -95,21 +95,13 @@ def process_corpus(data_dir, feature_source):
         # not including spaces
         stem_list = []
         for word in text.split():
-<<<<<<< Updated upstream
-                # Use Porter stemmer to test for string unicode encoding, then use English stemmer to perform stemming
-                try:
-                    test = " ".join(["kdkd", test_stemmer.stem(word), "kdkd"])
-                except:
-                    word = word.decode("utf8", "ignore").encode("ascii", "ignore")
-                stem_list.append(stemmer.stem(word))
-=======
-            # Skips the spaces, appends the word to stem_list
+            # Use Porter stemmer to test for string unicode encoding, then use
+            # English stemmer to perform stemming
             try:
                 ' '.join(['kdkd', test_stemmer.stem(word), 'kdkd'])
             except:
                 word = word.decode('utf8', 'ignore').encode('ascii', 'ignore')
             stem_list.append(stemmer.stem(word))
->>>>>>> Stashed changes
 
         # Writes the stem_list
         with open(os.path.join(stem_dir, filename), 'wb') as fo:
@@ -137,13 +129,12 @@ def label_data(data_dir):
                  'Stimulus Type': 'StimulusType',
                  'Response Modality': 'ResponseModality',
                  'Response Type': 'ResponseType',
-                 'Instructions': 'Instructions',
-                 'Context': 'Context'}
+                 'Instructions': 'Instructions'}
 
     columns = converter.keys()
 
     # Cycles through all columns and all metadata files and concatenates everything
-    metadata_dfs = [pd.read_csv(file_, dtype=str)[['PubMed ID'] + column_to_cogpo.keys()] for file_ in filenames]
+    metadata_dfs = [pd.read_csv(file_, dtype=str)[['PubMed ID'] + converter.keys()] for file_ in filenames]
     metadata_df = pd.concat(metadata_dfs, ignore_index=True)
 
     # Transforms to table format and sorts the metadata matrices
