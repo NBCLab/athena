@@ -9,9 +9,10 @@ from nltk.corpus import stopwords
 from nltk import word_tokenize
 from nltk.stem.porter import PorterStemmer
 import pandas as pd
+import re
 
 stemmer = PorterStemmer()
-stop = stopwords.words("english")
+#stop = stopwords.words("english")
 
 
 def stem_tokens(tokens, stemmer):
@@ -41,10 +42,10 @@ def cogpo_columns(columns):
     column_to_cogpo = {"Paradigm Class": "ParadigmClass",
                        "Behavioral Domain": "BehavioralDomain",
                        "Diagnosis": "Diagnosis",
-                       "Stimulus Modality": "StimulusModality",
-                       "Stimulus Type": "StimulusType",
-                       "Response Modality": "OvertResponseModality",
-                       "Response Type": "OvertResponseType",
+                       "Stimulus Modality": "StimModality",
+                       "Stimulus Type": "StimType",
+                       "Response Modality": "RespModality",
+                       "Response Type": "RespType",
                        "Instructions": "Instruction",
                        "Context": "Context"}
     subset = { key:value for key, value in column_to_cogpo.items() if key in columns }
@@ -54,7 +55,10 @@ def cogpo_columns(columns):
 def clean_str(str_):
     """
     """
-    label = str_.replace(' ', '').replace("'", '').replace('(', '.').replace(')', '').replace('Stroop-', 'Stroop.')
+    label = str_.replace(' ', '').replace("'", '').replace('(Overt)', '.Overt')
+    label = label.replace('(Covert)', '.Covert').replace('Stroop-', 'Stroop.')
+    label = label.replace('-', '').replace('/', '')
+    label = re.sub(r'\([^)]*\)', '', label)
     return label
 
 
@@ -72,4 +76,4 @@ def get_label_parents(df, column, dimension):
         parents = ['.'.join(item.split('.')[:-1]) for item in parents if len(item.split('.'))>1]
         dim_labels += parents
     dim_labels = ['{0}.{1}'.format(dimension, label) for label in dim_labels]
-    return table
+    return dim_labels
