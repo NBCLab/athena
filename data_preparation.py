@@ -31,6 +31,11 @@ from nltk.stem.snowball import EnglishStemmer
 from nltk.stem.porter import PorterStemmer
 from utils import clean_str, get_label_parents
 import abbreviations as abbs
+import csv
+
+with open('label_converter.csv', mode='r') as infile:
+    reader = csv.reader(infile)
+    label_con = {rows[0]:rows[1] for rows in reader}
 
 
 def process_raw_data(data_dir='/home/data/nbc/athena/athena-data/'):
@@ -144,6 +149,7 @@ def label_data(data_dir):
         dim_labels = get_label_parents(metadata_df, column, dimension)
         all_labels += dim_labels
 
+    all_labels = [label for label in all_labels if label not in label_con.keys()]
     all_labels = sorted(list(set(all_labels)))
 
     # Get list of annotated papers with associated files
@@ -169,9 +175,10 @@ def label_data(data_dir):
                     exp_labels = exp_labels.split('| ')
                     exp_labels = ['{0}.{1}'.format(converter[column], clean_str(label)) for label in exp_labels]
                     for label in exp_labels:
+                        corr_label = label_con.get(label, label)
                         for out_column in label_df.columns:
                             # Count each label toward itself and its parents.
-                            if label.startswith(out_column):
+                            if corr_label.startswith(out_column):
                                 out_row = label_df.loc[label_df['pmid']==pmid].index[0]
                                 label_df[out_column].iloc[out_row] = 1
 

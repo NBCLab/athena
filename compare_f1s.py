@@ -8,7 +8,7 @@ from glob import glob
 from os.path import join
 import pandas as pd
 import numpy as np
-from scipy.stats import f_oneway as anova
+from scipy.stats import friedmanchisquare
 
 comparisons = ['source', 'space', 'classifier', 'fold', 'label']
 sources = ['full', 'abstract', 'methods', 'combined']
@@ -34,14 +34,14 @@ for source in sources:
     dfs = []
     for f in files:
         combo_df = pd.read_csv(f)
-        
+
         # Create unique identifier for specific fold/space/clf/etc combo.
         # We specified our random seeds in the CV so the split for a given
         # combo should be constant across sources.
         cols = minus(comparisons, 'source')
         combo_df['id'] = combo_df[cols].apply(lambda x: '-'.join(x), axis=1)
         combo_df.set_index('id', inplace=True)
-        
+
         # Remove unnecessary columns and give score column unique name.
         combo_df[source] = combo_df['f1']
         combo_df = combo_df[[source]]
@@ -64,7 +64,7 @@ df1 = k - 1
 df2 = N - 1
 
 # Repeated measures one-way ANOVA?
-f, p = anova(source_data)  # Currently independent and won't run.
+f, p = friedmanchisquare(source_data)  # Currently independent and won't run.
 if p < 0.05:  # Currently no MCC.
     res = ''
     run_posthocs = True
