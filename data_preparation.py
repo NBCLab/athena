@@ -24,7 +24,7 @@ First round of commenting: Tue Oct 4 2016 Cody Riedel
 import os
 import re
 import pandas as pd
-import cogat
+#import cogat
 from glob import glob
 import numpy as np
 from nltk.stem.snowball import EnglishStemmer
@@ -33,7 +33,7 @@ from utils import clean_str, get_label_parents
 import abbreviations as abbs
 import csv
 
-with open('label_converter.csv', mode='r') as infile:
+with open('/Users/salo/Desktop/nbc/athena-data/misc/label_converter.csv', mode='r') as infile:
     reader = csv.reader(infile)
     label_con = {rows[0]:rows[1] for rows in reader}
 
@@ -124,16 +124,15 @@ def label_data(data_dir):
     """
     # Reads in the metadata matrices (i.e., paper by metadata matrix)
     metadata_dir = os.path.join(data_dir, 'metadata/')
-    filenames = sorted(glob(os.path.join(metadata_dir, '*.csv')))
-    text_dir = os.path.join(data_dir, 'text/full/')  # Full text is more restrictive than abstract
+    filenames = sorted(glob(os.path.join(metadata_dir, 'Karina*.csv')))
 
     converter = {'Paradigm Class': 'ParadigmClass',
                  'Behavioral Domain': 'BehavioralDomain',
                  'Diagnosis': 'Diagnosis',
-                 'Stimulus Modality': 'StimulusModality',
-                 'Stimulus Type': 'StimulusType',
-                 'Response Modality': 'ResponseModality',
-                 'Response Type': 'ResponseType',
+                 'Stimulus Modality': 'StimModality',
+                 'Stimulus Type': 'StimType',
+                 'Response Modality': 'RespModality',
+                 'Response Type': 'RespType',
                  'Instructions': 'Instructions'}
 
     columns = converter.keys()
@@ -155,9 +154,6 @@ def label_data(data_dir):
     # Get list of annotated papers with associated files
     metadata_df = metadata_df[metadata_df['PubMed ID'].str.contains('^\d+$')].reset_index()
     list_of_pmids = metadata_df['PubMed ID'].unique().tolist()
-    list_of_files = [os.path.splitext(file_)[0] for file_ in os.listdir(text_dir)]
-    list_of_files = sorted(list(set(list_of_files)))
-    list_of_pmids = sorted(list(set(list_of_pmids).intersection(list_of_files)))
 
     column_names = ['pmid'] + all_labels
     label_df = pd.DataFrame(columns=column_names, data=np.zeros((len(list_of_pmids), len(column_names))))
@@ -185,7 +181,7 @@ def label_data(data_dir):
     # Save DataFrames.
     count_df = label_df.sum().to_frame()
     label_df = label_df.astype(int).astype(str)
-    out_file = os.path.join(data_dir, 'labels/labeled.csv')
+    out_file = os.path.join(data_dir, 'labels/fiu_labels.csv')
     label_df.to_csv(out_file, index=False)
 
     count_file = os.path.join(data_dir, 'labels/label_counts.csv')
