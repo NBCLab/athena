@@ -83,6 +83,12 @@ label_con = {'BehavioralDomain.Cognition.Reward': 'ParadigmClass.Reward',
              'Diagnosis.OrthopedicInjuries': 'DROP',
              'Diagnosis.PremenstrualDysphoricDisorder': 'DROP',
              'Diagnosis.ProbableAlzheimersDisease': 'DROP',
+             'Diagnosis.MajorDepressiveDisorder': 'Diagnosis.Depression',
+             'StimType.Digits': 'StimType.Numbers',
+             'Instruction.Add': 'DROP',
+             'Instruction.Experience': 'DROP',
+             'Instruction.Choose': 'DROP',
+             'StimType.Video': 'StimType.FilmClip',
 }
 
 with open('/Users/salo/Desktop/label_converter.csv', 'wb') as f:

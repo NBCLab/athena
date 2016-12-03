@@ -133,7 +133,7 @@ def label_data(data_dir):
                  'Stimulus Type': 'StimType',
                  'Response Modality': 'RespModality',
                  'Response Type': 'RespType',
-                 'Instructions': 'Instructions'}
+                 'Instructions': 'Instruction'}
 
     columns = converter.keys()
 
@@ -148,7 +148,8 @@ def label_data(data_dir):
         dim_labels = get_label_parents(metadata_df, column, dimension)
         all_labels += dim_labels
 
-    all_labels = [label for label in all_labels if label not in label_con.keys()]
+    all_labels = [label_con.get(label, label) for label in all_labels]
+    all_labels = [label for label in all_labels if label != 'DROP']
     all_labels = sorted(list(set(all_labels)))
 
     # Get list of annotated papers with associated files
