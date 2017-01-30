@@ -43,7 +43,7 @@ def run_svm_bow_cv(label_df, text_df, source):
     # We'll use n_cogat for now because we think it makes CogAt/BOW comparison
     # make more sense, but will ask others about it later.
     n_cogat = 3000
-    
+
     ## Settings
     space = 'bow'
     classifier = 'svm'
@@ -56,7 +56,7 @@ def run_svm_bow_cv(label_df, text_df, source):
               "gamma": [.01, .1, 1.]}
 
     # Get data from DataFrame
-    texts = text_df['text'].tolist()
+    texts = text_df[source].tolist()
     feature_range = np.arange(len(texts))
 
     # Pull info from label_df
@@ -68,7 +68,8 @@ def run_svm_bow_cv(label_df, text_df, source):
 
     # Choose cross-validation techniques for the inner and outer loops,
     # independently of the dataset. Classic 5x2 split.
-    # 5x2 popularized in http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
+    # 5x2 popularized in 
+    # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
     outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
     inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=0)
 
@@ -92,21 +93,21 @@ def run_svm_bow_cv(label_df, text_df, source):
             # Get classes.
             y_train = labels[train_idx, i_label]
             y_test = labels[test_idx, i_label]
-            
+
             # Get raw data.
             train_texts = [texts[i] for i in train_idx]
-            
+
             # Feature selection.
             features = tfidf.fit_transform(train_texts)
             names = tfidf.get_feature_names()
-            
+
             skb = SelectKBest(chi2, k=n_cogat)
             skb.fit(features, y_train)
             neg_n = -1 * n_cogat
             keep_idx = np.argpartition(skb.scores_, neg_n)[neg_n:]
-            
+
             vocabulary = [str(names[i]) for i in keep_idx]
-            
+
             # Now feature extraction with the new vocabulary
             tfidf = TfidfVectorizer(stop_words=stop,
                                     vocabulary=vocabulary,
@@ -122,7 +123,7 @@ def run_svm_bow_cv(label_df, text_df, source):
             # between labels/dimensions as well as between folds.
             X_train = features[train_idx, :]
             X_test = features[test_idx, :]
-            
+
             # Select hyperparameters using inner CV.
             gs_clf = GridSearchCV(estimator=svm, param_grid=p_grid, cv=inner_cv)
             gs_clf.fit(X_train, y_train)

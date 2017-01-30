@@ -15,7 +15,6 @@ from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
 from cognitiveatlas.api import get_disorder
 from cogat_weighting_schemes import get_weights
-from sklearn.feature_extraction.text import TfidfTransformer
 
 # Constants
 spell_file = os.path.join("/home/data/nbc/athena/athena-data/misc/english_spellings.csv")
@@ -297,7 +296,7 @@ def weight_rels(rel_df, weighting_scheme="none"):
     all_possible_rels = [list(pair) for pair in list(itertools.product(term_ids,
                                                                        term_ids))]
     all_possible_rels = set(map(tuple, all_possible_rels))
-        
+    
     new_rels = list(all_possible_rels - set(map(tuple, existing_rels)))
     
     weight_df = pd.DataFrame(columns=["input", "output"], data=new_rels)
@@ -328,5 +327,132 @@ def weight_rels(rel_df, weighting_scheme="none"):
     weight_df = weight_df.pivot(index="input", columns="output", values="weight")
     weight_df.index.name = "term"
     del weight_df.columns.name
+    
+    idx = np.where(weight_df.sum(axis=1).values>0)[0]
+    raw_weights = np.eye(weight_df.shape[0])
+    
+    for i in idx:
+        arr = np.zeros((1, weight_df.shape[0]))
+        arr[0, i] = 1
+        weights = np.copy(arr)
+        while np.any(arr):
+            arr = np.dot(arr, weight_df.values)
+            new_idx = np.where(arr)[1]
+            new_idx = [j for j in new_idx if j not in np.where(weights)[1]]
+            if not new_idx:
+                break
+            
+            for j in new_idx:
+                weights[0, j] = arr[0, j]
+        raw_weights[i, :] = weights
+    
+    weight_df[weight_df.columns] = raw_weights
 
     return weight_df
+
+
+def extract_cogat(cogat_df, text_df):
+    """
+    Creates feature table for Cognitive Atlas terms from full, unstemmed text.
+    Just a first pass.
+    """
+    # Read in features
+    pmids = text_df.index.values
+    out_text_df = text_df.copy()
+    gazetteer = sorted(cogat_df["id"].unique().tolist())
+
+    # Count
+    sources = text_df.columns
+    count_dfs = ['' for _ in range(len(sources))]
+    for i, source in enumerate(sources):
+        count_array = np.zeros((len(pmids), len(gazetteer)))
+        for j, pmid in enumerate(pmids):
+            text = text_df[source].loc[pmid]
+            
+            for row in cogat_df.index:
+                term = cogat_df["term"].iloc[row]
+                words = term.split(" ")
+                regex = "\\s*(\\(.*\\))?\\s*".join(words)
+                regex = "\\b"+regex+"\\b"
+                pattern = re.compile(regex, re.MULTILINE|re.DOTALL|re.IGNORECASE)
+                
+                term_id = cogat_df["id"].iloc[row]
+                col_idx = gazetteer.index(term_id)
+                
+                count = len(re.findall(pattern, text))
+                count_array[j, col_idx] += count
+                text = re.sub(pattern, term_id, text)
+    
+            out_text_df[source].loc[pmid] = text
+        
+        # Create and save output
+        count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=count_array)
+        count_df.index.name = "pmid"
+        count_dfs[i] = count_df
+    return out_text_df, count_dfs
+
+
+def apply_weights(input_df, weight_df):
+    """
+    Apply weights once.
+    """
+    weight_df = weight_df.reindex_axis(sorted(weight_df.columns), axis=1).sort()
+    input_df = input_df.reindex_axis(sorted(input_df.columns), axis=1)
+    
+    if not (set(weight_df.columns) == set(input_df.columns)):
+        raise Exception("Columns do not match between DataFrames!")
+
+    weighted_df = input_df.dot(weight_df)
+    return weighted_df
+
+
+def run(data_dir='/home/data/nbc/athena/athena-data2/'):
+    #id_df = create_id_sheet()
+    #id_df.to_csv(os.path.join(data_dir, 'gazetteers/cogat_ids.csv'))
+    id_df = pd.read_csv(os.path.join(data_dir, 'gazetteers/cogat_ids.csv'))
+    #rel_df = create_rel_sheet(id_df)
+    #rel_df.to_csv(os.path.join(data_dir, 'gazetteers/cogat_rels.csv'))
+    rel_df = pd.read_csv(os.path.join(data_dir, 'gazetteers/cogat_rels.csv'))
+    #weight_df = weight_rels(rel_df, 'ws2_up')
+    weight_df = pd.read_csv(os.path.join(data_dir, 'gazetteers/cogat_weights.csv'),
+                            index_col='term')
+    text_df = pd.read_csv(os.path.join(data_dir, 'text/cleaned_texts.csv'),
+                          index_col='pmid')
+    out_text_df, count_dfs = extract_cogat(id_df, text_df)
+    out_text_df.to_csv(os.path.join(data_dir, 'text/cogat_processed_texts.csv'))
+    
+    sources = text_df.columns
+#    count_dfs = ['' for _ in range(len(sources))]
+    weighted_dfs = ['' for _ in range(len(sources))]
+    
+#    for i, source in enumerate(sources):
+#        count_dfs[i] = pd.read_csv(os.path.join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)),
+#                                   index_col='pmid')
+    
+    for i, source in enumerate(sources):
+        
+        if i == 0:
+            cogat_input = count_dfs[i].columns.values.tolist()
+            cogat_weight = weight_df.columns.values.tolist()
+            
+            not_in_input = list(set(cogat_weight) - set(cogat_input))
+            
+            add = [term for term in not_in_input if term.startswith("ctp")]
+            drop = [term for term in not_in_input if not term.startswith("ctp")]
+            
+            new_weight = sorted(list(set(cogat_weight) - set(drop)))
+            
+            weight_df = weight_df[new_weight]
+            weight_df = weight_df[weight_df.index.isin(new_weight)]
+            weight_df.to_csv(os.path.join(data_dir, 'gazetteers/cogat_weights.csv'))            
+        
+        # Add to input
+        for val in add:
+            count_dfs[i][val] = 0
+        
+        count_dfs[i] = count_dfs[i][new_weight]
+        count_dfs[i].to_csv(os.path.join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)))
+
+    for i, source in enumerate(sources):        
+        weighted_dfs[i] = apply_weights(count_dfs[i], weight_df)
+        weighted_dfs[i].to_csv(os.path.join(data_dir, 'features/cogat_{0}.csv'.format(source)))

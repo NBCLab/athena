@@ -24,7 +24,7 @@ First round of commenting: Tue Oct 4 2016 Cody Riedel
 import os
 import re
 import pandas as pd
-#import cogat
+import cogat
 from glob import glob
 import numpy as np
 from nltk.stem.snowball import EnglishStemmer
@@ -205,7 +205,7 @@ def generate_gazetteer(data_dir):
     rel_df = cogat.create_rel_sheet(cogat_df)
     rel_df.to_csv(os.path.join(gaz_dir, 'cogat_relationships.csv'), index=False)
 
-    weighting_schemes = ['ws2_up', 'ws2_down', 'ws2_side']
+    weighting_schemes = ['ws2_up']
     for weighting_scheme in weighting_schemes:
         weight_df = cogat.weight_rels(rel_df, weighting_scheme)
         weight_df.to_csv(os.path.join(gaz_dir, 'cogat_weights_{0}.csv'.format(weighting_scheme)),
