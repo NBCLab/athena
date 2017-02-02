@@ -351,6 +351,14 @@ def weight_rels(rel_df, weighting_scheme="none"):
     return weight_df
 
 
+def create_re(term):
+    words = term.split(" ")
+    regex = "\\s*(\\(.*\\))?\\s*".join(words)
+    regex = "\\b"+regex+"\\b"
+    pattern = re.compile(regex, re.DOTALL)
+    return pattern
+
+
 def extract_cogat(cogat_df, text_df):
     """
     Creates feature table for Cognitive Atlas terms from full, unstemmed text.
@@ -361,24 +369,26 @@ def extract_cogat(cogat_df, text_df):
     out_text_df = text_df.copy()
     gazetteer = sorted(cogat_df["id"].unique().tolist())
 
+    # Create regex dictionary
+    regex_dict = {}
+    for term in cogat_df['term'].values:
+        regex_dict[term] = create_re(term)
+    
     # Count
     sources = text_df.columns
     count_dfs = ['' for _ in range(len(sources))]
     for i, source in enumerate(sources):
         count_array = np.zeros((len(pmids), len(gazetteer)))
         for j, pmid in enumerate(pmids):
-            text = text_df[source].loc[pmid]
+            text = text_df[source].loc[pmid].lower()
             
             for row in cogat_df.index:
-                term = cogat_df["term"].iloc[row]
-                words = term.split(" ")
-                regex = "\\s*(\\(.*\\))?\\s*".join(words)
-                regex = "\\b"+regex+"\\b"
-                pattern = re.compile(regex, re.MULTILINE|re.DOTALL|re.IGNORECASE)
+                term = cogat_df["term"].loc[row]
+                term_id = cogat_df["id"].loc[row]
                 
-                term_id = cogat_df["id"].iloc[row]
                 col_idx = gazetteer.index(term_id)
                 
+                pattern = regex_dict[term]
                 count = len(re.findall(pattern, text))
                 count_array[j, col_idx] += count
                 text = re.sub(pattern, term_id, text)
