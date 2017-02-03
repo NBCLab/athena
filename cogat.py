@@ -6,10 +6,11 @@ Created on Thu Jan 28 12:35:54 2016
 """
 
 from __future__ import division
-import os
+from os.path import join, basename, splitext
 import pandas as pd
 import re
 import numpy as np
+from glob import glob
 import itertools
 from cognitiveatlas.api import get_concept
 from cognitiveatlas.api import get_task
@@ -17,7 +18,7 @@ from cognitiveatlas.api import get_disorder
 from cogat_weighting_schemes import get_weights
 
 # Constants
-spell_file = os.path.join("/home/data/nbc/athena/athena-data/misc/english_spellings.csv")
+spell_file = join("/home/data/nbc/athena/athena-data/misc/english_spellings.csv")
 spell_df = pd.read_csv(spell_file, index_col="UK")
 spell_dict = spell_df["US"].to_dict()
 
@@ -359,14 +360,13 @@ def create_re(term):
     return pattern
 
 
-def extract_cogat(cogat_df, text_df):
+def extract_cogat(cogat_df, text_dir, out_dir):
     """
     Creates feature table for Cognitive Atlas terms from full, unstemmed text.
     Just a first pass.
     """
     # Read in features
-    pmids = text_df.index.values
-    out_text_df = text_df.copy()
+    pmids = sorted([basename(splitext(f)[0]) for f in glob(join(text_dir, '*.txt'))])
     gazetteer = sorted(cogat_df["id"].unique().tolist())
 
     # Create regex dictionary
@@ -375,31 +375,29 @@ def extract_cogat(cogat_df, text_df):
         regex_dict[term] = create_re(term)
     
     # Count
-    sources = text_df.columns
-    count_dfs = ['' for _ in range(len(sources))]
-    for i, source in enumerate(sources):
-        count_array = np.zeros((len(pmids), len(gazetteer)))
-        for j, pmid in enumerate(pmids):
-            text = text_df[source].loc[pmid].lower()
-            
-            for row in cogat_df.index:
-                term = cogat_df["term"].loc[row]
-                term_id = cogat_df["id"].loc[row]
-                
-                col_idx = gazetteer.index(term_id)
-                
-                pattern = regex_dict[term]
-                count = len(re.findall(pattern, text))
-                count_array[j, col_idx] += count
-                text = re.sub(pattern, term_id, text)
-    
-            out_text_df[source].loc[pmid] = text
+    count_array = np.zeros((len(pmids), len(gazetteer)))
+    for i, pmid in enumerate(pmids):
+        with open(join(text_dir, pmid+'.txt'), 'r') as fo:
+            text = fo.read().lower()
         
-        # Create and save output
-        count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=count_array)
-        count_df.index.name = "pmid"
-        count_dfs[i] = count_df
-    return out_text_df, count_dfs
+        for row in cogat_df.index:
+            term = cogat_df["term"].loc[row]
+            term_id = cogat_df["id"].loc[row]
+            
+            col_idx = gazetteer.index(term_id)
+            
+            pattern = regex_dict[term]
+            count = len(re.findall(pattern, text))
+            count_array[i, col_idx] += count
+            text = re.sub(pattern, term_id, text)
+
+        with open(join(out_dir, pmid+'.txt'), 'w') as fo:
+            fo.write(text)
+        
+    # Create and save output
+    count_df = pd.DataFrame(columns=gazetteer, index=pmids, data=count_array)
+    count_df.index.name = 'pmid'
+    return count_df
 
 
 def apply_weights(input_df, weight_df):
@@ -416,33 +414,25 @@ def apply_weights(input_df, weight_df):
     return weighted_df
 
 
-def run(data_dir='/home/data/nbc/athena/athena-data2/'):
+def run(data_dir='/home/data/nbc/athena/athena-data2/', sources=['abstract', 'full']):
     #id_df = create_id_sheet()
-    #id_df.to_csv(os.path.join(data_dir, 'gazetteers/cogat_ids.csv'))
-    id_df = pd.read_csv(os.path.join(data_dir, 'gazetteers/cogat_ids.csv'))
+    #id_df.to_csv(join(data_dir, 'gazetteers/cogat_ids.csv'))
+    id_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_ids.csv'))
     #rel_df = create_rel_sheet(id_df)
-    #rel_df.to_csv(os.path.join(data_dir, 'gazetteers/cogat_rels.csv'))
-    rel_df = pd.read_csv(os.path.join(data_dir, 'gazetteers/cogat_rels.csv'))
+    #rel_df.to_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
+    #rel_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
     #weight_df = weight_rels(rel_df, 'ws2_up')
-    weight_df = pd.read_csv(os.path.join(data_dir, 'gazetteers/cogat_weights.csv'),
+    weight_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_weights.csv'),
                             index_col='term')
-    text_df = pd.read_csv(os.path.join(data_dir, 'text/cleaned_texts.csv'),
-                          index_col='pmid')
-    out_text_df, count_dfs = extract_cogat(id_df, text_df)
-    out_text_df.to_csv(os.path.join(data_dir, 'text/cogat_processed_texts.csv'))
-    
-    sources = text_df.columns
-#    count_dfs = ['' for _ in range(len(sources))]
-    weighted_dfs = ['' for _ in range(len(sources))]
-    
-#    for i, source in enumerate(sources):
-#        count_dfs[i] = pd.read_csv(os.path.join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)),
-#                                   index_col='pmid')
-    
+
     for i, source in enumerate(sources):
+        text_folder = join(data_dir, 'text/cleaned_{0}/'.format(source))
+        out_dir = join(data_dir, 'text/cogat_cleaned_{0}/'.format(source))
+        count_df = extract_cogat(id_df, text_folder, out_dir)
         
         if i == 0:
-            cogat_input = count_dfs[i].columns.values.tolist()
+            # Reduce weight_df and count_df by their common CogAt terms.
+            cogat_input = count_df.columns.values.tolist()
             cogat_weight = weight_df.columns.values.tolist()
             
             not_in_input = list(set(cogat_weight) - set(cogat_input))
@@ -454,15 +444,14 @@ def run(data_dir='/home/data/nbc/athena/athena-data2/'):
             
             weight_df = weight_df[new_weight]
             weight_df = weight_df[weight_df.index.isin(new_weight)]
-            weight_df.to_csv(os.path.join(data_dir, 'gazetteers/cogat_weights.csv'))            
+            weight_df.to_csv(join(data_dir, 'gazetteers/cogat_weights_adjusted.csv'))            
         
         # Add to input
         for val in add:
-            count_dfs[i][val] = 0
+            count_df[val] = 0
         
-        count_dfs[i] = count_dfs[i][new_weight]
-        count_dfs[i].to_csv(os.path.join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)))
-
-    for i, source in enumerate(sources):        
-        weighted_dfs[i] = apply_weights(count_dfs[i], weight_df)
-        weighted_dfs[i].to_csv(os.path.join(data_dir, 'features/cogat_{0}.csv'.format(source)))
+        count_df = count_df[new_weight]
+        count_df.to_csv(join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)))
+     
+        weighted_df = apply_weights(count_df, weight_df)
+        weighted_df.to_csv(join(data_dir, 'features/cogat_{0}.csv'.format(source)))
