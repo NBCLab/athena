@@ -76,7 +76,7 @@ def run_svm_cogat_cv(label_df, features_df, out_dir):
 
             # Define gaz, extract features, and perform feature selection here.
             tfidf = TfidfTransformer(norm='l2', use_idf=True, smooth_idf=False,
-                                     sublinear_tf=False)
+                                     sublinear_tf=True)
 
             # Get classes.
             y_train = labels[train_idx, i_label]
