@@ -33,7 +33,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from os.path import join
 
 
-def run_svm_cogat_cv(label_df, features_df, out_dir):
+def run_svm_cogat_abstract_cv(label_df, features_df, out_dir):
     ## Settings
     space = 'cogat'
     classifier = 'svm'
@@ -128,7 +128,7 @@ def run_svm_cogat_cv(label_df, features_df, out_dir):
     # Write out [nFolds]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
     f_cols = ['Fold_{0}'.format(f) for f in range(j_fold+1)]
-    print f_alllabels
+
     df = pd.DataFrame(data=f_alllabels, columns=f_cols, index=label_names)
     df.index.name = 'label'
     df.to_csv(join(out_dir, f_filename))
@@ -160,5 +160,5 @@ label_df = label_df.loc[shared_pmids]
 features_df = features_df.loc[shared_pmids]
 
 out_dir = '/scratch/tsalo006/test_cv/'
-run_svm_cogat_cv(label_df, features_df, out_dir)
+run_svm_cogat_abstract_cv(label_df, features_df, out_dir)
     

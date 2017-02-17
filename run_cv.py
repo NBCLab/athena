@@ -20,11 +20,10 @@ NOTE: This doesn't take dimension into account at all. In order to employ
       labels by dimension and feed predictions from each dimension into the
       features for the next.
 """
+from os.path import basename, splitext, join
+from glob import glob
 
 from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier as KNN
-from sklearn.naive_bayes import BernoulliNB as BNB
-from sklearn.linear_model import LogisticRegression as LR
 
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.feature_selection import SelectKBest
@@ -39,29 +38,34 @@ from nltk.corpus import stopwords
 stop = stopwords.words('english')
 
 
-def run_svm_bow_cv(label_df, text_df, source):
+def run_svm_bow_full_cv(label_df, text_dir, out_dir):
     # We'll use n_cogat for now because we think it makes CogAt/BOW comparison
     # make more sense, but will ask others about it later.
-    n_cogat = 3000
+    n_cogat = 1754
 
     ## Settings
     space = 'bow'
     classifier = 'svm'
+    source = 'full'
 
     # We will use a Support Vector Classifier with "rbf" kernel
     svm = SVC(kernel='rbf', class_weight='balanced')
 
     # Set up possible values of parameters to optimize over
-    p_grid = {"C": [1, 10, 100],
-              "gamma": [.01, .1, 1.]}
+    p_grid = {'C': [1, 10, 100],
+              'gamma': [.01, .1, 1.]}
 
     # Get data from DataFrame
-    texts = text_df[source].tolist()
+    pmids = label_df.index.values
+    texts = []
+    for pmid in pmids:
+        with open(join(text_dir, '{0}.txt'.format(pmid)), 'r') as fo:
+            texts.append(fo.read())
     feature_range = np.arange(len(texts))
 
     # Pull info from label_df
-    labels = label_df.as_matrix()
-    label_names = label_df.columns.tolist()
+    labels = label_df.as_matrix()[:, :6]
+    label_names = label_df.columns.tolist()[:6]
 
     # Loop for each trial
     rows = []
@@ -107,6 +111,8 @@ def run_svm_bow_cv(label_df, text_df, source):
             keep_idx = np.argpartition(skb.scores_, neg_n)[neg_n:]
 
             vocabulary = [str(names[i]) for i in keep_idx]
+            # We probably want to store the top words for each fold/label to
+            # measure stability or something.
 
             # Now feature extraction with the new vocabulary
             tfidf = TfidfVectorizer(stop_words=stop,
@@ -137,15 +143,16 @@ def run_svm_bow_cv(label_df, text_df, source):
             preds = cv_clf.predict(X_test)
 
             f_fold_label = f1_score(y_test, preds)
-            f_label_row += f_fold_label
+            f_label_row.append(f_fold_label)
 
             # Write out 1x[nTest] array of predictions to file.
             filename = 'preds_{0}_{1}_{2}_{3}_{4}.csv'.format(classifier,
                                                               source, space,
                                                               i_label, j_fold)
-            df = pd.DataFrame(data=[preds, y_test],
+            dat = np.vstack((preds, y_test)).transpose()
+            df = pd.DataFrame(data=dat,
                               columns=['predictions', 'true'])
-            df.to_csv(filename, index=False)
+            df.to_csv(join(out_dir, filename), index=False)
 
             # Add new predictions to overall array.
             preds_array[test_idx, i_label] = preds
@@ -158,20 +165,38 @@ def run_svm_bow_cv(label_df, text_df, source):
 
     # Write out [nFolds]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
-    f_cols = ['Fold_{0}'.format(f) for f in range(j_fold)]
+    f_cols = ['Fold_{0}'.format(f) for f in range(j_fold+1)]
+
     df = pd.DataFrame(data=f_alllabels, columns=f_cols, index=label_names)
     df.index.name = 'label'
-    df.to_csv(f_filename)
+    df.to_csv(join(out_dir, f_filename))
 
     # Save predictions array to file.
     p_filename = '{0}_{1}_{2}_preds.csv'.format(classifier, source, space)
     df = pd.DataFrame(data=preds_array, columns=label_names, index=label_df.index)
     df.index.name = 'pmid'
-    df.to_csv(p_filename)
+    df.to_csv(join(out_dir, p_filename))
 
     # Save hyperparameter values to file.
     hp_filename = '{0}_{1}_{2}_params.csv'.format(classifier, source, space)
     hp_cols = ['label', 'classifier', 'feature source', 'feature space',
                'fold', 'C', 'gamma']
     df = pd.DataFrame(data=rows, columns=hp_cols)
-    df.to_csv(hp_filename, index=False)
+    df.to_csv(join(out_dir, hp_filename), index=False)
+
+#def run():
+data_dir = '/home/data/nbc/athena/athena-data2/'
+label_df = pd.read_csv(join(data_dir, 'labels/red_labels.csv'),
+                       index_col='pmid')
+text_dir = join(data_dir, 'text/stemmed_full/')
+texts = glob(join(text_dir, '*.txt'))
+feature_pmids = [int(splitext(basename(f))[0]) for f in texts]
+label_pmids = label_df.index.values
+shared_pmids = sorted(list(set(label_pmids).intersection(feature_pmids)))
+label_df = label_df.loc[shared_pmids]
+
+out_dir = '/scratch/tsalo006/test_cv2/'
+run_svm_bow_full_cv(label_df, text_dir, out_dir)
+
+
+
