@@ -53,22 +53,23 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
         p_grid = {'C': [1, 10, 100],
                   'gamma': [.01, .1, 1.]}
     elif classifier == 'bnb':
-        bnb = BernoulliNB(fit_prior=True)
+        clf = BernoulliNB(fit_prior=True)
 
         # Set up possible values of parameters to optimize over
         p_grid = {'alpha': [0.01, 0.1, 1, 10]}
     elif classifier == 'lr':
-        lr = LogisticRegression(class_weight='balanced')
+        clf = LogisticRegression(class_weight='balanced')
         
         # Set up possible values of parameters to optimize over
         p_grid = {'C': [.01, .1, 1, 10, 100],
                   'penalty': ['l1', 'l2']}
     elif classifier == 'knn':
-        knn = KNeighborsClassifier()
+        clf = KNeighborsClassifier()
         
         # Set up possible values of parameters to optimize over
-        p_grid = {'k': [1, 3, 5, 7, 9],
-                  'p': [1, 2]}
+        p_grid = {'n_neighbors': [1, 3, 5, 7, 9],
+                  'p': [1, 2],
+                  'weights': ['uniform', 'distance']}
     else:
         raise Exception('Classifier {0} not supported.'.format(classifier))
         
@@ -136,7 +137,8 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
             elif classifier == 'lr':
                 cv_clf = clf.set_params(C=params['C'], penalty=params['penalty'])
             elif classifier == 'knn':
-                cv_clf = clf.set_params(k=params['k'], p=params['p'])
+                cv_clf = clf.set_params(n_neighbors=params['n_neighbors'],
+                                        p=params['p'], weights=params['weights'])
                          
             
             cv_clf.fit(X_train, y_train)
@@ -182,7 +184,7 @@ def run(data_dir, out_dir):
                            index_col='pmid')
 
     sources = ['full', 'abstract']
-    classifiers = ['svm', 'bnb', 'lr', 'knn']
+    classifiers = ['knn', 'svm', 'bnb', 'lr']
     
     # BOW PMIDs
     text_dirs = [join(data_dir, 'text/stemmed_{0}/'.format(s)) for s in sources]
