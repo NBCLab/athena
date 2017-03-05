@@ -41,6 +41,182 @@ from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer
 stop = stopwords.words('english')
 
 
+def run_bow_cv(label_df, text_dir, out_dir, classifier, source):
+    ## Settings
+    space = 'bow'
+    n_cogat = 1754
+    
+    if classifier == 'svm':
+        # We will use a Support Vector Classifier with "rbf" kernel
+        clf = SVC(kernel='rbf', class_weight='balanced')
+    
+        # Set up possible values of parameters to optimize over
+        p_grid = {'C': [1, 10, 100],
+                  'gamma': [.01, .1, 1.]}
+    elif classifier == 'bnb':
+        clf = BernoulliNB(fit_prior=True)
+
+        # Set up possible values of parameters to optimize over
+        p_grid = {'alpha': [0.01, 0.1, 1, 10]}
+    elif classifier == 'lr':
+        clf = LogisticRegression(class_weight='balanced')
+        
+        # Set up possible values of parameters to optimize over
+        p_grid = {'C': [.01, .1, 1, 10, 100],
+                  'penalty': ['l1', 'l2']}
+    elif classifier == 'knn':
+        clf = KNeighborsClassifier()
+        
+        # Set up possible values of parameters to optimize over
+        p_grid = {'n_neighbors': [1, 3, 5, 7, 9],
+                  'p': [1, 2],
+                  'weights': ['uniform', 'distance']}
+    else:
+        raise Exception('Classifier {0} not supported.'.format(classifier))
+        
+    param_cols = sorted(p_grid.keys())
+    
+    # Get data from DataFrame
+    pmids = label_df.index.values
+    texts = []
+    for pmid in pmids:
+        with open(join(text_dir, '{0}.txt'.format(pmid)), 'r') as fo:
+            texts.append(fo.read())
+    feature_range = np.arange(len(texts))
+
+    # Pull info from label_df
+    labels = label_df.as_matrix()[:, :6]
+    label_names = label_df.columns.tolist()[:6]
+    
+    
+    # Loop for each trial
+    sel_params = []
+
+    # Choose cross-validation techniques for the inner and outer loops,
+    # independently of the dataset. Classic 5x2 split.
+    # 5x2 popularized in 
+    # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
+    outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
+    inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=0)
+
+    preds_array = np.zeros(labels.shape)
+    f_alllabels = []
+    for i_label in range(labels.shape[1]):
+        test_label = label_names[i_label]
+        print('{0}'.format(test_label))
+        f_label_row = []
+        for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(feature_range,
+                                                                      labels[:, i_label])):
+            print('\t{0}'.format(j_fold))
+
+            # Define gaz, extract features, and perform feature selection here.
+            tfidf = TfidfVectorizer(stop_words=stop,
+                                    token_pattern='(?!\\[)[A-z\\-]{3,}',
+                                    ngram_range=(1, 2),
+                                    sublinear_tf=True,
+                                    min_df=80, max_df=1.)
+
+            # Get classes.
+            y_train = labels[train_idx, i_label]
+            y_test = labels[test_idx, i_label]
+
+            # Get raw data.
+            train_texts = [texts[i] for i in train_idx]
+
+            # Feature selection.
+            features = tfidf.fit_transform(train_texts)
+            names = tfidf.get_feature_names()
+            
+            # Perform feature selection if there are too many features.
+            if len(names) > n_cogat:
+                skb = SelectKBest(chi2, k=n_cogat)
+                skb.fit(features, y_train)
+                neg_n = -1 * n_cogat
+                keep_idx = np.argpartition(skb.scores_, neg_n)[neg_n:]
+                vocabulary = [str(names[i]) for i in keep_idx]
+            else:
+                vocabulary = names[:]
+            
+            # We probably want to store the top words for each fold/label to
+            # measure stability or something.
+
+            # Now feature extraction with the new vocabulary
+            tfidf = TfidfVectorizer(stop_words=stop,
+                                    vocabulary=vocabulary,
+                                    token_pattern='(?!\\[)[A-z\\-]{3,}',
+                                    ngram_range=(1, 2),
+                                    sublinear_tf=True,
+                                    min_df=80, max_df=1.)
+            tfidf.fit(train_texts)
+            features = tfidf.transform(texts)
+
+            # Do we choose best params across labels or per label?
+            # Let's say per label for now, so Cody can analyze variability
+            # between labels/dimensions as well as between folds.
+            X_train = features[train_idx, :]
+            X_test = features[test_idx, :]
+
+            # Select hyperparameters using inner CV.
+            gs_clf = GridSearchCV(estimator=clf, param_grid=p_grid, cv=inner_cv)
+            gs_clf.fit(X_train, y_train)
+
+            # Train/test outer CV using best parameters from inner CV.
+            params = gs_clf.best_params_
+
+            # Track best parameters from inner cvs and use to train outer CV model.
+            if classifier == 'svm':
+                cv_clf = clf.set_params(C=params['C'], gamma=params['gamma'])
+            elif classifier == 'bnb':
+                cv_clf = clf.set_params(alpha=params['alpha'])
+            elif classifier == 'lr':
+                cv_clf = clf.set_params(C=params['C'], penalty=params['penalty'])
+            elif classifier == 'knn':
+                cv_clf = clf.set_params(n_neighbors=params['n_neighbors'],
+                                        p=params['p'], weights=params['weights'])
+            
+            cv_clf.fit(X_train, y_train)
+            preds = cv_clf.predict(X_test)
+
+            f_fold_label = f1_score(y_test, preds)
+            f_label_row.append(f_fold_label)
+
+            # Write out 1x[nTest] array of predictions to file.
+            filename = 'preds_{0}_{1}_{2}_{3}_{4}.csv'.format(classifier,
+                                                              source, space,
+                                                              i_label, j_fold)
+            
+            # Add new predictions to overall array.
+            preds_array[test_idx, i_label] = preds
+
+            # Put hyperparameters in dataframe.
+            p_vals = [params[key] for key in param_cols]
+            p_row = [label_names[i_label], classifier, source, space,
+                     j_fold] + p_vals
+            sel_params += [p_row]
+        f_alllabels += [f_label_row]
+
+    # Write out [nFolds]x[nLabels] array of F1-scores to file.
+    f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
+    f_cols = ['Fold_{0}'.format(f) for f in range(j_fold+1)]
+
+    df = pd.DataFrame(data=f_alllabels, columns=f_cols, index=label_names)
+    df.index.name = 'label'
+    df.to_csv(join(out_dir, f_filename))
+
+    # Save predictions array to file.
+    p_filename = '{0}_{1}_{2}_preds.csv'.format(classifier, source, space)
+    df = pd.DataFrame(data=preds_array, columns=label_names, index=label_df.index)
+    df.index.name = 'pmid'
+    df.to_csv(join(out_dir, p_filename))
+
+    # Save hyperparameter values to file.
+    hp_filename = '{0}_{1}_{2}_params.csv'.format(classifier, source, space)
+    hp_cols = ['label', 'classifier', 'feature source', 'feature space',
+               'fold'] + param_cols
+    df = pd.DataFrame(data=sel_params, columns=hp_cols)
+    df.to_csv(join(out_dir, hp_filename), index=False)
+
+
 def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
     ## Settings
     space = 'cogat'
@@ -139,7 +315,6 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
             elif classifier == 'knn':
                 cv_clf = clf.set_params(n_neighbors=params['n_neighbors'],
                                         p=params['p'], weights=params['weights'])
-                         
             
             cv_clf.fit(X_train, y_train)
             preds = cv_clf.predict(X_test)
@@ -212,7 +387,7 @@ def run(data_dir, out_dir):
     for i, s in enumerate(sources):
         for c in classifiers:
             # BOW
-            #run_bow_cv(label_df, text_dirs[i], out_dir, source=s, classifier=c)
+            run_bow_cv(label_df, text_dirs[i], out_dir, source=s, classifier=c)
 
             # CogAt
             run_cogat_cv(label_df, cogat_dfs[i], out_dir, source=s, classifier=c)
