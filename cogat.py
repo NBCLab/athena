@@ -288,6 +288,17 @@ def create_rel_sheet(id_df):
 
 def weight_rels(rel_df, weighting_scheme="none"):
     """
+    Based on a relationship legend (e.g., term1 is a kindOf term2) and a
+    weighting scheme (e.g., if a term is found, you also count toward all terms
+    that term is a kindOf), create a weight matrix.
+    
+    Imagine term1 is a kindOf term2, and term2 is a kindOf term3. If you find
+    term1 in the text, you need to count toward term2 AND term3. The goal here
+    is to make sure the row corresponding to term1 in the weight matrix has the
+    correct weights for term2 and term3, without getting caught in any infinite
+    loops.
+    NOTE: If a term is connected to another term through more than one path
+    (which may have different weights) we use the max of the weights.
     """
     weights = get_weights(weighting_scheme)
     
@@ -329,23 +340,27 @@ def weight_rels(rel_df, weighting_scheme="none"):
     weight_df.index.name = "term"
     del weight_df.columns.name
     
-    idx = np.where(weight_df.sum(axis=1).values>0)[0]
+    # Get weights for all term-term relationships, regardless of path length.
     raw_weights = np.eye(weight_df.shape[0])
     
-    for i in idx:
+    # Skip terms with no relationships
+    row_idx = np.where(weight_df.sum(axis=1).values>0)[0]
+    for i_row in row_idx:
         arr = np.zeros((1, weight_df.shape[0]))
-        arr[0, i] = 1
+        arr[0, i_row] = 1
         weights = np.copy(arr)
         while np.any(arr):
+            # Get next order of relationships for term
             arr = np.dot(arr, weight_df.values)
-            new_idx = np.where(arr)[1]
-            new_idx = [j for j in new_idx if j not in np.where(weights)[1]]
-            if not new_idx:
-                break
             
-            for j in new_idx:
-                weights[0, j] = arr[0, j]
-        raw_weights[i, :] = weights
+            # If no weights increase, the weights are stable and we can quit
+            temp_arr = np.maximum(weights, arr)
+            if np.array_equal(weights, temp_arr):
+                break
+            else:
+                weights = temp_arr
+
+        raw_weights[i_row, :] = weights
     
     weight_df[weight_df.columns] = raw_weights
 
