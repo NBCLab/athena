@@ -178,30 +178,25 @@ def run_bow_cv(label_df, text_dir, out_dir, classifier, source):
             preds = cv_clf.predict(X_test)
 
             f_fold_label = f1_score(y_test, preds)
-            f_label_row.append(f_fold_label)
-
-            # Write out 1x[nTest] array of predictions to file.
-            filename = 'preds_{0}_{1}_{2}_{3}_{4}.csv'.format(classifier,
-                                                              source, space,
-                                                              i_label, j_fold)
+            f_label_row = [classifier, source, space, j_fold, test_label,
+                           f_fold_label]
+            f_alllabels += [f_label_row]
             
             # Add new predictions to overall array.
             preds_array[test_idx, i_label] = preds
 
             # Put hyperparameters in dataframe.
             p_vals = [params[key] for key in param_cols]
-            p_row = [label_names[i_label], classifier, source, space,
+            p_row = [classifier, source, space, label_names[i_label],
                      j_fold] + p_vals
             sel_params += [p_row]
-        f_alllabels += [f_label_row]
 
     # Write out [nFolds]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
-    f_cols = ['Fold_{0}'.format(f) for f in range(j_fold+1)]
-
-    df = pd.DataFrame(data=f_alllabels, columns=f_cols, index=label_names)
-    df.index.name = 'label'
-    df.to_csv(join(out_dir, f_filename))
+    f_cols = ['classifier', 'source', 'space', 'label', 'fold', 'f1']
+    
+    df = pd.DataFrame(data=f_alllabels, columns=f_cols)
+    df.to_csv(join(out_dir, f_filename), index=False)
 
     # Save predictions array to file.
     p_filename = '{0}_{1}_{2}_preds.csv'.format(classifier, source, space)
@@ -211,8 +206,7 @@ def run_bow_cv(label_df, text_dir, out_dir, classifier, source):
 
     # Save hyperparameter values to file.
     hp_filename = '{0}_{1}_{2}_params.csv'.format(classifier, source, space)
-    hp_cols = ['label', 'classifier', 'feature source', 'feature space',
-               'fold'] + param_cols
+    hp_cols = ['classifier', 'source', 'space', 'label', 'fold'] + param_cols
     df = pd.DataFrame(data=sel_params, columns=hp_cols)
     df.to_csv(join(out_dir, hp_filename), index=False)
 
@@ -273,7 +267,7 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
     for i_label in range(labels.shape[1]):
         test_label = label_names[i_label]
         print('{0}'.format(test_label))
-        f_label_row = []
+
         X_range = np.zeros((labels.shape[0], 1))
         for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(X_range,
                                                                       labels[:, i_label])):
@@ -320,25 +314,25 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
             preds = cv_clf.predict(X_test)
 
             f_fold_label = f1_score(y_test, preds)
-            f_label_row.append(f_fold_label)
+            f_label_row = [classifier, source, space, j_fold, test_label,
+                           f_fold_label]
+            f_alllabels += [f_label_row]
 
             # Add new predictions to overall array.
             preds_array[test_idx, i_label] = preds
 
             # Put hyperparameters in dataframe.
             p_vals = [params[key] for key in param_cols]
-            p_row = [label_names[i_label], classifier, source, space,
+            p_row = [classifier, source, space, label_names[i_label],
                      j_fold] + p_vals
             sel_params += [p_row]
-        f_alllabels += [f_label_row]
 
     # Write out [nFolds]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
-    f_cols = ['Fold_{0}'.format(f) for f in range(j_fold+1)]
-
-    df = pd.DataFrame(data=f_alllabels, columns=f_cols, index=label_names)
-    df.index.name = 'label'
-    df.to_csv(join(out_dir, f_filename))
+    f_cols = ['classifier', 'source', 'space', 'label', 'fold', 'f1']
+    
+    df = pd.DataFrame(data=f_alllabels, columns=f_cols)
+    df.to_csv(join(out_dir, f_filename), index=False)
 
     # Save predictions array to file.
     p_filename = '{0}_{1}_{2}_preds.csv'.format(classifier, source, space)
@@ -348,8 +342,7 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
 
     # Save hyperparameter values to file.
     hp_filename = '{0}_{1}_{2}_params.csv'.format(classifier, source, space)
-    hp_cols = ['label', 'classifier', 'feature source', 'feature space',
-               'fold'] + param_cols
+    hp_cols = ['classifier', 'source', 'space', 'label', 'fold'] + param_cols
     df = pd.DataFrame(data=sel_params, columns=hp_cols)
     df.to_csv(join(out_dir, hp_filename), index=False)
 
