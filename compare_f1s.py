@@ -5,17 +5,17 @@ Compare classifiers, feature spaces, and feature sources.
 Only the source comparison has been written so far.
 """
 from glob import glob
-from os.path import join
+from os.path import join, basename
 import pandas as pd
 import numpy as np
 from scipy.stats import friedmanchisquare
 
 comparisons = ['source', 'space', 'classifier', 'fold', 'label']
-sources = ['full', 'abstract', 'methods', 'combined']
+sources = ['full', 'abstract']
 spaces = ['bow', 'cogat']
-classifiers = ['svm', 'knn', 'lr', 'nb']
+classifiers = ['svm', 'knn', 'lr', 'bnb']
 
-f1s_dir = '/Users/salo/Desktop/'
+f1s_dir = '/Users/tsalo/Desktop/test_cv/'
 
 def minus(l, s):
     """
@@ -26,7 +26,7 @@ def minus(l, s):
 # Compare sources
 print('Comparing sources.')
 
-pattern = '*_{0}_*_f1.txt'
+pattern = '*_{0}_*_f1.csv'
 
 merged_dfs = []
 for source in sources:
@@ -34,6 +34,8 @@ for source in sources:
     dfs = []
     for f in files:
         combo_df = pd.read_csv(f)
+        fn = basename(f)
+        classifier, _, space, _ = fn.split('_')
 
         # Create unique identifier for specific fold/space/clf/etc combo.
         # We specified our random seeds in the CV so the split for a given
