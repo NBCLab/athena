@@ -18,7 +18,7 @@ patterns = {'source': '*_{0}_*_f1.csv',
             'space': '*_*_{0}_f1.csv',
             'classifier': '{0}_*_*_f1.csv'}
 
-f1s_dir = '/Users/tsalo/Desktop/test_cv/'
+f1s_dir = '/scratch/tsalo006/test_cv/'
 
 
 def minus(l, s):

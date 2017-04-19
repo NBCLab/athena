@@ -39,9 +39,22 @@ class RelException(Exception):
             Exception.__init__(self, """Unknown term type {0}""".format(term_type))
 
 
+def stem(string):
+    stemmer = EnglishStemmer()
+    stem_list = []
+    for word in text.split():
+        # Use Porter stemmer to test for string unicode encoding, then use
+        # English stemmer to perform stemming
+        try:
+            ' '.join(['kdkd', test_stemmer.stem(word), 'kdkd'])
+        except:
+            word = word.decode('utf8', 'ignore').encode('ascii', 'ignore')
+        stem_list.append(stemmer.stem(word))
+
+
 def clean_string(string):
     """
-    Clean CogAt terms.
+    Clean CogAt terms and generate likely alternate forms.
     """
     # Convert apostrophe symbols to apostrophes. Also strip whitespace.
     string = str(string.replace('&#39;', "'")).strip()
@@ -72,8 +85,8 @@ def clean_string(string):
         prefix = ''
     
     # Remove parenthetical statements.
-    string = re.sub(r'\([^\)]*\)', '', string)
-    string = re.sub(r'\[[^\]]*\]', '', string)  
+    string = re.sub(r'\([^\)]*\)', '', string)  # Closing paren
+    string = re.sub(r'\[[^\]]*\]', '', string)  # Opening paren
     string_set.append(string)
 
     if prefix:
@@ -97,8 +110,12 @@ def clean_string(string):
         new_strings.append(s.replace(' / ', '/'))
     string_set += new_strings
     
+    # Remove stop words and stem terms
+    string_set = [stem(string) for string in string_set]
+    
     # Remove duplicates
     string_set = list(set(string_set))
+    
     return string_set
 
 
@@ -435,8 +452,8 @@ def run(data_dir='/home/data/nbc/athena/athena-data2/', sources=['abstract', 'fu
     id_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_ids.csv'))
     #rel_df = create_rel_sheet(id_df)
     #rel_df.to_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
-    #rel_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
-    #weight_df = weight_rels(rel_df, 'ws2_up')
+    rel_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
+    weight_df = weight_rels(rel_df, 'ws2_up')
     weight_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_weights.csv'),
                             index_col='term')
 
@@ -470,3 +487,4 @@ def run(data_dir='/home/data/nbc/athena/athena-data2/', sources=['abstract', 'fu
      
         weighted_df = apply_weights(count_df, weight_df)
         weighted_df.to_csv(join(data_dir, 'features/cogat_{0}.csv'.format(source)))
+
