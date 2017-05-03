@@ -348,7 +348,7 @@ def run_cogat_cv(label_df, features_df, out_dir, classifier, source):
 
     # Write out [nFolds*nIters]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
-    f_cols = ['classifier', 'source', 'space', 'fold', 'label', 'iter', 'f1']
+    f_cols = ['classifier', 'source', 'space', 'label', 'fold', 'iter', 'f1']
     
     df = pd.DataFrame(data=f_alllabels, columns=f_cols)
     df.to_csv(join(out_dir, f_filename), index=False)
