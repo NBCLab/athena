@@ -142,6 +142,14 @@ def run_bow_cv(label_df, text_dir, out_dir, classifier, source):
                 
                 # We probably want to store the top words for each fold/label to
                 # measure stability or something.
+                vocab_filename = '{c}_{so}_{sp}_{l}_i{i}_f{f}_feats.csv'.format(c=classifier,
+                                                                                so=source,
+                                                                                sp=space,
+                                                                                l=test_label,
+                                                                                i=iter_,
+                                                                                f=j_fold)
+                vocab_df = pd.DataFrame(data=vocabulary, columns=['features'])
+                vocab_df.to_csv(join(out_dir, vocab_filename), index=False)
 
                 # Now feature extraction with the new vocabulary
                 tfidf = TfidfVectorizer(stop_words=stop,
