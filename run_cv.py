@@ -401,8 +401,73 @@ def run(data_dir, out_dir):
             run_cogat_cv(label_df, cogat_dfs[i], out_dir, source=s, classifier=c)
 
 
+def run_para(data_dir, out_dir):
+    sources = ['full', 'abstract']
+    classifiers = ['knn', 'svm', 'bnb', 'lr']
+    
+    label_df = pd.read_csv(join(data_dir, 'labels/red_labels.csv'),
+                           index_col='pmid')
+
+    # BOW PMIDs
+    text_dirs = [join(data_dir, 'text/stemmed_{0}/'.format(s)) for s in sources]
+    texts = [glob(join(td, '*.txt')) for td in text_dirs]
+    bow_pmids_ = [[int(splitext(basename(f))[0]) for f in t] for t in texts]
+    bow_pmids = sorted(list(set(bow_pmids_[0]).intersection(bow_pmids_[1])))
+    
+    # CogAt PMIDs
+    cogat_dfs = [pd.read_csv(join(data_dir, 'features/cogat_{0}.csv'.format(s)),
+                                  index_col='pmid') for s in sources]
+    cogat_pmids_ = [df.index.tolist() for df in cogat_dfs]
+    cogat_pmids = sorted(list(set(cogat_pmids_[0]).intersection(cogat_pmids_[1])))
+    
+    # Label PMIDs
+    label_pmids = label_df.index.tolist()
+    
+    # Intersection between all three sets
+    shared_pmids = set(label_pmids).intersection(bow_pmids).intersection(cogat_pmids)
+    shared_pmids = sorted(list(shared_pmids))
+    
+    # Reduce corpus by PMIDs with features and labels
+    label_df = label_df.loc[shared_pmids]
+    
+    label_dfs = []
+    out_dirs = []
+    text_dirs = []
+    cogat_dfs = []
+    so_input = []
+    clf_input = []
+
+    for s in sources:
+        text_dir = join(data_dir, 'text/stemmed_{0}/'.format(s))
+        cogat_df = pd.read_csv(join(data_dir, 'features/cogat_{0}.csv'.format(s)),
+                               index_col='pmid')
+        cogat_df = cogat_df.loc[shared_pmids]
+        for c in classifiers:
+            label_dfs.append(label_df)
+            out_dirs.append(out_dir)
+            text_dirs.append(text_dir)
+            cogat_dfs.append(cogat_df)
+            so_input.append(s)
+            clf_input.append(c)
+    params = zip(*[label_dfs, out_dirs, text_dirs,
+                   cogat_dfs, so_input, clf_input])
+    pool = mp.Pool(len(params))
+    pool.map(_run, params)
+    pool.close()
+
+
+def _run(params):
+    label_df, out_dir, text_dir, cogat_df, s, c = params
+    
+    # BOW
+    run_bow_cv(label_df, text_dir, out_dir, source=s, classifier=c)
+    
+    # CogAt
+    run_cogat_cv(label_df, cogat_df, out_dir, source=s, classifier=c)
+
+
 if __name__ == '__main__':
     data_dir = '/home/data/nbc/athena/athena-data2/'
     out_dir = '/scratch/tsalo006/test_cv/'
-    run(data_dir, out_dir)
+    run_para(data_dir, out_dir)
 
