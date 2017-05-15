@@ -23,6 +23,7 @@ NOTE: This doesn't take dimension into account at all. In order to employ
 import numpy as np
 import pandas as pd
 from glob import glob
+import multiprocessing as mp
 from os.path import basename, splitext, join
 
 from sklearn.svm import SVC
@@ -468,6 +469,6 @@ def _run(params):
 
 if __name__ == '__main__':
     data_dir = '/home/data/nbc/athena/athena-data2/'
-    out_dir = '/scratch/tsalo006/test_cv/'
+    out_dir = '/scratch/tsalo006/test_cv2/'
     run_para(data_dir, out_dir)
 
