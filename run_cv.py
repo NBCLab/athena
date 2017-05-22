@@ -515,9 +515,11 @@ def run_para(data_dir, out_dir):
             clf_input.append(c)
     params = zip(*[label_dfs, out_dirs, text_dirs,
                    cogat_dfs, so_input, clf_input])
-    pool = mp.Pool(len(params))
-    pool.map(_run, params)
-    pool.close()
+    #pool = mp.Pool(len(params))
+    #pool.map(_run, params)
+    #pool.close()
+    for i in params:
+        _run(i)
 
 
 def _run(params):

@@ -1,7 +1,7 @@
 #!/bin/bash 
 #---Number of core
-#BSUB -n 12
-#BSUB -R "span[ptile=12]"
+#BSUB -n 40
+#BSUB -R "span[ptile=40]"
 
 #---Job's name in LSF system
 #BSUB -J cv
