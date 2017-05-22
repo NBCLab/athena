@@ -453,7 +453,7 @@ def run(data_dir='/home/data/nbc/athena/athena-data2/', sources=['abstract', 'fu
     #rel_df = create_rel_sheet(id_df)
     #rel_df.to_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
     rel_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_rels.csv'))
-    weight_df = weight_rels(rel_df, 'ws2_up')
+    #weight_df = weight_rels(rel_df, 'ws2_up')
     weight_df = pd.read_csv(join(data_dir, 'gazetteers/cogat_weights.csv'),
                             index_col='term')
 

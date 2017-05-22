@@ -22,6 +22,7 @@ NOTE: This doesn't take dimension into account at all. In order to employ
 """
 import numpy as np
 import pandas as pd
+import cPickle as pickle
 from glob import glob
 import multiprocessing as mp
 from os.path import basename, splitext, join
@@ -157,7 +158,7 @@ def _run_bow(inputs):
         p_row = [clf_name, source, space, label_name, j_fold, iter_] + p_vals
         p_rows += [p_row]
         
-    return f_rows, p_rows, preds_array, label_name
+    return [f_rows, p_rows, preds_array, label_name]
 
 
 def _run_cogat(inputs):
@@ -232,7 +233,7 @@ def _run_cogat(inputs):
         p_row = [clf_name, source, space, label_name, j_fold, iter_] + p_vals
         p_rows += [p_row]
         
-    return f_rows, p_rows, preds_array, label_name
+    return [f_rows, p_rows, preds_array, label_name]
 
 
 def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
@@ -304,8 +305,8 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
         pool = mp.Pool(10)
         results = pool.map(_run_bow, inputs)
         pool.close()
-        
-        f_rows, p_rows, preds_1d, temp_label_names = results
+
+        f_rows, p_rows, preds_1d, temp_label_names = zip(*results)
         f_alllabels += unnest(f_rows)
         sel_params += unnest(p_rows)
         for i, tl in enumerate(temp_label_names):
@@ -385,6 +386,8 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
         
         # Prepare inputs
         y_split = np.array_split(label_array, label_array.shape[1], axis=1)
+        print label_array.shape
+        print len(y_split)
         y_split = [y.squeeze() for y in y_split]
         iters = [iter_] * n_labels
         features_list = [features] * n_labels
@@ -395,11 +398,17 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
         
         inputs = zip(*[y_split, label_names, features_list, clf_names, sources,
                        iters, clfs, p_grids])
+        with open('temp.pkl', 'w') as fo:
+            pickle.dump(inputs, fo)
+        print('Zipped sizes:')
+        print len(inputs)
+        for i in inputs:
+            print len(i)
         pool = mp.Pool(10)
         results = pool.map(_run_cogat, inputs)
         pool.close()
         
-        f_rows, p_rows, preds_1d, temp_label_names = results
+        f_rows, p_rows, preds_1d, temp_label_names = zip(*results)
         f_alllabels += unnest(f_rows)
         sel_params += unnest(p_rows)
         for i, tl in enumerate(temp_label_names):
@@ -500,7 +509,6 @@ def run_para(data_dir, out_dir):
     cogat_dfs = []
     so_input = []
     clf_input = []
-
     for s in sources:
         text_dir = join(data_dir, 'text/stemmed_{0}/'.format(s))
         cogat_df = pd.read_csv(join(data_dir, 'features/cogat_{0}.csv'.format(s)),
@@ -525,11 +533,11 @@ def run_para(data_dir, out_dir):
 def _run(params):
     label_df, out_dir, text_dir, cogat_df, s, c = params
     
-    # BOW
-    bow_wrapper(label_df, text_dir, out_dir, source=s, classifier=c)
-    
     # CogAt
     cogat_wrapper(label_df, cogat_df, out_dir, source=s, classifier=c)
+    
+    # BOW
+    bow_wrapper(label_df, text_dir, out_dir, source=s, classifier=c)
 
 
 if __name__ == '__main__':

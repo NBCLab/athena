@@ -1,1 +1,75 @@
-0
+2633
+(2633, 86)
+full
+(2634, 1754)
+abstract
+(2633, 1754)
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@n093>
+Subject: Job 217820: <cv> Exited
+
+Job <cv> was submitted from host <v001> by user <tsalo006> in cluster <panther>.
+Job was executed on host(s) <40*n093>, in queue <PQ_nbc>, as user <tsalo006> in cluster <panther>.
+</home/tsalo006> was used as the home directory.
+</home/data/nbc/athena/athena/jobs> was used as the working directory.
+Started at Mon May 22 13:17:03 2017
+Results reported at Mon May 22 13:17:27 2017
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash 
+#---Number of core
+#BSUB -n 40
+#BSUB -R "span[ptile=40]"
+
+#---Job's name in LSF system
+#BSUB -J cv
+
+#---Error file
+#BSUB -eo err_cv
+
+#---Output file
+#BSUB -oo out_cv
+
+#---LSF Queue name
+#BSUB -q PQ_nbc
+
+##########################################################
+# Set up environmental variables.
+##########################################################
+export NPROCS=`echo $LSB_HOSTS | wc -w`
+export OMP_NUM_THREADS=$NPROCS
+
+. $MODULESHOME/../global/profile.modules
+source /home/data/nbc/athena/athena/bash_environment
+
+
+##########################################################
+##########################################################
+
+python /home/data/nbc/athena/athena/run_cv.py
+
+------------------------------------------------------------
+
+Exited with exit code 1.
+
+Resource usage summary:
+
+    CPU time   :      7.32 sec.
+    Max Memory :         2 MB
+    Max Swap   :        45 MB
+
+    Max Processes  :         1
+    Max Threads    :         1
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <err_cv> for stderr output of this job.
+
