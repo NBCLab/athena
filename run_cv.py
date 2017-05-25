@@ -52,7 +52,6 @@ def _run_bow(inputs):
     y_all, label_name, texts, clf_name, source, iter_, clf, p_grid = inputs
     space = 'bow'
     n_cogat = 1754
-    X_range = np.arange(len(texts))
     param_cols = sorted(p_grid.keys())
     
     # Choose cross-validation techniques for the inner and outer loops,
@@ -63,12 +62,21 @@ def _run_bow(inputs):
     inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=iter_)
 
     print('\t{0}'.format(label_name))
+
     f_rows = []
     p_rows = []
-    preds_array = np.zeros((len(y_all)))
-    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(X_range,
-                                                                  y_all)):
-        print('\t\t{0}'.format(j_fold))
+    preds_array = np.empty((len(y_all)))
+    preds_array[:] = np.NaN
+    
+    # Reduce labels and features for Context labels.
+    keep_idx = np.where(np.isfinite(y_all))[0]
+    y_red = y_all[keep_idx]
+    red_range = np.arange(len(y_red))
+    red_texts = [t for i, t in enumerate(texts) if i in keep_idx]
+
+    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(red_range,
+                                                                  y_red)):
+        print('\t\tFold {0}'.format(j_fold))
 
         # Define gaz, extract features, and perform feature selection here.
         tfidf = TfidfVectorizer(stop_words=stopwords,
@@ -78,11 +86,11 @@ def _run_bow(inputs):
                                 min_df=80, max_df=1.)
 
         # Get classes.
-        y_train = y_all[train_idx]
-        y_test = y_all[test_idx]
+        y_train = y_red[train_idx]
+        y_test = y_red[test_idx]
 
         # Get raw data.
-        train_texts = [texts[i] for i in train_idx]
+        train_texts = [red_texts[i] for i in train_idx]
 
         # Feature selection.
         features = tfidf.fit_transform(train_texts)
@@ -117,7 +125,7 @@ def _run_bow(inputs):
                                 sublinear_tf=True,
                                 min_df=80, max_df=1.)
         tfidf.fit(train_texts)
-        features = tfidf.transform(texts)
+        features = tfidf.transform(red_texts)
 
         # Do we choose best params across labels or per label?
         # Let's say per label for now, so Cody can analyze variability
@@ -151,7 +159,7 @@ def _run_bow(inputs):
         f_rows += [f_row]
         
         # Add new predictions to overall array.
-        preds_array[test_idx] = preds
+        preds_array[keep_idx[test_idx]] = preds
 
         # Put hyperparameters in dataframe.
         p_vals = [params[key] for key in param_cols]
@@ -164,7 +172,6 @@ def _run_bow(inputs):
 def _run_cogat(inputs):
     y_all, label_name, features, clf_name, source, iter_, clf, p_grid = inputs
     space = 'cogat'
-    X_range = np.arange(len(features))
     param_cols = sorted(p_grid.keys())
     
     # Choose cross-validation techniques for the inner and outer loops,
@@ -175,24 +182,32 @@ def _run_cogat(inputs):
     inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=iter_)
 
     print('\t{0}'.format(label_name))
+
     f_rows = []
     p_rows = []
-    preds_array = np.zeros((len(y_all)))
-    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(X_range, y_all)):
-        print('\t\t{0}'.format(j_fold))
+    preds_array = np.empty((len(y_all)))
+    preds_array[:] = np.NaN
+
+    # Reduce labels and features for Context labels.
+    keep_idx = np.where(np.isfinite(y_all))[0]
+    y_red = y_all[keep_idx]
+    red_range = np.arange(len(y_red))
+    red_features = features[keep_idx, :]
+
+    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(red_range, y_red)):
+        print('\t\tFold {0}'.format(j_fold))
 
         # Define gaz, extract features, and perform feature selection here.
         tfidf = TfidfTransformer(norm='l2', use_idf=True, smooth_idf=True,
                                  sublinear_tf=True)
 
         # Get classes.
-        y_train = y_all[train_idx]
-        y_test = y_all[test_idx]
+        y_train = y_red[train_idx]
+        y_test = y_red[test_idx]
 
         # Get raw data.
-        tfidf.fit(features[train_idx, :])
-        
-        transformed_features = tfidf.transform(features)
+        tfidf.fit(red_features[train_idx, :])
+        transformed_features = tfidf.transform(red_features)
 
         # Do we choose best params across labels or per label?
         # Let's say per label for now, so Cody can analyze variability
@@ -226,7 +241,7 @@ def _run_cogat(inputs):
         f_rows += [f_row]
         
         # Add new predictions to overall array.
-        preds_array[test_idx] = preds
+        preds_array[keep_idx[test_idx]] = preds
 
         # Put hyperparameters in dataframe.
         p_vals = [params[key] for key in param_cols]
@@ -239,7 +254,7 @@ def _run_cogat(inputs):
 def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
     ## Settings
     space = 'bow'
-    n_iters = 5
+    n_iters = 100
     
     if classifier == 'svm':
         # We will use a Support Vector Classifier with "rbf" kernel
@@ -278,14 +293,14 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
             texts.append(fo.read())
 
     # Pull info from label_df
-    label_array = label_df.as_matrix()[:, :6]
-    label_names = label_df.columns.tolist()[:6]
+    label_array = label_df.as_matrix()
+    label_names = label_df.columns.tolist()
     n_labels = len(label_names)
 
     f_alllabels = []  # One F1 array for all iters/folds/labels
     for iter_ in range(n_iters):
         # Loop for each trial
-        print('{0}'.format(iter_))
+        print('Iteration {0}'.format(iter_))
 
         sel_params = []  # One param array for each iter
         preds_array = np.zeros(label_array.shape)  # One pred array for each iter
@@ -302,7 +317,7 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
         
         inputs = zip(*[y_split, label_names, texts_list, clf_names, sources,
                        iters, clfs, p_grids])
-        pool = mp.Pool(10)
+        pool = mp.Pool(20)
         results = pool.map(_run_bow, inputs)
         pool.close()
 
@@ -336,7 +351,7 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
 def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
     ## Settings
     space = 'cogat'
-    n_iters = 5
+    n_iters = 100
 
     if classifier == 'svm':
         # We will use a Support Vector Classifier with "rbf" kernel
@@ -372,22 +387,20 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
     features = features_df.as_matrix()
 
     # Pull info from label_df
-    label_array = label_df.as_matrix()[:, :6]
-    label_names = label_df.columns.tolist()[:6]
+    label_array = label_df.as_matrix()
+    label_names = label_df.columns.tolist()
     n_labels = len(label_names)
 
     f_alllabels = []  # One F1 array for all iters/folds/labels
     for iter_ in range(n_iters):
         # Loop for each trial
-        print('{0}'.format(iter_))
+        print('Iteration {0}'.format(iter_))
 
         sel_params = []  # One param array for each iter
         preds_array = np.zeros(label_array.shape)  # One pred array for each iter
         
         # Prepare inputs
         y_split = np.array_split(label_array, label_array.shape[1], axis=1)
-        print label_array.shape
-        print len(y_split)
         y_split = [y.squeeze() for y in y_split]
         iters = [iter_] * n_labels
         features_list = [features] * n_labels
@@ -398,13 +411,8 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
         
         inputs = zip(*[y_split, label_names, features_list, clf_names, sources,
                        iters, clfs, p_grids])
-        with open('temp.pkl', 'w') as fo:
-            pickle.dump(inputs, fo)
-        print('Zipped sizes:')
-        print len(inputs)
-        for i in inputs:
-            print len(i)
-        pool = mp.Pool(10)
+        
+        pool = mp.Pool(20)
         results = pool.map(_run_cogat, inputs)
         pool.close()
         
@@ -523,9 +531,6 @@ def run_para(data_dir, out_dir):
             clf_input.append(c)
     params = zip(*[label_dfs, out_dirs, text_dirs,
                    cogat_dfs, so_input, clf_input])
-    #pool = mp.Pool(len(params))
-    #pool.map(_run, params)
-    #pool.close()
     for i in params:
         _run(i)
 
@@ -542,6 +547,6 @@ def _run(params):
 
 if __name__ == '__main__':
     data_dir = '/home/data/nbc/athena/athena-data2/'
-    out_dir = '/scratch/tsalo006/test_cv2/'
+    out_dir = '/scratch/tsalo006/athena-cv/'
     run_para(data_dir, out_dir)
 
