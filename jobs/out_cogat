@@ -1,0 +1,68 @@
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@n085>
+Subject: Job 217848: <cogat> Done
+
+Job <cogat> was submitted from host <v001> by user <tsalo006> in cluster <panther>.
+Job was executed on host(s) <n085>, in queue <PQ_nbc>, as user <tsalo006> in cluster <panther>.
+</home/tsalo006> was used as the home directory.
+</home/data/nbc/athena/athena/jobs> was used as the working directory.
+Started at Mon May 22 13:34:09 2017
+Results reported at Wed May 24 04:25:20 2017
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#!/bin/bash 
+#---Number of core
+#BSUB -n 1
+#BSUB -R "span[ptile=1]"
+
+#---Job's name in LSF system
+#BSUB -J cogat
+
+#---Error file
+#BSUB -eo err_cogat
+
+#---Output file
+#BSUB -oo out_cogat
+
+#---LSF Queue name
+#BSUB -q PQ_nbc
+
+##########################################################
+# Set up environmental variables.
+##########################################################
+export NPROCS=`echo $LSB_HOSTS | wc -w`
+export OMP_NUM_THREADS=$NPROCS
+
+. $MODULESHOME/../global/profile.modules
+source /home/data/nbc/athena/athena/bash_environment
+
+##########################################################
+##########################################################
+
+python /home/data/nbc/athena/athena/jobs/run_cogat.py
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time   : 139702.05 sec.
+    Max Memory :       250 MB
+    Max Swap   :       808 MB
+
+    Max Processes  :         4
+    Max Threads    :         5
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <err_cogat> for stderr output of this job.
+

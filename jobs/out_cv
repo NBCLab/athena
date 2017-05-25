@@ -1,20 +1,1679 @@
-2633
-(2633, 86)
-full
-(2634, 1754)
-abstract
-(2633, 1754)
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	2
+		3
+		4
+3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+			BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+0
+1
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+2
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+3
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+			BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+0
+1
+2
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+3
+4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+4
+		2
+		BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+0
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+1
+2
+3
+4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+			BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+0
+1
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+			BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+2
+3
+4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+0
+1
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+2
+3
+4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		Behavi	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+0
+1
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+2
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+3
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+
+		1
+		2
+		BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution
+		0
+		1
+			Behaviora	BehavioralDomain.Cognition
+		0
+		1
+		2
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+0
+1
+2
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+3
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+0
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+1
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+2
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+3
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action
+		0
+		1
+		2
+		3
+		4
+4
+(2633, 6)
+6
+Zipped sizes:
+6
+8
+8
+8
+8
+8
+8
+0
+	BehavioralDomain.Action.Inhibition
+		0
+		1
+		2
+			BehavioralDomain.Cognition
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution.Speech
+		0
+		1
+		2
+		3
+		4
+	BehavioralDomain.Action.Execution
+		0
+		1
+		2
+		3
+		4
+1
+2
+3
+4
+	BehavioralDomain.Action.Rest
+		0
+		1
+		2
+		3
+		4
 
 ------------------------------------------------------------
-Sender: LSF System <lsfadmin@n093>
-Subject: Job 217820: <cv> Exited
+Sender: LSF System <lsfadmin@n090>
+Subject: Job 218926: <cv> Done
 
 Job <cv> was submitted from host <v001> by user <tsalo006> in cluster <panther>.
-Job was executed on host(s) <40*n093>, in queue <PQ_nbc>, as user <tsalo006> in cluster <panther>.
+Job was executed on host(s) <40*n090>, in queue <PQ_nbc>, as user <tsalo006> in cluster <panther>.
 </home/tsalo006> was used as the home directory.
 </home/data/nbc/athena/athena/jobs> was used as the working directory.
-Started at Mon May 22 13:17:03 2017
-Results reported at Mon May 22 13:17:27 2017
+Started at Wed May 24 10:56:08 2017
+Results reported at Wed May 24 16:13:23 2017
 
 Your job looked like:
 
@@ -54,16 +1713,16 @@ python /home/data/nbc/athena/athena/run_cv.py
 
 ------------------------------------------------------------
 
-Exited with exit code 1.
+Successfully completed.
 
 Resource usage summary:
 
-    CPU time   :      7.32 sec.
-    Max Memory :         2 MB
-    Max Swap   :        45 MB
+    CPU time   : 103234.26 sec.
+    Max Memory :      7146 MB
+    Max Swap   :     21073 MB
 
-    Max Processes  :         1
-    Max Threads    :         1
+    Max Processes  :        14
+    Max Threads    :        26
 
 The output (if any) is above this job summary.
 
