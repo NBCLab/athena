@@ -101,8 +101,8 @@ def _run_bow(inputs):
             skb = SelectKBest(chi2, k=n_cogat)
             skb.fit(features, y_train)
             neg_n = -1 * n_cogat
-            keep_idx = np.argpartition(skb.scores_, neg_n)[neg_n:]
-            vocabulary = [str(names[i]) for i in keep_idx]
+            vocab_idx = np.argpartition(skb.scores_, neg_n)[neg_n:]
+            vocabulary = [str(names[i]) for i in vocab_idx]
         else:
             vocabulary = names[:]
         
@@ -314,7 +314,7 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
         sources = [source] * n_labels
         clfs = [clf] * n_labels
         p_grids = [p_grid] * n_labels
-        
+
         inputs = zip(*[y_split, label_names, texts_list, clf_names, sources,
                        iters, clfs, p_grids])
         pool = mp.Pool(20)
@@ -538,11 +538,11 @@ def run_para(data_dir, out_dir):
 def _run(params):
     label_df, out_dir, text_dir, cogat_df, s, c = params
     
-    # CogAt
-    cogat_wrapper(label_df, cogat_df, out_dir, source=s, classifier=c)
-    
     # BOW
     bow_wrapper(label_df, text_dir, out_dir, source=s, classifier=c)
+
+    # CogAt
+    cogat_wrapper(label_df, cogat_df, out_dir, source=s, classifier=c)
 
 
 if __name__ == '__main__':
