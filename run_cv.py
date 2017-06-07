@@ -531,8 +531,9 @@ def run_para(data_dir, out_dir):
             clf_input.append(c)
     params = zip(*[label_dfs, out_dirs, text_dirs,
                    cogat_dfs, so_input, clf_input])
-    for i in params:
-        _run(i)
+    params = params[2:]  # Skip KNN full BOW and KNN full CogAt (already run)
+    for combo_params in params:
+        _run(combo_params)
 
 
 def _run(params):
