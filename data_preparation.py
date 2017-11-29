@@ -22,20 +22,24 @@ First round of commenting: Tue Oct 4 2016 Cody Riedel
 """
 
 import os
+from os.path import join
 import re
-import pandas as pd
-import cogat
+import csv
 from glob import glob
+
 import numpy as np
+import pandas as pd
 from nltk.stem.snowball import EnglishStemmer
 from nltk.stem.porter import PorterStemmer
-from utils import clean_str, get_label_parents
+
+import extract_cogat as ec
 import abbreviations as abbs
-import csv
+
+from utils import clean_str, get_label_parents
 
 with open('/Users/salo/Desktop/nbc/athena-data/misc/label_converter.csv', mode='r') as infile:
     reader = csv.reader(infile)
-    label_con = {rows[0]:rows[1] for rows in reader}
+    label_con = {row[0]:row[1] for row in reader}
 
 
 def process_raw_data(data_dir='/home/data/nbc/athena/athena-data/'):
@@ -197,17 +201,22 @@ def generate_gazetteer(data_dir):
     Creates gazetteer for CogAt.
     """
     gaz_dir = os.path.join(data_dir, 'gazetteers/')
+    sources = ['abstract', 'full']
 
     # Cognitive Atlas gazetteer
-    cogat_df = cogat.create_id_sheet()
-    cogat_df.to_csv(os.path.join(gaz_dir, 'cogat.csv'), index=False)
+    weights = {'isSelf': 1,
+               'isKindOf': 1,
+               'inCategory': 1}
+    vocab_df, _, weight_df = ec.extract.generate_gazetteer(weights, overwrite=False,
+                                                           stem=False, prefix=gaz_dir)
+    for source in sources:
+        text_folder = join(data_dir, 'text/cleaned_{0}/'.format(source))
+        out_dir = join(data_dir, 'text/cogat_cleaned_{0}/'.format(source))
+        count_df = ec.extract.extract_folder(text_folder, vocab_df, stem=False,
+                                             subs_folder=out_dir, abbrev=True)
+        count_df.to_csv(join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)))
 
-    rel_df = cogat.create_rel_sheet(cogat_df)
-    rel_df.to_csv(os.path.join(gaz_dir, 'cogat_relationships.csv'), index=False)
+        weighted_df = ec.extract.expand(count_df, weight_df)
+        weighted_df.to_csv(join(data_dir, 'features/cogat_{0}.csv'.format(source)))
 
-    weighting_schemes = ['ws2_up']
-    for weighting_scheme in weighting_schemes:
-        weight_df = cogat.weight_rels(rel_df, weighting_scheme)
-        weight_df.to_csv(os.path.join(gaz_dir, 'cogat_weights_{0}.csv'.format(weighting_scheme)),
-                         index=True)
-    print('Completed cogat gaz.')
+    print('Completed cogat extraction.')
