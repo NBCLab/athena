@@ -51,12 +51,12 @@ def unnest(lst):
 def _run_bow(inputs):
     y_all, label_name, texts, clf_name, source, iter_, clf, p_grid = inputs
     space = 'bow'
-    n_cogat = 1754
+    n_cogat = 1764
     param_cols = sorted(p_grid.keys())
-    
+
     # Choose cross-validation techniques for the inner and outer loops,
     # independently of the dataset. Classic 5x2 split.
-    # 5x2 popularized in 
+    # 5x2 popularized in
     # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
     outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=iter_)
     inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=iter_)
@@ -67,21 +67,20 @@ def _run_bow(inputs):
     p_rows = []
     preds_array = np.empty((len(y_all)))
     preds_array[:] = np.NaN
-    
+
     # Reduce labels and features for Context labels.
     keep_idx = np.where(np.isfinite(y_all))[0]
     y_red = y_all[keep_idx]
     red_range = np.arange(len(y_red))
     red_texts = [t for i, t in enumerate(texts) if i in keep_idx]
 
-    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(red_range,
-                                                                  y_red)):
+    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(red_range, y_red)):
         print('\t\tFold {0}'.format(j_fold))
 
         # Define gaz, extract features, and perform feature selection here.
         tfidf = TfidfVectorizer(stop_words=stopwords,
                                 token_pattern='(?!\\[)[A-z\\-]{3,}',
-                                ngram_range=(1, 2),
+                                ngram_range=(1, 3),
                                 sublinear_tf=True,
                                 min_df=80, max_df=1.)
 
@@ -95,7 +94,7 @@ def _run_bow(inputs):
         # Feature selection.
         features = tfidf.fit_transform(train_texts)
         names = tfidf.get_feature_names()
-        
+
         # Perform feature selection if there are too many features.
         if len(names) > n_cogat:
             skb = SelectKBest(chi2, k=n_cogat)
@@ -105,7 +104,7 @@ def _run_bow(inputs):
             vocabulary = [str(names[i]) for i in vocab_idx]
         else:
             vocabulary = names[:]
-        
+
         # We probably want to store the top words for each fold/label to
         # measure stability or something.
         vocab_filename = '{c}_{so}_{sp}_{l}_i{i}_f{f}_feats.csv'.format(c=clf_name,
@@ -121,7 +120,7 @@ def _run_bow(inputs):
         tfidf = TfidfVectorizer(stop_words=stopwords,
                                 vocabulary=vocabulary,
                                 token_pattern='(?!\\[)[A-z\\-]{3,}',
-                                ngram_range=(1, 2),
+                                ngram_range=(1, 3),
                                 sublinear_tf=True,
                                 min_df=80, max_df=1.)
         tfidf.fit(train_texts)
@@ -150,14 +149,14 @@ def _run_bow(inputs):
         elif clf_name == 'knn':
             cv_clf = clf.set_params(n_neighbors=params['n_neighbors'],
                                     p=params['p'], weights=params['weights'])
-        
+
         cv_clf.fit(X_train, y_train)
         preds = cv_clf.predict(X_test)
 
         f_fold_label = f1_score(y_test, preds)
         f_row = [clf_name, source, space, j_fold, label_name, iter_, f_fold_label]
         f_rows += [f_row]
-        
+
         # Add new predictions to overall array.
         preds_array[keep_idx[test_idx]] = preds
 
@@ -165,7 +164,7 @@ def _run_bow(inputs):
         p_vals = [params[key] for key in param_cols]
         p_row = [clf_name, source, space, label_name, j_fold, iter_] + p_vals
         p_rows += [p_row]
-        
+
     return [f_rows, p_rows, preds_array, label_name]
 
 
@@ -173,10 +172,10 @@ def _run_cogat(inputs):
     y_all, label_name, features, clf_name, source, iter_, clf, p_grid = inputs
     space = 'cogat'
     param_cols = sorted(p_grid.keys())
-    
+
     # Choose cross-validation techniques for the inner and outer loops,
     # independently of the dataset. Classic 5x2 split.
-    # 5x2 popularized in 
+    # 5x2 popularized in
     # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
     outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=iter_)
     inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=iter_)
@@ -232,14 +231,14 @@ def _run_cogat(inputs):
         elif clf_name == 'knn':
             cv_clf = clf.set_params(n_neighbors=params['n_neighbors'],
                                     p=params['p'], weights=params['weights'])
-        
+
         cv_clf.fit(X_train, y_train)
         preds = cv_clf.predict(X_test)
 
         f_fold_label = f1_score(y_test, preds)
         f_row = [clf_name, source, space, j_fold, label_name, iter_, f_fold_label]
         f_rows += [f_row]
-        
+
         # Add new predictions to overall array.
         preds_array[keep_idx[test_idx]] = preds
 
@@ -247,7 +246,7 @@ def _run_cogat(inputs):
         p_vals = [params[key] for key in param_cols]
         p_row = [clf_name, source, space, label_name, j_fold, iter_] + p_vals
         p_rows += [p_row]
-        
+
     return [f_rows, p_rows, preds_array, label_name]
 
 
@@ -255,11 +254,11 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
     ## Settings
     space = 'bow'
     n_iters = 100
-    
+
     if classifier == 'svm':
         # We will use a Support Vector Classifier with "rbf" kernel
         clf = SVC(kernel='rbf', class_weight='balanced')
-    
+
         # Set up possible values of parameters to optimize over
         p_grid = {'C': [1, 10, 100],
                   'gamma': [.01, .1, 1.]}
@@ -270,13 +269,13 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
         p_grid = {'alpha': [0.01, 0.1, 1, 10]}
     elif classifier == 'lr':
         clf = LogisticRegression(class_weight='balanced')
-        
+
         # Set up possible values of parameters to optimize over
         p_grid = {'C': [.01, .1, 1, 10, 100],
                   'penalty': ['l1', 'l2']}
     elif classifier == 'knn':
         clf = KNeighborsClassifier()
-        
+
         # Set up possible values of parameters to optimize over
         p_grid = {'n_neighbors': [1, 3, 5, 7, 9],
                   'p': [1, 2],
@@ -284,7 +283,7 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
     else:
         raise Exception('Classifier {0} not supported.'.format(classifier))
     param_cols = sorted(p_grid.keys())
-    
+
     # Get data from DataFrame
     pmids = label_df.index.values
     texts = []
@@ -304,7 +303,7 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
 
         sel_params = []  # One param array for each iter
         preds_array = np.zeros(label_array.shape)  # One pred array for each iter
-        
+
         # Prepare inputs
         y_split = np.array_split(label_array, label_array.shape[1], axis=1)
         y_split = [y.squeeze() for y in y_split]
@@ -343,7 +342,7 @@ def bow_wrapper(label_df, text_dir, out_dir, classifier, source):
     # Write out [nFolds*nIters]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
     f_cols = ['classifier', 'source', 'space', 'fold', 'label', 'iter', 'f1']
-    
+
     df = pd.DataFrame(data=f_alllabels, columns=f_cols)
     df.to_csv(join(out_dir, f_filename), index=False)
 
@@ -356,7 +355,7 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
     if classifier == 'svm':
         # We will use a Support Vector Classifier with "rbf" kernel
         clf = SVC(kernel='rbf', class_weight='balanced')
-    
+
         # Set up possible values of parameters to optimize over
         p_grid = {'C': [1, 10, 100],
                   'gamma': [.01, .1, 1.]}
@@ -367,20 +366,20 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
         p_grid = {'alpha': [0.01, 0.1, 1, 10]}
     elif classifier == 'lr':
         clf = LogisticRegression(class_weight='balanced')
-        
+
         # Set up possible values of parameters to optimize over
         p_grid = {'C': [.01, .1, 1, 10, 100],
                   'penalty': ['l1', 'l2']}
     elif classifier == 'knn':
         clf = KNeighborsClassifier()
-        
+
         # Set up possible values of parameters to optimize over
         p_grid = {'n_neighbors': [1, 3, 5, 7, 9],
                   'p': [1, 2],
                   'weights': ['uniform', 'distance']}
     else:
         raise Exception('Classifier {0} not supported.'.format(classifier))
-        
+
     param_cols = sorted(p_grid.keys())
 
     # Get data from DataFrame
@@ -398,7 +397,7 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
 
         sel_params = []  # One param array for each iter
         preds_array = np.zeros(label_array.shape)  # One pred array for each iter
-        
+
         # Prepare inputs
         y_split = np.array_split(label_array, label_array.shape[1], axis=1)
         y_split = [y.squeeze() for y in y_split]
@@ -408,14 +407,14 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
         sources = [source] * n_labels
         clfs = [clf] * n_labels
         p_grids = [p_grid] * n_labels
-        
+
         inputs = zip(*[y_split, label_names, features_list, clf_names, sources,
                        iters, clfs, p_grids])
-        
+
         pool = mp.Pool(20)
         results = pool.map(_run_cogat, inputs)
         pool.close()
-        
+
         f_rows, p_rows, preds_1d, temp_label_names = zip(*results)
         f_alllabels += unnest(f_rows)
         sel_params += unnest(p_rows)
@@ -438,7 +437,7 @@ def cogat_wrapper(label_df, features_df, out_dir, classifier, source):
     # Write out [nFolds*nIters]x[nLabels] array of F1-scores to file.
     f_filename = '{0}_{1}_{2}_f1.csv'.format(classifier, source, space)
     f_cols = ['classifier', 'source', 'space', 'fold', 'label', 'iter', 'f1']
-    
+
     df = pd.DataFrame(data=f_alllabels, columns=f_cols)
     df.to_csv(join(out_dir, f_filename), index=False)
 
@@ -449,30 +448,30 @@ def run(data_dir, out_dir):
 
     sources = ['full', 'abstract']
     classifiers = ['knn', 'svm', 'bnb', 'lr']
-    
+
     # BOW PMIDs
     text_dirs = [join(data_dir, 'text/stemmed_{0}/'.format(s)) for s in sources]
     texts = [glob(join(td, '*.txt')) for td in text_dirs]
     bow_pmids_ = [[int(splitext(basename(f))[0]) for f in t] for t in texts]
     bow_pmids = sorted(list(set(bow_pmids_[0]).intersection(bow_pmids_[1])))
-    
+
     # CogAt PMIDs
     cogat_dfs = [pd.read_csv(join(data_dir, 'features/cogat_{0}.csv'.format(s)),
                                   index_col='pmid') for s in sources]
     cogat_pmids_ = [df.index.tolist() for df in cogat_dfs]
     cogat_pmids = sorted(list(set(cogat_pmids_[0]).intersection(cogat_pmids_[1])))
-    
+
     # Label PMIDs
     label_pmids = label_df.index.tolist()
-    
+
     # Intersection between all three sets
     shared_pmids = set(label_pmids).intersection(bow_pmids).intersection(cogat_pmids)
     shared_pmids = sorted(list(shared_pmids))
-    
+
     # Reduce corpus by PMIDs with features and labels
     label_df = label_df.loc[shared_pmids]
     cogat_dfs = [df.loc[shared_pmids] for df in cogat_dfs]
-    
+
     for i, s in enumerate(sources):
         for c in classifiers:
             # BOW
@@ -485,7 +484,7 @@ def run(data_dir, out_dir):
 def run_para(data_dir, out_dir):
     sources = ['full', 'abstract']
     classifiers = ['knn', 'svm', 'bnb', 'lr']
-    
+
     label_df = pd.read_csv(join(data_dir, 'labels/red_labels.csv'),
                            index_col='pmid')
 
@@ -494,23 +493,23 @@ def run_para(data_dir, out_dir):
     texts = [glob(join(td, '*.txt')) for td in text_dirs]
     bow_pmids_ = [[int(splitext(basename(f))[0]) for f in t] for t in texts]
     bow_pmids = sorted(list(set(bow_pmids_[0]).intersection(bow_pmids_[1])))
-    
+
     # CogAt PMIDs
     cogat_dfs = [pd.read_csv(join(data_dir, 'features/cogat_{0}.csv'.format(s)),
                                   index_col='pmid') for s in sources]
     cogat_pmids_ = [df.index.tolist() for df in cogat_dfs]
     cogat_pmids = sorted(list(set(cogat_pmids_[0]).intersection(cogat_pmids_[1])))
-    
+
     # Label PMIDs
     label_pmids = label_df.index.tolist()
-    
+
     # Intersection between all three sets
     shared_pmids = set(label_pmids).intersection(bow_pmids).intersection(cogat_pmids)
     shared_pmids = sorted(list(shared_pmids))
-    
+
     # Reduce corpus by PMIDs with features and labels
     label_df = label_df.loc[shared_pmids]
-    
+
     label_dfs = []
     out_dirs = []
     text_dirs = []
@@ -538,7 +537,7 @@ def run_para(data_dir, out_dir):
 
 def _run(params):
     label_df, out_dir, text_dir, cogat_df, s, c = params
-    
+
     # BOW
     bow_wrapper(label_df, text_dir, out_dir, source=s, classifier=c)
 
@@ -550,4 +549,3 @@ if __name__ == '__main__':
     data_dir = '/home/data/nbc/athena/athena-data2/'
     out_dir = '/scratch/tsalo006/athena-cv/'
     run_para(data_dir, out_dir)
-
