@@ -33,7 +33,7 @@ from nltk.stem.snowball import EnglishStemmer
 from nltk.stem.porter import PorterStemmer
 
 import extract_cogat as ec
-import abbreviations as abbs
+import abbr
 
 from utils import clean_str, get_label_parents
 
@@ -88,10 +88,10 @@ def process_corpus(data_dir, feature_source):
         text = text.decode('utf8', 'ignore').encode('ascii', 'ignore')
 
         # Clean text
-        text = abbs.clean_str(text)
+        text = abbr.clean_str(text)
 
         # Detect and expand abbreviations
-        text = abbs.expandall(text)
+        text = abbr.expandall(text)
 
         # Remove periods (for abbreviations)
         text = text.replace('.', '')
