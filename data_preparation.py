@@ -37,7 +37,7 @@ import abbr
 
 from utils import clean_str, get_label_parents
 
-with open('/Users/salo/Desktop/nbc/athena-data/misc/label_converter.csv', mode='r') as infile:
+with open('/home/data/nbc/athena-data/misc/label_converter.csv', mode='r') as infile:
     reader = csv.reader(infile)
     label_con = {row[0]:row[1] for row in reader}
 
