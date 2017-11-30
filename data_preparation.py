@@ -207,8 +207,10 @@ def generate_gazetteer(data_dir):
     weights = {'isSelf': 1,
                'isKindOf': 1,
                'inCategory': 1}
-    vocab_df, _, weight_df = ec.extract.generate_gazetteer(weights, overwrite=False,
-                                                           stem=False, prefix=gaz_dir)
+    vocab_df = pd.read_csv(join(ec.utils.get_resource_path(), 'ontology',
+                                'unstemmed_cogat_vocabulary.csv'))
+    weight_df = pd.read_csv(join(ec.utils.get_resource_path(), 'ontology',
+                                 'unstemmed_cogat_weights.csv'), index_col='id')
     for source in sources:
         text_folder = join(data_dir, 'text/cleaned_{0}/'.format(source))
         out_dir = join(data_dir, 'text/cogat_cleaned_{0}/'.format(source))
