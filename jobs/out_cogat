@@ -1,14 +1,15 @@
+Completed cogat extraction.
 
 ------------------------------------------------------------
-Sender: LSF System <lsfadmin@n085>
-Subject: Job 217848: <cogat> Done
+Sender: LSF System <lsfadmin@n086>
+Subject: Job 849131: <cogat> Done
 
-Job <cogat> was submitted from host <v001> by user <tsalo006> in cluster <panther>.
-Job was executed on host(s) <n085>, in queue <PQ_nbc>, as user <tsalo006> in cluster <panther>.
+Job <cogat> was submitted from host <v002> by user <tsalo006> in cluster <panther>.
+Job was executed on host(s) <n086>, in queue <PQ_nbc>, as user <tsalo006> in cluster <panther>.
 </home/tsalo006> was used as the home directory.
-</home/data/nbc/athena/athena/jobs> was used as the working directory.
-Started at Mon May 22 13:34:09 2017
-Results reported at Wed May 24 04:25:20 2017
+</scratch/tsalo006> was used as the working directory.
+Started at Sat Dec  2 12:55:18 2017
+Results reported at Sun Dec  3 06:27:03 2017
 
 Your job looked like:
 
@@ -51,9 +52,9 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time   : 139702.05 sec.
-    Max Memory :       250 MB
-    Max Swap   :       808 MB
+    CPU time   :  62958.23 sec.
+    Max Memory :       442 MB
+    Max Swap   :      1224 MB
 
     Max Processes  :         4
     Max Threads    :         5

@@ -69,8 +69,8 @@ def process_corpus(data_dir, feature_source):
     """
     raw_dir = os.path.join(data_dir, 'text/', feature_source)
     stem_dir = os.path.join(data_dir, 'text/stemmed_{0}/'.format(feature_source))
-    proc_dir = os.path.join(data_dir, 'text/processed_{0}/'.format(feature_source))
-    spell_file = os.path.join(data_dir, 'misc/english_spellings.csv')
+    proc_dir = os.path.join(data_dir, 'text/cleaned_{0}/'.format(feature_source))
+    spell_file = os.path.join('/home/data/nbc/athena/athena-data/misc/english_spellings.csv')
     spell_df = pd.read_csv(spell_file, index_col='UK')
     spell_dict = spell_df['US'].to_dict()
 
@@ -201,7 +201,7 @@ def generate_gazetteer(data_dir):
     Creates gazetteer for CogAt.
     """
     gaz_dir = os.path.join(data_dir, 'gazetteers/')
-    sources = ['abstract', 'full']
+    sources = ['full']
 
     # Cognitive Atlas gazetteer
     weights = {'isSelf': 1,

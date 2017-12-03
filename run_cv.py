@@ -547,5 +547,5 @@ def _run(params):
 
 if __name__ == '__main__':
     data_dir = '/home/data/nbc/athena/athena-data2/'
-    out_dir = '/scratch/tsalo006/athena-cv/'
+    out_dir = '/scratch/miriedel/athena-cv/'
     run_para(data_dir, out_dir)
