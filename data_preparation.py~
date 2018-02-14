@@ -216,9 +216,9 @@ def generate_gazetteer(data_dir):
         out_dir = join(data_dir, 'text/cogat_cleaned_{0}/'.format(source))
         count_df = ec.extract.extract_folder(text_folder, vocab_df, stem=False,
                                              subs_folder=out_dir, abbrev=True)
-        count_df.to_csv(join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)), index_label='pmid')
+        count_df.to_csv(join(data_dir, 'features/cogat_counts_{0}.csv'.format(source)))
 
         weighted_df = ec.extract.expand(count_df, weight_df)
-        weighted_df.to_csv(join(data_dir, 'features/cogat_{0}.csv'.format(source)), index_label='pmid')
+        weighted_df.to_csv(join(data_dir, 'features/cogat_{0}.csv'.format(source)))
 
     print('Completed cogat extraction.')
