@@ -11,7 +11,7 @@ import pandas as pd
 from scipy import stats
 
 from sklearn.metrics import f1_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold
 
 
 def unnest(lst):
@@ -26,8 +26,7 @@ def _run_null(inputs):
     # independently of the dataset. Classic 5x2 split.
     # 5x2 popularized in
     # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
-    outer_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=iter_)
-    inner_cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=iter_)
+    outer_cv = KFold(n_splits=5, shuffle=True, random_state=iter_)
 
     print('\t{0}'.format(label_name))
 
@@ -40,7 +39,6 @@ def _run_null(inputs):
     keep_idx = np.where(np.isfinite(y_all))[0]
     y_red = y_all[keep_idx]
     red_range = np.arange(len(y_red))
-    red_texts = [t for i, t in enumerate(texts) if i in keep_idx]
 
     for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(red_range,
                                                                   y_red)):
@@ -50,8 +48,8 @@ def _run_null(inputs):
         y_train = y_red[train_idx]
         y_test = y_red[test_idx]
 
-        most_common = stats.mode(y_train).mode[0]
-        preds = y_test[:]
+        most_common = 1 #stats.mode(y_train).mode[0]
+        preds = np.copy(y_test)
         preds[:] = most_common
 
         f_fold_label = f1_score(y_test, preds)
@@ -68,6 +66,7 @@ def _run_null(inputs):
 def run(data_dir, out_dir):
     label_df = pd.read_csv(join(data_dir, 'labels/red_labels.csv'),
                            index_col='pmid')
+    sources = ['full', 'abstract']
 
     # BOW PMIDs
     text_dirs = [join(data_dir, 'text/stemmed_{0}/'.format(s))

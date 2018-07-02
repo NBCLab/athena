@@ -1,0 +1,31 @@
+#!/bin/bash 
+#---Number of core
+#BSUB -n 20
+#BSUB -R "span[ptile=40]"
+
+#---Job's name in LSF system
+#BSUB -J null
+
+#---Error file
+#BSUB -eo err_null
+
+#---Output file
+#BSUB -oo out_null
+
+#---LSF Queue name
+#BSUB -q PQ_nbc
+
+##########################################################
+# Set up environmental variables.
+##########################################################
+export NPROCS=`echo $LSB_HOSTS | wc -w`
+export OMP_NUM_THREADS=$NPROCS
+
+. $MODULESHOME/../global/profile.modules
+source /home/data/nbc/athena/athena/bash_environment
+
+
+##########################################################
+##########################################################
+
+python /home/data/nbc/athena/athena/run_cv_null.py
