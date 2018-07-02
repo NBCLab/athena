@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from collections import Counter
 
-data_dir = '/Users/salo/Desktop/nbc/athena-data/'
+data_dir = '/Users/tsalo/Documents/nbc/athena-data/'
 labels_dir = os.path.join(data_dir, 'labels/')
 fiu_file = os.path.join(labels_dir, 'fiu_labels.csv')
 bm_file = os.path.join(labels_dir, 'bm_labels.txt')
@@ -26,7 +26,7 @@ drop_pmids = []
 for pmid in counter.keys():
     if counter[pmid] > 1:
         drop_pmids.append(pmid)
-bmid_to_pmid = { k:v for k, v in bmid_to_pmid.items() if v not in drop_pmids}
+bmid_to_pmid = {k:v for k, v in bmid_to_pmid.items() if v not in drop_pmids}
 
 def get2(val):
     return bmid_to_pmid.get(val, np.nan)
@@ -49,7 +49,7 @@ fiu_labels = sorted(fiu_df.columns.tolist())
 
 fiu_specific_labels = list(set(fiu_labels) - set(most_labels))
 if len(fiu_specific_labels) > 0:
-    print fiu_specific_labels
+    print(fiu_specific_labels)
 
 new_labels = list(set(most_labels) - set(fiu_labels))
 
@@ -84,7 +84,7 @@ count_df.index.name = 'label'
 count_df[['pos', 'neg']].to_csv(os.path.join(labels_dir, 'label_counts.csv'))
 
 # Both classes (pos and neg) must have at least 80 instances.
-keep_df = count_df.loc[(count_df['pos'] >= 80) & (count_df['neg'] >=80)]
+keep_df = count_df.loc[(count_df['pos'] >= 80) & (count_df['neg'] >= 80)]
 keep_labels = keep_df.index
 
 full_df.to_csv(os.path.join(labels_dir, 'untrimmed_labels.csv'))
