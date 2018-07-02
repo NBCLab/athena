@@ -89,4 +89,4 @@ keep_labels = keep_df.index
 
 full_df.to_csv(os.path.join(labels_dir, 'untrimmed_labels.csv'))
 full_df = full_df[keep_labels]
-#full_df.to_csv(os.path.join(labels_dir, 'full_labels.csv'))
+full_df.to_csv(os.path.join(labels_dir, 'full_labels.csv'))
