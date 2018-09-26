@@ -18,51 +18,6 @@ def unnest(lst):
     return [item for sublist in lst for item in sublist]
 
 
-def _run_null(inputs):
-    y_all, label_name, iter_ = inputs
-    space = 'null'
-
-    # Choose cross-validation techniques for the inner and outer loops,
-    # independently of the dataset. Classic 5x2 split.
-    # 5x2 popularized in
-    # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.37.3325&rep=rep1&type=pdf
-    outer_cv = KFold(n_splits=5, shuffle=True, random_state=iter_)
-
-    print('\t{0}'.format(label_name))
-
-    f_rows = []
-    p_rows = []
-    preds_array = np.empty((len(y_all)))
-    preds_array[:] = np.NaN
-
-    # Reduce labels and features for Context labels.
-    keep_idx = np.where(np.isfinite(y_all))[0]
-    y_red = y_all[keep_idx]
-    red_range = np.arange(len(y_red))
-
-    for j_fold, (train_idx, test_idx) in enumerate(outer_cv.split(red_range,
-                                                                  y_red)):
-        print('\t\tFold {0}'.format(j_fold))
-
-        # Get classes.
-        y_train = y_red[train_idx]
-        y_test = y_red[test_idx]
-
-        most_common = 1 #stats.mode(y_train).mode[0]
-        preds = np.copy(y_test)
-        preds[:] = most_common
-
-        f_fold_label = f1_score(y_test, preds)
-        f_row = ['null', 'null', 'null', j_fold, label_name, iter_,
-                 f_fold_label]
-        f_rows += [f_row]
-
-        # Add new predictions to overall array.
-        preds_array[keep_idx[test_idx]] = preds
-
-    return [f_rows, preds_array, label_name]
-
-
 def run(data_dir, out_dir):
     label_df = pd.read_csv(join(data_dir, 'labels/red_labels.csv'),
                            index_col='pmid')
@@ -93,58 +48,63 @@ def run(data_dir, out_dir):
 
     # Reduce corpus by PMIDs with features and labels
     label_df = label_df.loc[shared_pmids]
+    pred_label_df = label_df.copy()
 
-    # Settings
-    n_iters = 100
+    # Use label cardinality and most popular labels to generate predicted labels
+    labels = label_df.columns.tolist()
+    dimensions = sorted(list(set([l.split('.')[0] for l in labels])))
+    for dim in dimensions:
+        dim_labels = [l for l in labels if l.startswith(dim+'.')]
+        dim_df = label_df[dim_labels]
+        lab_card = dim_df.sum(axis=1).mean()
+        lab_card = int(np.ceil(lab_card))
+        chosen = dim_df.sum(axis=0).sort_values(ascending=False)[:lab_card]
+        chosen = chosen.index.tolist()
+        pred_dim_df = dim_df.copy()
+        pred_dim_df.loc[:, :] /= 2.
+        for lab in pred_dim_df.columns:
+            pred_label_df[lab] = pred_dim_df[lab]
+
+        pred_dim_df = np.floor(pred_dim_df.copy())
+        pred_dim_df[chosen] += 1
+        for chos in chosen:
+            pred_label_df[chos] = pred_dim_df[chos]
 
     # Get data from DataFrame
     pmids = label_df.index.values
 
     # Pull info from label_df
-    label_array = label_df.as_matrix()
+    label_array = label_df.values
     label_names = label_df.columns.tolist()
+    pred_label_array = pred_label_df[label_names].values
     n_labels = len(label_names)
 
-    f_alllabels = []  # One F1 array for all iters/folds/labels
-    for iter_ in range(n_iters):
-        # Loop for each trial
-        print('Iteration {0}'.format(iter_))
+    f_rows = []  # One F1 array for all labels
 
-        sel_params = []  # One param array for each iter
-        preds_array = np.zeros(label_array.shape)  # One pred array per iter
+    # Prepare inputs
+    y_split = np.array_split(label_array, label_array.shape[1], axis=1)
+    y_split = [y.squeeze() for y in y_split]
+    y_pred_split = np.array_split(pred_label_array, label_array.shape[1], axis=1)
+    y_pred_split = [y.squeeze() for y in y_pred_split]
 
-        # Prepare inputs
-        y_split = np.array_split(label_array, label_array.shape[1], axis=1)
-        y_split = [y.squeeze() for y in y_split]
-        iters = [iter_] * n_labels
-
-        inputs = zip(*[y_split, label_names, iters])
-        pool = mp.Pool(20)
-        results = pool.map(_run_null, inputs)
-        pool.close()
-
-        f_rows, preds_1d, temp_label_names = zip(*results)
-        f_alllabels += unnest(f_rows)
-        for i, tl in enumerate(temp_label_names):
-            idx = label_names.index(tl)
-            preds_array[:, idx] = preds_1d[i]
-
-        # Save predictions array to file.
-        p_filename = 'null_null_null_{0}_preds.csv'.format(iter_)
-        df = pd.DataFrame(data=preds_array, columns=label_names,
-                          index=label_df.index)
-        df.index.name = 'pmid'
-        df.to_csv(join(out_dir, p_filename))
+    for label in range(n_labels):
+        y_label = y_split[label]
+        y_pred_label = y_pred_split[label]
+        y_pred_label = y_pred_label[~np.isnan(y_label)].astype(int)
+        y_label = y_label[~np.isnan(y_label)].astype(int)
+        f_label = f1_score(y_label, y_pred_label)
+        f_row = [label_names[label], f_label]
+        f_rows += [f_row]
 
     # Write out [nFolds*nIters]x[nLabels] array of F1-scores to file.
-    f_filename = 'null_null_null_f1.csv'
-    f_cols = ['classifier', 'source', 'space', 'fold', 'label', 'iter', 'f1']
+    f_filename = 'null_f1.csv'
+    f_cols = ['label', 'f1']
 
-    df = pd.DataFrame(data=f_alllabels, columns=f_cols)
+    df = pd.DataFrame(data=f_rows, columns=f_cols)
     df.to_csv(join(out_dir, f_filename), index=False)
 
 
 if __name__ == '__main__':
-    data_dir = '/home/data/nbc/athena/athena-data2/'
-    out_dir = '/scratch/tsalo006/athena-cv/'
+    data_dir = '/home/data/nbc/athena/athena/athena-data2/'
+    out_dir = '/home/data/nbc/athena/athena/athena-cv-null/'
     run(data_dir, out_dir)
